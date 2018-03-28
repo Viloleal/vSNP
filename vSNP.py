@@ -592,21 +592,21 @@ class script1():
                 option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
                 return option_list, found
 
-            # if give_option == "bovis":
-            #     found=True
-            #     #Remove network path at and left of "Results"
-            #     dependents_dir="/mycobacterium/tbc/tbbov/script_dependents/script1"
-            #     upload_to, remote, script_dependents = script1.update_directory(dependents_dir) #***FUNCTION CALL
+            if give_option == "bovis":
+                found=True
+                #Remove network path at and left of "Results"
+                dependents_dir="/mycobacterium/tbc/tbbov/script_dependents/script1"
+                upload_to, remote, script_dependents = script1.update_directory(dependents_dir) #***FUNCTION CALL
                 
-            #     spoligo_db = script_dependents + "/spoligotype_db.txt"
-            #     reference = script_dependents + "/NC_002945.fasta"
-            #     print("Reference being used: %s" % reference)
-            #     hqs = script_dependents + "/HighestQualitySNPs.vcf"
-            #     gbk_file = script_dependents + "/NC_002945.gbk"
-            #     email_list = "tod.p.stuber@aphis.usda.gov"
+                spoligo_db = script_dependents + "/spoligotype_db.txt"
+                reference = script_dependents + "/NC_002945.fasta"
+                print("Reference being used: %s" % reference)
+                hqs = script_dependents + "/HighestQualitySNPs.vcf"
+                gbk_file = script_dependents + "/NC_002945.gbk"
+                email_list = "tod.p.stuber@aphis.usda.gov"
                 
-            #     option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
-            #     return option_list, found
+                option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
+                return option_list, found
                 
             if give_option == "af":
                 found=True

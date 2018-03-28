@@ -3488,6 +3488,8 @@ def get_snps(directory):
                     else:
                         sample_dict.update({record_position:"N"})
                     # Poor calls
+                elif str(record.ALT[0]) != "None" and int(record.QUAL) >= 50 and record.QUAL <= N_gatk_threshold:
+                    sample_dict.update({record_position:str(record.REF[0])})
                 elif str(record.ALT[0]) != "None" and record.QUAL <= N_gatk_threshold:
                     sample_dict.update({record_position:"N"})
                 # same as above but take into account Deletion call

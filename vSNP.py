@@ -3459,7 +3459,7 @@ def get_snps(directory):
                     sample_dict.update({record_position:record.ALT[0]})
                 # same as above but take into account Ambiguious call
                 #elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and record.QUAL >= N_gatk_threshold:
-                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1:
+                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) >= 50:
                     ref_alt = str(record.ALT[0]) + str(record.REF[0])
                     if ref_alt == "AG":
                         sample_dict.update({record_position:"R"})
@@ -3488,7 +3488,7 @@ def get_snps(directory):
                     else:
                         sample_dict.update({record_position:"N"})
                     # Poor calls
-                elif str(record.ALT[0]) != "None" and int(record.QUAL) >= 50 and record.QUAL <= N_gatk_threshold:
+                elif str(record.ALT[0]) != "None": #Any SNP AC1 or AC2 < QUAL 50, or AC2 < QUAL 150
                     sample_dict.update({record_position:str(record.REF[0])})
                 elif str(record.ALT[0]) != "None" and record.QUAL <= N_gatk_threshold:
                     sample_dict.update({record_position:"N"})

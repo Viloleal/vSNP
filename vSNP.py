@@ -2315,7 +2315,7 @@ class script2():
         elif args.species == "bovis":
             
             qual_gatk_threshold = 150
-            N_gatk_threshold = 200
+            N_gatk_threshold = 150
             
             #Remove network path at and left of "Results"
             dependents_dir="/mycobacterium/tbc/tbbov/script_dependents/script2"
@@ -2346,7 +2346,7 @@ class script2():
         elif args.species == "af":
             
             qual_gatk_threshold = 150
-            N_gatk_threshold = 200
+            N_gatk_threshold = 150
             
             #Remove network path at and left of "Results"
             dependents_dir="/mycobacterium/tbc/af2122/script_dependents/script2"
@@ -2377,7 +2377,7 @@ class script2():
         elif args.species == "h37":
             
             qual_gatk_threshold = 150
-            N_gatk_threshold = 200
+            N_gatk_threshold = 150
             
             #Remove network path at and left of "Results"
             dependents_dir="/mycobacterium/tbc/h37/script_dependents/script2"
@@ -2407,7 +2407,7 @@ class script2():
         elif args.species == "para":
             
             qual_gatk_threshold = 150
-            N_gatk_threshold = 200
+            N_gatk_threshold = 150
             
             #Remove network path at and left of "Results"
             dependents_dir="/mycobacterium/avium_complex/para_cattle-bison/script_dependents/script2"
@@ -3457,9 +3457,7 @@ def get_snps(directory):
                 # In GATK VCFs "!= None" not used.
                 if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > N_gatk_threshold:
                     sample_dict.update({record_position:record.ALT[0]})
-                # same as above but take into account Ambiguious call
-                #elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and record.QUAL >= N_gatk_threshold:
-                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) >= 50:
+                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > N_gatk_threshold:
                     ref_alt = str(record.ALT[0]) + str(record.REF[0])
                     if ref_alt == "AG":
                         sample_dict.update({record_position:"R"})
@@ -3488,11 +3486,12 @@ def get_snps(directory):
                     else:
                         sample_dict.update({record_position:"N"})
                     # Poor calls
-                elif str(record.ALT[0]) != "None": #Any SNP AC1 or AC2 < QUAL 50, or AC2 < QUAL 150
-                    sample_dict.update({record_position:str(record.REF[0])})
-                elif str(record.ALT[0]) != "None" and record.QUAL <= N_gatk_threshold:
+                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= 50:
+                    sample_dict.update({record_position:record.REF[0]})
+                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= N_gatk_threshold:
                     sample_dict.update({record_position:"N"})
-                # same as above but take into account Deletion call
+                elif str(record.ALT[0]) != "None": #Insurance -- Will still report on a possible SNP even if missed with above statement
+                    sample_dict.update({record_position:str(record.REF[0])})
                 elif str(record.ALT[0]) == "None":
                     sample_dict.update({record_position:"-"})
 

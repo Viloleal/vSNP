@@ -540,7 +540,7 @@ class script1():
                 reference = script_dependents + "/Bsuisbv2-94-11.fasta"
                 print("Reference being used: %s" % reference)
                 hqs = script_dependents + "/BsuisF5-03-2-highqualitysnps.vcf"
-                #gbk_file = script_dependents + ""
+                gbk_file = None #script_dependents + ""
                 email_list = "tod.p.stuber@aphis.usda.gov"
                 
                 option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
@@ -1929,7 +1929,7 @@ class script2():
                 print ("will use previously used genotyping_codes.xlsx file")
 
             genotypingcodes = script_dependents + "/genotyping_codes.xlsx" # this may not be available if there is no access to f drive.  f drive record will not get cp to cut bioinfo list and then cp locally.  Can also manually put something in ~/dependencies on github.
-            #gbk_file = script_dependents + ""
+            gbk_file = None #script_dependents + ""
             # This file tells the script how to cluster VCFs
             definingSNPs = script_dependents + "/Defining SNPs.xlsx"
             remove_from_analysis = script_dependents + "/RemoveFromAnalysis.xlsx"

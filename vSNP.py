@@ -530,6 +530,22 @@ class script1():
                 option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
                 return option_list, found
 
+            if give_option == "suis2":
+                found=True
+                #Remove network path at and left of "Results"
+                dependents_dir="/brucella/suis2/script_dependents/script1"
+                upload_to, remote, script_dependents = script1.update_directory(dependents_dir) #***FUNCTION CALL
+                
+                spoligo_db = script_dependents + "/nospoligo.txt"
+                reference = script_dependents + "/Bsuisbv2-94-11.fasta"
+                print("Reference being used: %s" % reference)
+                hqs = script_dependents + "/BsuisF5-03-2-highqualitysnps.vcf"
+                #gbk_file = script_dependents + ""
+                email_list = "tod.p.stuber@aphis.usda.gov"
+                
+                option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
+                return option_list, found
+
             if give_option == "suis3":
                 found=True
                 #Remove network path at and left of "Results"
@@ -1288,7 +1304,7 @@ class script1():
                 hqs=glob.glob(directory + '/*vcf')
                 
                 print("self.species: %s" % self.species)
-                if self.species in ["ab1", "ab3", "suis1", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
+                if self.species in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
                     print("Brucella")
                     self.mlst()
                 elif self.species in ["h37", "af"]: #removed bovis
@@ -1886,6 +1902,39 @@ class script2():
             remove_from_analysis = script_dependents + "/RemoveFromAnalysis.xlsx"
             bioinfoVCF = upload_to + "/brucella/suis1/vcfs"
             excelinfile = script_dependents + "/Filtered_Regions_python.xlsx"
+            print(excelinfile)
+            filter_files = script_dependents + "/filter_files"
+            if os.path.isdir(filter_files):
+                shutil.rmtree(filter_files)
+                os.mkdir(filter_files)
+            else:        os.mkdir(filter_files)
+            get_filters(excelinfile, filter_files) #***FUNCTION CALL
+            if args.email == "s":
+                email_list = "tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, christine.r.quance@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov"
+
+        elif args.species == "suis2":
+
+            qual_gatk_threshold = 300
+            N_gatk_threshold = 350
+            
+            #Remove network path at and left of "Results"
+            dependents_dir="/brucella/suis2/script_dependents/script2"
+            
+            upload_to, remote, script_dependents = update_directory(dependents_dir) # returned upload_to, remote, local (aka: script_dependents) --> local is where working dependencies are located
+            
+            bruc_private_codes(upload_to) # if f drive then upload fixed column 32 to bioinfo
+            try:
+                shutil.copy(upload_to + "/brucella/genotyping_codes.xlsx", script_dependents)
+            except FileNotFoundError:
+                print ("will use previously used genotyping_codes.xlsx file")
+
+            genotypingcodes = script_dependents + "/genotyping_codes.xlsx" # this may not be available if there is no access to f drive.  f drive record will not get cp to cut bioinfo list and then cp locally.  Can also manually put something in ~/dependencies on github.
+            #gbk_file = script_dependents + ""
+            # This file tells the script how to cluster VCFs
+            definingSNPs = script_dependents + "/Defining SNPs.xlsx"
+            remove_from_analysis = script_dependents + "/RemoveFromAnalysis.xlsx"
+            bioinfoVCF = upload_to + "/brucella/suis2/vcfs"
+            excelinfile = script_dependents + "/Filtered_Regions_Suis2.xlsx"
             print(excelinfile)
             filter_files = script_dependents + "/filter_files"
             if os.path.isdir(filter_files):
@@ -4158,6 +4207,7 @@ def get_species():
     species_cross_reference["ovis"] = ["009504", "009505"]
     species_cross_reference["neo"] = ["KN046827"]
     species_cross_reference["suis1"] = ["017250", "017251"]
+    species_cross_reference["suis2"] = ["Bsuisbv2-94-11"]
     species_cross_reference["suis3"] = ["007719", "007718"]
     species_cross_reference["suis4"] = ["B-REF-BS4-40"]
     
@@ -4198,7 +4248,7 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
         Step 2: VCFs --> Tables & Trees
 
--s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, salmonella
+-s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, salmonella
 
 '''), epilog='''---------------------------------------------------------''')
 

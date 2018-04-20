@@ -4207,7 +4207,7 @@ def get_species():
     species_cross_reference["ovis"] = ["009504", "009505"]
     species_cross_reference["neo"] = ["KN046827"]
     species_cross_reference["suis1"] = ["017250", "017251"]
-    species_cross_reference["suis2"] = ["Bsuisbv2-94-11"]
+    species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
     species_cross_reference["suis3"] = ["007719", "007718"]
     species_cross_reference["suis4"] = ["B-REF-BS4-40"]
     

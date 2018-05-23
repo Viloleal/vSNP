@@ -2966,6 +2966,24 @@ class script2():
 ###################map pooled##################
 ###############################################
 ###############################################
+def mean_quality_size(fastq_file):
+    mean_quality_list=[]
+    mean_high = 0
+    mean_low = 0 
+    handle = gzip.open(fastq_file, "rt")
+    count = 0
+    seq_record_list = []
+    for rec in SeqIO.parse(handle, "fastq"):
+        # if count < 100:
+        mean_q = int(mean(rec.letter_annotations["phred_quality"]))
+        if mean_q >= 30:
+            mean_high+=1
+            seq_record_list.append(rec)
+        else:
+            mean_low+=1
+        mean_quality_list.append(mean_q)
+        count+=1
+    return mean_quality_list, mean_high, count
 
 #map pooled from script 1
 def read_aligner(directory):
@@ -2973,12 +2991,24 @@ def read_aligner(directory):
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
     print("R1 and R2: %s %s" % (R1, R2))
+    print("Getting mean for {}" .format(R1[0]))
+    mean_quality_list1, mean_high1, count1 = mean_quality_size(R1[0])
+    print("Getting mean for {}" .format(R2[0]))
+    mean_quality_list2, mean_high2, count2 = mean_quality_size(R2[0])
+
+    read_quality_stats = {}
+    read_quality_stats["Q_ave_R1"] = mean(mean_quality_list1)
+    read_quality_stats["Q_ave_R2"] = mean(mean_quality_list2)
+    read_quality_stats["Q30_R1"] = mean_high1/count1
+    read_quality_stats["Q30_R2"] = mean_high2/count2
+
     if args.species:
         sample = script1(R1[0], R2[0], args.species) #force species
     else:
         sample = script1(R1[0], R2[0]) #no species give, will find best
     try:
         stat_summary = sample.align_reads()
+        stat_summary = {**stat_summary, **read_quality_stats}
         return(stat_summary)
     except:
         return #(stat_summary)
@@ -4055,7 +4085,7 @@ class loop():
         worksheet = workbook.add_worksheet()
         row = 0
         col = 0
-        top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+        top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
         for header in top_row_header:
             worksheet.write(row, col, header)
             col += 1

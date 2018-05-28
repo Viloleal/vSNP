@@ -1641,29 +1641,29 @@ class script1():
                     # worksheet.write(row, col, v)
                 
                 stat_summary = {**stat_summary, **read_quality_stats}
-                # worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
-                # worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
-                # worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
-                # worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                # worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
-                # worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
-                # worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                # worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                # worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
-                # worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
-                # worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                # worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
-                # worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
-                # worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
-                # worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                # worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                # worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
-                # worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
-                # worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
-                # worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
-                # worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                # worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
-                # workbook.close()
+                worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
+                worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
+                worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+                worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
+                worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
+                worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
+                worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
+                worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
+                worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
+                worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
+                worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
+                worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
+                worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
+                worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
+                worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
+                workbook.close()
                 
                 return(stat_summary)
 
@@ -3028,7 +3028,7 @@ def read_aligner(directory):
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
         return(stat_summary)
-        
+
     except:
         return #(stat_summary)
         pass
@@ -4175,7 +4175,6 @@ class loop():
                     worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
                     worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
                     worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
-                    workbook.close()
 
                     os.chdir(root_dir)
             else: # run all in run_list in parallel
@@ -4207,7 +4206,6 @@ class loop():
                         worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
                         worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
                         worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
-                        workbook.close()
 
                 if not args.quiet and path_found:
                     try:

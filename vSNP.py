@@ -1607,24 +1607,24 @@ class script1():
 
                 #
 
-                #stat_summary["time_stamp", 'n/a'] = st
-                #stat_summary["sample_name", 'n/a'] = sample_name
-                #stat_summary["self.species", 'n/a'] = self.species
-                #stat_summary["reference_sequence_name", 'n/a'] = reference_sequence_name
-                #stat_summary["R1size", 'n/a'] = R1size
-                #stat_summary["R2size", 'n/a'] = R2size
-                #stat_summary["allbam_mapped_reads", 'n/a'] = allbam_mapped_reads
-                #stat_summary["genome_coverage", 'n/a'] = genome_coverage
-                #stat_summary["ave_coverage", 'n/a'] = ave_coverage
-                #stat_summary["ave_read_length", 'n/a'] = ave_read_length
-                #stat_summary["unmapped_reads", 'n/a'] = unmapped_reads
-                #stat_summary["unmapped_assembled_contigs", 'n/a'] = abyss_contig_count
-                #stat_summary["good_snp_count", 'n/a'] = good_snp_count
-                #stat_summary["mlst_type", 'n/a'] = mlst_type
-                #stat_summary["octalcode", 'n/a'] = octalcode
-                #stat_summary["sbcode", 'n/a'] = sbcode
-                #stat_summary["hexadecimal_code", 'n/a'] = hexcode
-                #stat_summary["binarycode", 'n/a'] = binarycode
+                stat_summary["time_stamp"] = st
+                stat_summary["sample_name"] = sample_name
+                stat_summary["self.species"] = self.species
+                stat_summary["reference_sequence_name"] = reference_sequence_name
+                stat_summary["R1size"] = R1size
+                stat_summary["R2size"] = R2size
+                stat_summary["allbam_mapped_reads"] = allbam_mapped_reads
+                stat_summary["genome_coverage"] = genome_coverage
+                stat_summary["ave_coverage"] = ave_coverage
+                stat_summary["ave_read_length"] = ave_read_length
+                stat_summary["unmapped_reads"] = unmapped_reads
+                stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
+                stat_summary["good_snp_count"] = good_snp_count
+                stat_summary["mlst_type"] = mlst_type
+                stat_summary["octalcode"] = octalcode
+                stat_summary["sbcode"] = sbcode
+                stat_summary["hexadecimal_code"] = hexcode
+                stat_summary["binarycode"] = binarycode
                 
                 ###
                 # Create a sample stats file in the sample's script1 directory
@@ -1641,29 +1641,29 @@ class script1():
                     # worksheet.write(row, col, v)
                 
                 stat_summary = {**stat_summary, **read_quality_stats}
-                worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
-                worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
-                worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
-                worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
-                worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
-                worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
-                worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
-                worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
-                worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
-                worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
-                worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
-                worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
-                worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
-                worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
-                worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
-                workbook.close()
+                # worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
+                # worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
+                # worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+                # worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                # worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
+                # worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
+                # worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                # worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                # worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
+                # worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
+                # worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                # worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
+                # worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
+                # worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
+                # worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                # worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                # worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
+                # worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
+                # worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
+                # worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
+                # worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                # worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
+                # workbook.close()
                 
                 return(stat_summary)
 
@@ -3025,9 +3025,10 @@ def read_aligner(directory):
         sample = script1(R1[0], R2[0]) #no species give, will find best
     try:
         stat_summary = sample.align_reads(read_quality_stats)
-        return(stat_summary)
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
+        return(stat_summary)
+        
     except:
         return #(stat_summary)
         pass

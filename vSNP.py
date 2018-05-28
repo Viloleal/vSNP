@@ -1273,7 +1273,7 @@ class script1():
 
             return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
 
-        def align_reads(self):
+        def align_reads(self, read_quality_stats):
         
             ts = time.time()
             st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
@@ -1291,6 +1291,7 @@ class script1():
                 stat_summary["R1size"] = R1size
                 stat_summary["R2size"] = R2size
                 stat_summary["allbam_mapped_reads"] = "CHECK SAMPLE *****************************************"
+                stat_summary = {**stat_summary, **read_quality_stats}
                 return(stat_summary)
             else:
                 startTime = datetime.now()
@@ -1470,7 +1471,7 @@ class script1():
                     # os.kill(process_id, signal.SIGKILL)
 
                 ###
-                if gbk_file is not "None":
+                if gbk_file is not "None" and not args.no_annotation:
                     try:
                         in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(gbk_file, "genbank"))
                         annotated_vcf = loc_sam + "-annotated.vcf"
@@ -1603,27 +1604,27 @@ class script1():
                 st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
 
                 stat_summary={}
-                stat_summary["time_stamp"] = st
-                stat_summary["sample_name"] = sample_name
-                stat_summary["self.species"] = self.species
-                stat_summary["reference_sequence_name"] = reference_sequence_name
-                stat_summary["R1size"] = R1size
-                stat_summary["R2size"] = R2size
-                stat_summary["allbam_mapped_reads"] = allbam_mapped_reads
-                stat_summary["genome_coverage"] = genome_coverage
-                stat_summary["ave_coverage"] = ave_coverage
-                stat_summary["ave_read_length"] = ave_read_length
-                stat_summary["unmapped_reads"] = unmapped_reads
-                stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
-                stat_summary["good_snp_count"] = good_snp_count
-                stat_summary["mlst_type"] = mlst_type
-                stat_summary["octalcode"] = octalcode
-                stat_summary["sbcode"] = sbcode
-                stat_summary["hexadecimal_code"] = hexcode
-                stat_summary["binarycode"] = binarycode
 
-                for k, v in stat_summary.items():
-                    print("%s: %s" % (k, v))
+                #
+
+                #stat_summary["time_stamp", 'n/a'] = st
+                #stat_summary["sample_name", 'n/a'] = sample_name
+                #stat_summary["self.species", 'n/a'] = self.species
+                #stat_summary["reference_sequence_name", 'n/a'] = reference_sequence_name
+                #stat_summary["R1size", 'n/a'] = R1size
+                #stat_summary["R2size", 'n/a'] = R2size
+                #stat_summary["allbam_mapped_reads", 'n/a'] = allbam_mapped_reads
+                #stat_summary["genome_coverage", 'n/a'] = genome_coverage
+                #stat_summary["ave_coverage", 'n/a'] = ave_coverage
+                #stat_summary["ave_read_length", 'n/a'] = ave_read_length
+                #stat_summary["unmapped_reads", 'n/a'] = unmapped_reads
+                #stat_summary["unmapped_assembled_contigs", 'n/a'] = abyss_contig_count
+                #stat_summary["good_snp_count", 'n/a'] = good_snp_count
+                #stat_summary["mlst_type", 'n/a'] = mlst_type
+                #stat_summary["octalcode", 'n/a'] = octalcode
+                #stat_summary["sbcode", 'n/a'] = sbcode
+                #stat_summary["hexadecimal_code", 'n/a'] = hexcode
+                #stat_summary["binarycode", 'n/a'] = binarycode
                 
                 ###
                 # Create a sample stats file in the sample's script1 directory
@@ -1633,22 +1634,38 @@ class script1():
                 row = 0
                 col = 0
 
-                top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+                top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
                 for header in top_row_header:
                     worksheet.write(row, col, header)
                     col += 1
-                col = 0
-                row += 1
-                for v in stat_summary.values():
-                        worksheet.write(row, col, v)
-                        col += 1
-                workbook.close()
-                ###
+                    # worksheet.write(row, col, v)
                 
+                stat_summary = {**stat_summary, **read_quality_stats}
+                worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
+                worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
+                worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+                worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
+                worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
+                worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
+                worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
+                worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
+                worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
+                worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
+                worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
+                worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
+                worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
+                worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
+                worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
+                workbook.close()
                 
                 return(stat_summary)
-
-
 
 ###############################################
 ###############################################
@@ -2637,7 +2654,7 @@ class script2():
             #fix files
             vcf_list = glob.glob('*vcf')
             print("Fixing files...\n")
-            if args.debug_call:
+            if args.debug_call and not args.get:
                 for each_vcf in vcf_list:
                     print(each_vcf)
                     mal = fix_vcf(each_vcf)
@@ -2729,7 +2746,7 @@ class script2():
         group_calls_list = []
 
         print ("Grouping files...")
-        if args.debug_call:
+        if args.debug_call and not args.get:
             for i in files:
                 dict_amb, group_calls, mal = group_files(i)
                 all_list_amb.update(dict_amb)
@@ -2807,7 +2824,7 @@ class script2():
         print ("<h4>There are %s VCFs in this run</h4>" % file_number, file=htmlfile)
 
         #OPTIONS
-        print ("Additional options ran: email: %s, args.filter: %s, all_vcf: %s, elite: %s, debug: %s, uploaded: %s" % (args.email, args.filter, args.all_vcf, args.elite, args.debug_call, args.upload), file=htmlfile)
+        print ("Additional options ran: email: %s, args.filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (args.email, args.filter, args.all_vcf, args.elite, args.no_annotation, args.debug_call, args.get, args.upload), file=htmlfile)
         if args.all_vcf:
             print ("\n<h4>All_VCFs is available</h4>", file=htmlfile)
         elif args.elite:
@@ -2997,19 +3014,20 @@ def read_aligner(directory):
     mean_quality_list2, mean_high2, count2 = mean_quality_size(R2[0])
 
     read_quality_stats = {}
-    read_quality_stats["Q_ave_R1"] = mean(mean_quality_list1)
-    read_quality_stats["Q_ave_R2"] = mean(mean_quality_list2)
-    read_quality_stats["Q30_R1"] = mean_high1/count1
-    read_quality_stats["Q30_R2"] = mean_high2/count2
+    read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list1))
+    read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list2))
+    read_quality_stats["Q30_R1"] = "{:.1%}" .format(mean_high1/count1)
+    read_quality_stats["Q30_R2"] = "{:.1%}" .format(mean_high2/count2)
 
     if args.species:
         sample = script1(R1[0], R2[0], args.species) #force species
     else:
         sample = script1(R1[0], R2[0]) #no species give, will find best
     try:
-        stat_summary = sample.align_reads()
-        stat_summary = {**stat_summary, **read_quality_stats}
+        stat_summary = sample.align_reads(read_quality_stats)
         return(stat_summary)
+        for k, v in stat_summary.items():
+            print("%s: %s" % (k, v))
     except:
         return #(stat_summary)
         pass
@@ -3018,7 +3036,7 @@ def fix_vcf(each_vcf):
     mal = []
     ###
     # Fix common VCF errors
-    if args.debug_call:
+    if args.debug_call and not args.get:
         print ("FIXING FILE: " + each_vcf)
     temp_file = each_vcf + ".temp"
     write_out=open(temp_file, 'w') #r+ used for reading and writing to the same file
@@ -3322,7 +3340,7 @@ def get_snps(directory):
 
     files = glob.glob('*vcf')
     all_positions = {}
-    if args.debug_call:
+    if args.debug_call and not args.get:
         for i in files:
             found_positions = find_positions(i)
             all_positions.update(found_positions)
@@ -3801,7 +3819,7 @@ def get_snps(directory):
         mytable = mytable.transpose() #org
         mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
-        if mygbk:
+        if mygbk and not args.no_annotation:
             dict_annotation = get_annotations_table(parsimony_positions)
             write_out=open('annotations.txt', 'w+')
             print ('reference_pos\tannotations', file=write_out)
@@ -4080,7 +4098,7 @@ class loop():
 
         #placed at root
         #get file opened and give a header
-        summary_file = root_dir+ '/stat_alignment_summary_' + st + '.xlsx'
+        summary_file = root_dir + '/stat_alignment_summary_' + st + '.xlsx'
         workbook = xlsxwriter.Workbook(summary_file)
         worksheet = workbook.add_worksheet()
         row = 0
@@ -4133,11 +4151,31 @@ class loop():
                     stat_summary = read_aligner(d)
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
-                    col = 0
-                    row += 1
-                    for v in stat_summary.values():
-                        worksheet.write(row, col, v)
-                        col += 1
+                    #worksheet.write(row, col, value)
+                    worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
+                    worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
+                    worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+                    worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                    worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
+                    worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
+                    worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                    worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                    worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
+                    worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
+                    worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                    worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
+                    worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
+                    worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
+                    worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                    worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                    worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
+                    worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
+                    worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
+                    worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
+                    worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                    worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
+                    workbook.close()
+
                     os.chdir(root_dir)
             else: # run all in run_list in parallel
                 print("SAMPLES RAN IN PARALLEL")
@@ -4145,12 +4183,31 @@ class loop():
                     for stat_summary in pool.map(read_aligner, run_list): #run in parallel run_list in read_aligner (script1)
                         df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                         frames.append(df_stat_summary) #frames to concatenate
-                        col = 0
-                        row += 1
-                        #run stats
-                        for v in stat_summary.values():
-                            worksheet.write(row, col, v) #stat summary to be attached in email and left in root directory
-                            col += 1
+
+                        worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
+                        worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
+                        worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+                        worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                        worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
+                        worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
+                        worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                        worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                        worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
+                        worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
+                        worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                        worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
+                        worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
+                        worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
+                        worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                        worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                        worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
+                        worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
+                        worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
+                        worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
+                        worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                        worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
+                        workbook.close()
+
                 if not args.quiet and path_found:
                     try:
                         open_check = open(summary_cumulative_file, 'a') #'a' is very important, 'w' will leave you with an empty file
@@ -4286,6 +4343,8 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 parser.add_argument('-s', '--species', action='store', dest='species', help='OPTIONAL: Used to FORCE species type <see options above>')
 
 parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', help='debug, run without loop.map for loops')
+parser.add_argument('-g', '--get', action='store_true', dest='get', help='get, get to the core functions for debugging')
+parser.add_argument('-n', '--no_annotation', action='store_true', dest='no_annotation', help='no_annotation, run without annotation')
 parser.add_argument('-a', '--all_vcf', action='store_true', dest='all_vcf', help='make tree using all VCFs')
 parser.add_argument('-e', '--elite', action='store_true', dest='elite', help='create a tree with on elite sample representation')
 parser.add_argument('-f', '--filter', action='store_true', dest='filter', help='Find possible positions to filter')

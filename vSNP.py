@@ -1607,24 +1607,24 @@ class script1():
 
                 #
 
-                stat_summary["time_stamp"] = st
-                stat_summary["sample_name"] = sample_name
-                stat_summary["self.species"] = self.species
-                stat_summary["reference_sequence_name"] = reference_sequence_name
-                stat_summary["R1size"] = R1size
-                stat_summary["R2size"] = R2size
-                stat_summary["allbam_mapped_reads"] = allbam_mapped_reads
-                stat_summary["genome_coverage"] = genome_coverage
-                stat_summary["ave_coverage"] = ave_coverage
-                stat_summary["ave_read_length"] = ave_read_length
-                stat_summary["unmapped_reads"] = unmapped_reads
-                stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
-                stat_summary["good_snp_count"] = good_snp_count
-                stat_summary["mlst_type"] = mlst_type
-                stat_summary["octalcode"] = octalcode
-                stat_summary["sbcode"] = sbcode
-                stat_summary["hexadecimal_code"] = hexcode
-                stat_summary["binarycode"] = binarycode
+                stat_summary["time_stamp", 'n/a'] = st
+                stat_summary["sample_name", 'n/a'] = sample_name
+                stat_summary["self.species", 'n/a'] = self.species
+                stat_summary["reference_sequence_name", 'n/a'] = reference_sequence_name
+                stat_summary["R1size", 'n/a'] = R1size
+                stat_summary["R2size", 'n/a'] = R2size
+                stat_summary["allbam_mapped_reads", 'n/a'] = allbam_mapped_reads
+                stat_summary["genome_coverage", 'n/a'] = genome_coverage
+                stat_summary["ave_coverage", 'n/a'] = ave_coverage
+                stat_summary["ave_read_length", 'n/a'] = ave_read_length
+                stat_summary["unmapped_reads", 'n/a'] = unmapped_reads
+                stat_summary["unmapped_assembled_contigs", 'n/a'] = abyss_contig_count
+                stat_summary["good_snp_count", 'n/a'] = good_snp_count
+                stat_summary["mlst_type", 'n/a'] = mlst_type
+                stat_summary["octalcode", 'n/a'] = octalcode
+                stat_summary["sbcode", 'n/a'] = sbcode
+                stat_summary["hexadecimal_code", 'n/a'] = hexcode
+                stat_summary["binarycode", 'n/a'] = binarycode
                 
                 ###
                 # Create a sample stats file in the sample's script1 directory
@@ -3025,10 +3025,9 @@ def read_aligner(directory):
         sample = script1(R1[0], R2[0]) #no species give, will find best
     try:
         stat_summary = sample.align_reads(read_quality_stats)
+        return(stat_summary)
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
-        return(stat_summary)
-
     except:
         return #(stat_summary)
         pass

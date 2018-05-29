@@ -4135,6 +4135,7 @@ class loop():
         total_samples = len(directory_list)
         lower_count = 0
         upper_count = 1
+        row = 1
         while lower_count < total_samples:
             upper_count = lower_count +  limited_cpu_count
             run_list = directory_list[lower_count:upper_count] #create a run list
@@ -4146,69 +4147,67 @@ class loop():
             print("Iterating directories")
             frames = []
             if args.debug_call: #run just one sample at a time to debug
-                col = 1
                 for d in run_list:
                     print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
                     stat_summary = read_aligner(d)
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
                     #worksheet.write(row, col, value)
-                    worksheet.write(col, 0, stat_summary.get('time_stamp', 'n/a'))
-                    worksheet.write(col, 1, stat_summary.get('sample_name', 'n/a'))
-                    worksheet.write(col, 2, stat_summary.get('self.species', 'n/a'))
-                    worksheet.write(col, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                    worksheet.write(col, 4, stat_summary.get('R1size', 'n/a'))
-                    worksheet.write(col, 5, stat_summary.get('R2size', 'n/a'))
-                    worksheet.write(col, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                    worksheet.write(col, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                    worksheet.write(col, 8, stat_summary.get('Q30_R1', 'n/a'))
-                    worksheet.write(col, 9, stat_summary.get('Q30_R2', 'n/a'))
-                    worksheet.write(col, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                    worksheet.write(col, 11, stat_summary.get('genome_coverage', 'n/a'))
-                    worksheet.write(col, 12, stat_summary.get('ave_coverage', 'n/a'))
-                    worksheet.write(col, 13, stat_summary.get('ave_read_length', 'n/a'))
-                    worksheet.write(col, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                    worksheet.write(col, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                    worksheet.write(col, 16, stat_summary.get('good_snp_count', 'n/a'))
-                    worksheet.write(col, 17, stat_summary.get('mlst_type', 'n/a'))
-                    worksheet.write(col, 18, stat_summary.get('octalcode', 'n/a'))
-                    worksheet.write(col, 19, stat_summary.get('sbcode', 'n/a'))
-                    worksheet.write(col, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                    worksheet.write(col, 21, stat_summary.get('binarycode', 'n/a'))
-                    col += 1
+                    worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
+                    worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
+                    worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                    worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                    worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
+                    worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
+                    worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                    worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                    worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
+                    worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
+                    worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                    worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
+                    worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
+                    worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
+                    worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                    worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                    worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
+                    worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
+                    worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
+                    worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
+                    worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                    worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
+                    row += 1
 
                     os.chdir(root_dir)
             else: # run all in run_list in parallel
                 print("SAMPLES RAN IN PARALLEL")
-                col = 1
                 with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
                     for stat_summary in pool.map(read_aligner, run_list): #run in parallel run_list in read_aligner (script1)
                         df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                         frames.append(df_stat_summary) #frames to concatenate
 
-                        worksheet.write(col, 0, stat_summary.get('time_stamp', 'n/a'))
-                        worksheet.write(col, 1, stat_summary.get('sample_name', 'n/a'))
-                        worksheet.write(col, 2, stat_summary.get('self.species', 'n/a'))
-                        worksheet.write(col, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                        worksheet.write(col, 4, stat_summary.get('R1size', 'n/a'))
-                        worksheet.write(col, 5, stat_summary.get('R2size', 'n/a'))
-                        worksheet.write(col, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                        worksheet.write(col, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                        worksheet.write(col, 8, stat_summary.get('Q30_R1', 'n/a'))
-                        worksheet.write(col, 9, stat_summary.get('Q30_R2', 'n/a'))
-                        worksheet.write(col, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                        worksheet.write(col, 11, stat_summary.get('genome_coverage', 'n/a'))
-                        worksheet.write(col, 12, stat_summary.get('ave_coverage', 'n/a'))
-                        worksheet.write(col, 13, stat_summary.get('ave_read_length', 'n/a'))
-                        worksheet.write(col, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                        worksheet.write(col, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                        worksheet.write(col, 16, stat_summary.get('good_snp_count', 'n/a'))
-                        worksheet.write(col, 17, stat_summary.get('mlst_type', 'n/a'))
-                        worksheet.write(col, 18, stat_summary.get('octalcode', 'n/a'))
-                        worksheet.write(col, 19, stat_summary.get('sbcode', 'n/a'))
-                        worksheet.write(col, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                        worksheet.write(col, 21, stat_summary.get('binarycode', 'n/a'))
-                        col += 1
+                        worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
+                        worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
+                        worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                        worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                        worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
+                        worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
+                        worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                        worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                        worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
+                        worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
+                        worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                        worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
+                        worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
+                        worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
+                        worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                        worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                        worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
+                        worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
+                        worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
+                        worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
+                        worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                        worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
+                        row += 1
 
                 if not args.quiet and path_found:
                     try:

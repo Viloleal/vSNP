@@ -573,8 +573,10 @@ class script1():
                 print("Reference being used: %s" % reference)
                 hqs = script_dependents + "/suis4HighestQualitySNPs.vcf"
                 gbk_file = None #script_dependents + "/no.gff"
-
                 email_list = "tod.p.stuber@aphis.usda.gov"
+
+                option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
+                return option_list, found
                 
             if give_option == "ovis":
                 found=True

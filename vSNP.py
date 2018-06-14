@@ -1243,7 +1243,7 @@ class script1():
                 print("using list comprehension")
                 zero_not_added = [x for x in zero_position if x not in  zero_position_found] # use list comprehension to subtract one list from the other
                 for abs_position in zero_not_added:
-                    split_line = abs_position.split('-')
+                    split_line = abs_position.rsplit('-', 1)
                     chromosome=split_line[0]
                     position=split_line[1]
                     print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line

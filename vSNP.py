@@ -4142,7 +4142,12 @@ class loop():
         upper_count = 1
         row = 1
         while lower_count < total_samples:
+<<<<<<< HEAD
             upper_count = lower_count + limited_cpu_count
+=======
+            minus_one_cpu_count = int(cpu_count - 1)
+            upper_count = lower_count + minus_one_cpu_count
+>>>>>>> d30950d... updated pool processing
             run_list = directory_list[lower_count:upper_count] #create a run list
             for i in run_list:
                 directory_list.remove(i)

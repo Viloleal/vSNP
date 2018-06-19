@@ -4141,8 +4141,7 @@ class loop():
         upper_count = 1
         row = 1
         while lower_count < total_samples:
-            minus_one_cpu_count = int(cpu_count - 1)
-            upper_count = lower_count + minus_one_cpu_count
+            upper_count = lower_count + limited_cpu_count
             run_list = directory_list[lower_count:upper_count] #create a run list
             for i in run_list:
                 directory_list.remove(i)

@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import os
 import multiprocessing
+from multiprocessing import Pool
 import gzip
 import glob
 import git
@@ -940,8 +941,8 @@ class script1():
                         sequence_list.append(seq)
             seq_string = "".join(sequence_list)
 
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=4
-                for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values()):
+            with Pool(processes=limited_cpu_count, maxtasksperchild=1) as pool:
+                for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values(), chunksize=8):
                     for k, value in spoligo_dictionary.items():
                         if v == value:
                             count_summary.update({k:count})
@@ -1101,8 +1102,8 @@ class script1():
 
             count_summary={}
 
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: 
-                for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values()):
+            with Pool(processes=limited_cpu_count, maxtasksperchild=1) as pool: 
+                for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values(), chunksize=8):
                     for k, value in oligo_dictionary.items():
                         if v == value:
                             count_summary.update({k:count})
@@ -2664,8 +2665,8 @@ class script2():
                     mal = fix_vcf(each_vcf)
                     malformed = malformed + list(mal)
             else:
-                with futures.ProcessPoolExecutor() as pool:
-                    mal = pool.map(fix_vcf, vcf_list)
+                with Pool(processes=limited_cpu_count, maxtasksperchild=1) as pool:
+                    mal = pool.map(fix_vcf, vcf_list, chunksize=8)
                     malformed = malformed + list(mal)
             print("done fixing")
 
@@ -2757,8 +2758,8 @@ class script2():
                 group_calls_list.append(group_calls)
                 malformed.append(mal)
         else:
-            with futures.ProcessPoolExecutor() as pool:
-                for dict_amb, group_calls, mal in pool.map(group_files, files):
+            with Pool(processes=limited_cpu_count, maxtasksperchild=1) as pool:
+                for dict_amb, group_calls, mal in pool.map(group_files, files, chunksize=8):
                     all_list_amb.update(dict_amb)
                     group_calls_list.append(group_calls) # make list of list
                     malformed.append(mal)
@@ -2776,7 +2777,7 @@ class script2():
                 samples_in_output.append(samples_in_fasta)
         else:
             with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for samples_in_fasta in pool.map(get_snps, directory_list):
+                for samples_in_fasta in pool.map(get_snps, directory_list, chunksize=256):
                     samples_in_output.append(samples_in_fasta)
 
         def flatten(l):
@@ -3349,8 +3350,8 @@ def get_snps(directory):
             found_positions = find_positions(i)
             all_positions.update(found_positions)
     else:
-        with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-            for found_positions in pool.map(find_positions, files):
+        with Pool(processes=limited_cpu_count, maxtasksperchild=1) as pool:
+            for found_positions in pool.map(find_positions, files, chunksize=8):
                 all_positions.update(found_positions)
 
     print ("Directory %s found positions %s" % (directory, len(all_positions)))
@@ -3403,8 +3404,8 @@ def get_snps(directory):
                 no = []
                 dd_map = dict((k, dd_map.get(k, no) + dict_map.get(k, no)) for k in keys)
         else:
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for dict_qual, dict_map in pool.map(find_filter_dict, files):
+            with Pool(processes=limited_cpu_count, maxtasksperchild=1) as pool:
+                for dict_qual, dict_map in pool.map(find_filter_dict, files, chunksize=8):
                     keys = set(dd_qual).union(dict_qual)
                     no = []
                     dd_qual = dict((k, dd_qual.get(k, no) + dict_qual.get(k, no)) for k in keys)
@@ -4141,7 +4142,8 @@ class loop():
         upper_count = 1
         row = 1
         while lower_count < total_samples:
-            upper_count = lower_count +  limited_cpu_count
+            minus_one_cpu_count = int(cpu_count - 1)
+            upper_count = lower_count + minus_one_cpu_count
             run_list = directory_list[lower_count:upper_count] #create a run list
             for i in run_list:
                 directory_list.remove(i)
@@ -4185,7 +4187,7 @@ class loop():
             else: # run all in run_list in parallel
                 print("SAMPLES RAN IN PARALLEL")
                 with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
-                    for stat_summary in pool.map(read_aligner, run_list): #run in parallel run_list in read_aligner (script1)
+                    for stat_summary in pool.map(read_aligner, run_list, chunksize=1): #run in parallel run_list in read_aligner (script1)
                         df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                         frames.append(df_stat_summary) #frames to concatenate
 
@@ -4323,7 +4325,7 @@ global cpu_count
 global limited_cpu_count
 #set cpu usage
 cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count/6)
+limited_cpu_count = int(cpu_count/2)
 if limited_cpu_count == 0:
     limited_cpu_count = 1
 

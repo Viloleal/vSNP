@@ -573,8 +573,10 @@ class script1():
                 print("Reference being used: %s" % reference)
                 hqs = script_dependents + "/suis4HighestQualitySNPs.vcf"
                 gbk_file = None #script_dependents + "/no.gff"
-
                 email_list = "tod.p.stuber@aphis.usda.gov"
+
+                option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
+                return option_list, found
                 
             if give_option == "ovis":
                 found=True
@@ -1241,7 +1243,7 @@ class script1():
                 print("using list comprehension")
                 zero_not_added = [x for x in zero_position if x not in  zero_position_found] # use list comprehension to subtract one list from the other
                 for abs_position in zero_not_added:
-                    split_line = abs_position.split('-')
+                    split_line = abs_position.rsplit('-', 1)
                     chromosome=split_line[0]
                     position=split_line[1]
                     print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line

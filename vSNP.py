@@ -2622,6 +2622,7 @@ class script2():
                     print ("making temp_hold directory")
                     os.makedirs("temp_hold") # make all_vcfs if none exists
                 for each_vcf in list_of_files:
+                    # Default 1 * 24 * 60 *60
                     time_test = time.time() - os.path.getmtime(each_vcf) < (1 * 24 * 60 *60) # 1day * (24*60*60)sec in day
                     print ("%s each_vcf" % each_vcf)
                     vcf_pretext = re.sub(r'(.*?)[._].*', r'\1', each_vcf) # ? was needed to make greedy, in my view the regex was searching right to left without it.

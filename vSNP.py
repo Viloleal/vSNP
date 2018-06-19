@@ -2601,7 +2601,8 @@ class script2():
                 vcf_found = False
                 vcf_pretext = re.sub(r'(.*?)[._].*', r'\1', each_vcf) # ? was needed to make greedy, in my view the regex was searching right to left without it.
                 vcf_pretext = vcf_pretext.rstrip()
-                myregex = re.compile(vcf_pretext + '_.*') #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
+                #Added '^' because h37 18-2397 was finding bovis 18-011018-2397, 2018-06-19
+                myregex = re.compile('^' + vcf_pretext + '_.*') #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
                 for k, v in code_dictionary.items():
                     try:
                         if myregex.search(k):

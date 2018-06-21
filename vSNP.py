@@ -949,6 +949,9 @@ class script1():
                             count_summary=OrderedDict(sorted(count_summary.items()))
             seq_string = ""
 
+            for i in fastqs: #remove unzipped fastq files to save space
+                os.remove(i)
+
             spoligo_binary_dictionary={}
             for k, v in count_summary.items():
                 if v > 4:
@@ -1005,9 +1008,6 @@ class script1():
 
             print("bovis_string: %s" % bovis_string, file=write_out)
             print("binarycode  : %s" % binarycode, file=write_out)
-
-            for i in fastqs: #remove unzipped fastq files to save space
-                os.remove(i)
                 
             write_out.close()
 

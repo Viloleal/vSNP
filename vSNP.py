@@ -941,6 +941,9 @@ class script1():
                         sequence_list.append(seq)
             seq_string = "".join(sequence_list)
 
+            for i in fastqs: #remove unzipped fastq files to save space
+                os.remove(i)
+
             with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=4
                 for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values()):
                     for k, value in spoligo_dictionary.items():
@@ -948,9 +951,6 @@ class script1():
                             count_summary.update({k:count})
                             count_summary=OrderedDict(sorted(count_summary.items()))
             seq_string = ""
-
-            for i in fastqs: #remove unzipped fastq files to save space
-                os.remove(i)
 
             spoligo_binary_dictionary={}
             for k, v in count_summary.items():

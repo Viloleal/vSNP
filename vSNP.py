@@ -879,10 +879,10 @@ class script1():
             
             print("\nFinding spoligotype pattern...\n")
             
-            fastqs = glob.glob(zips + '/*.fastq')
-            if len(fastqs) < 2:
-                script1.unzipfiles()
-            fastqs = glob.glob(zips + '/*.fastq')
+            # fastqs = glob.glob(zips + '/*.fastq')
+            # if len(fastqs) < 2:
+            #     script1.unzipfiles()
+            # fastqs = glob.glob(zips + '/*.fastq')
           
             '''spoligo spacers'''
             spoligo_dictionary = {}
@@ -941,8 +941,9 @@ class script1():
                         sequence_list.append(seq)
             seq_string = "".join(sequence_list)
 
-            for i in fastqs: #remove unzipped fastq files to save space
-                os.remove(i)
+            # for i in fastqs: #remove unzipped fastq files to save space
+            os.remove(R1unzip)
+            os.remove(R2unzip)
 
             with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=4
                 for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values()):

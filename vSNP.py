@@ -4186,7 +4186,7 @@ class loop():
             else: # run all in run_list in parallel
                 print("SAMPLES RAN IN PARALLEL")
                 with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
-                    for stat_summary in pool.map(read_aligner, run_list, chunksize=1): #run in parallel run_list in read_aligner (script1)
+                    for stat_summary in pool.map(read_aligner, run_list): #run in parallel run_list in read_aligner (script1)
                         df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                         frames.append(df_stat_summary) #frames to concatenate
 

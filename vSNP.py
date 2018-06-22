@@ -4131,9 +4131,22 @@ class loop():
             print("Bioinfo not connected")
 
         if path_found:
-            summary_cumulative_file = copy_to + '/stat_alignment_culmulative_summary' + '.xlsx'
-            summary_cumulative_file_temp = copy_to + '/stat_alignment_culmulative_summary-' + st + '-temp.xlsx'
-            temp_folder = copy_to + '/temp'
+            try:
+                summary_cumulative_file = copy_to + '/stat_alignment_culmulative_summary' + '.xlsx'
+                summary_cumulative_file_temp = copy_to + '/stat_alignment_culmulative_summary-' + st + '-temp.xlsx'
+                temp_folder = copy_to + '/temp'
+            except OSError:
+                print("\n\nBioinfo unresponsive\n\nUnable to copy to stats file\n\n")                    
+                text = "ERROR, Bioinfo unresponsive unable to copy to stats file"
+                msg = MIMEMultipart()
+                msg['From'] = "tod.p.stuber@aphis.usda.gov"
+                msg['To'] = "tod.p.stuber@aphis.usda.gov"
+                msg['Date'] = formatdate(localtime = True)
+                msg['Subject'] = "### No coverage file"
+                msg.attach(MIMEText(text))
+                smtp = smtplib.SMTP('10.10.8.12')
+                smtp.send_message(msg)
+                smtp.quit()
         ###
 
         directory_list=[]

@@ -4328,7 +4328,7 @@ global cpu_count
 global limited_cpu_count
 #set cpu usage
 cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count - 1)
+limited_cpu_count = int(cpu_count/2)
 if limited_cpu_count == 0:
     limited_cpu_count = 1
 

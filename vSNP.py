@@ -939,6 +939,9 @@ class script1():
                     # all 3, title and seq and qual, were needed
                     for title, seq, qual in FastqGeneralIterator(in_handle):
                         sequence_list.append(seq)
+                        
+            capture_spacer_sequence = re.compile(".*TTTCCGTCCC.*|.*GGGACGGAAA.*|.*TCTCGGGGTT.*|.*AACCCCGAGA.*|.*TGGGTCTGAC.*|.*GTCAGACCCA.*")
+            sequence_list = list(filter(capture_spacer_sequence.match, sequence_list))
             seq_string = "".join(sequence_list)
 
             # for i in fastqs: #remove unzipped fastq files to save space

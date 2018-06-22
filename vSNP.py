@@ -939,7 +939,7 @@ class script1():
                     # all 3, title and seq and qual, were needed
                     for title, seq, qual in FastqGeneralIterator(in_handle):
                         sequence_list.append(seq)
-                        
+
             capture_spacer_sequence = re.compile(".*TTTCCGTCCC.*|.*GGGACGGAAA.*|.*TCTCGGGGTT.*|.*AACCCCGAGA.*|.*TGGGTCTGAC.*|.*GTCAGACCCA.*")
             sequence_list = list(filter(capture_spacer_sequence.match, sequence_list))
             seq_string = "".join(sequence_list)
@@ -4320,7 +4320,7 @@ global cpu_count
 global limited_cpu_count
 #set cpu usage
 cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count/6)
+limited_cpu_count = int(cpu_count/-1)
 if limited_cpu_count == 0:
     limited_cpu_count = 1
 

@@ -4139,26 +4139,49 @@ class loop():
                 directory_list.append(f)
 
         total_samples = len(directory_list)
-        lower_count = 0
-        upper_count = 1
         row = 1
-        while lower_count < total_samples:
-            upper_count = lower_count + limited_cpu_count
-            run_list = directory_list[lower_count:upper_count] #create a run list
-            for i in run_list:
-                directory_list.remove(i)
-            total_samples = len(directory_list)
-            print(run_list)
 
-            print("Iterating directories")
-            frames = []
-            if args.debug_call: #run just one sample at a time to debug
-                for d in run_list:
-                    print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
-                    stat_summary = read_aligner(d)
+        print("Iterating directories")
+        frames = []
+        if args.debug_call: #run just one sample at a time to debug
+            for d in directory_list:
+                print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
+                stat_summary = read_aligner(d)
+                df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
+                frames.append(df_stat_summary) #frames to concatenate
+                #worksheet.write(row, col, value)
+                worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
+                worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
+                worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
+                worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
+                worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
+                worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
+                worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
+                worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
+                worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
+                worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
+                worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
+                worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
+                worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
+                worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
+                row += 1
+
+                os.chdir(root_dir)
+        else: # run all in run_list in parallel
+            print("SAMPLES RAN IN PARALLEL")
+            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
+                for stat_summary in pool.map(read_aligner, directory_list, chunksize=limited_cpu_count): #run in parallel run_list in read_aligner (script1)
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
-                    #worksheet.write(row, col, value)
+
                     worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
                     worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
                     worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
@@ -4183,63 +4206,31 @@ class loop():
                     worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
                     row += 1
 
-                    os.chdir(root_dir)
-            else: # run all in run_list in parallel
-                print("SAMPLES RAN IN PARALLEL")
-                with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
-                    for stat_summary in pool.map(read_aligner, run_list, chunksize=1): #run in parallel run_list in read_aligner (script1)
-                        df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
-                        frames.append(df_stat_summary) #frames to concatenate
-
-                        worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
-                        worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
-                        worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
-                        worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                        worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
-                        worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
-                        worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                        worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                        worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
-                        worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
-                        worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                        worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
-                        worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
-                        worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
-                        worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                        worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                        worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
-                        worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
-                        worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
-                        worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
-                        worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                        worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
-                        row += 1
-
-                if not args.quiet and path_found:
-                    try:
-                        open_check = open(summary_cumulative_file, 'a') #'a' is very important, 'w' will leave you with an empty file
-                        open_check.close()
-                        df_all=pd.read_excel(summary_cumulative_file)
-                        df_all_trans = df_all.T #indexed on column headers
-                        # save back the old and remake the working stats file
-                        shutil.move(summary_cumulative_file, '{}' .format(temp_folder + '/stat_backup' + st + '.xlsx'))
-                        sorter = list(df_all_trans.index) #list of original column order
-                        frames.insert(0, df_all_trans) #put as first item in list
-                        df_concat = pd.concat(frames, axis=1) #cat frames
-                        df_sorted = df_concat.loc[sorter] #sort based on sorter order
-                        df_sorted.T.to_excel(summary_cumulative_file, index=False) #transpose before writing to excel, numerical index not needed
-                    except BlockingIOError:
-                        sorter = list(df_stat_summary.index) #list of original column order
-                        df_concat = pd.concat(frames, axis=1) #cat frames
-                        df_sorted = df_concat.loc[sorter] #sort based on sorter order
-                        df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
-                    except OSError:
-                        sorter = list(df_stat_summary.index) #list of original column order
-                        df_concat = pd.concat(frames, axis=1) #cat frames
-                        df_sorted = df_concat.loc[sorter] #sort based on sorter order
-                        df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
-                else:
-                    print("Path to cumulative stat summary file not found")
+            if not args.quiet and path_found:
+                try:
+                    open_check = open(summary_cumulative_file, 'a') #'a' is very important, 'w' will leave you with an empty file
+                    open_check.close()
+                    df_all=pd.read_excel(summary_cumulative_file)
+                    df_all_trans = df_all.T #indexed on column headers
+                    # save back the old and remake the working stats file
+                    shutil.move(summary_cumulative_file, '{}' .format(temp_folder + '/stat_backup' + st + '.xlsx'))
+                    sorter = list(df_all_trans.index) #list of original column order
+                    frames.insert(0, df_all_trans) #put as first item in list
+                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_sorted = df_concat.loc[sorter] #sort based on sorter order
+                    df_sorted.T.to_excel(summary_cumulative_file, index=False) #transpose before writing to excel, numerical index not needed
+                except BlockingIOError:
+                    sorter = list(df_stat_summary.index) #list of original column order
+                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_sorted = df_concat.loc[sorter] #sort based on sorter order
+                    df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
+                except OSError:
+                    sorter = list(df_stat_summary.index) #list of original column order
+                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_sorted = df_concat.loc[sorter] #sort based on sorter order
+                    df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
+            else:
+                print("Path to cumulative stat summary file not found")
 
 ####send email:
         def send_email(email_list):

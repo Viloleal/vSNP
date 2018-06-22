@@ -3038,6 +3038,7 @@ def read_aligner(directory):
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
     except:
+        print("### Unable to return stat_summary")
         return #(stat_summary)
         pass
 

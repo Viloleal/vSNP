@@ -993,8 +993,8 @@ class script1():
                     elif bovis_string == binarycode:
                         found=True
                         print("Pattern found:")
-                        print("%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode))
-                        print("%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode), file=write_out)
+                        print("--%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode))
+                        print("--%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode), file=write_out)
                         print("\One mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
                         for k, v in count_summary.items():
                             print(k, v, file=write_out)
@@ -1364,7 +1364,7 @@ class script1():
                 bamout = loc_sam + "-bamout.bam"
                 
                 print("\n@@@ BWA mem")
-                os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
+                os.system("bwa mem -M -t 8 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
 
                 print("\nAdd read group and out all BAM")
                 os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile, allbam, sample_name))
@@ -1453,7 +1453,7 @@ class script1():
                 os.system("samtools index {}" .format(qualitybam))
 
                 print("\n@@@ Depth of coverage using GATK")
-                os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+                os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 4" .format(sample_reference, prebam, coverage_file))
 
                 print("\n@@@ Calling SNPs with HaplotypeCaller")
                 os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))

@@ -4259,7 +4259,7 @@ class loop():
                     print("Path to cumulative stat summary file not found")
 
 ####send email:
-        def send_email(email_list):
+        def send_email(email_list, runtime):
             text = "See attached:  "
             send_from = "tod.p.stuber@aphis.usda.gov"
             send_to = email_list
@@ -4270,7 +4270,7 @@ class loop():
             if not path_found:
                 msg['Subject'] = "###CUMULATIVE STATS NOT UPDATED - Script1 stats summary"
             else:
-                msg['Subject'] = "Script1 stats summary"
+                msg['Subject'] = "Script1 stats summary, runtime: {}" .format(runtime)
             msg.attach(MIMEText(text))
 
             part = MIMEBase('application', "octet-stream")
@@ -4288,11 +4288,14 @@ class loop():
             smtp.quit()
 
         workbook.close()
-        if args.email:
-            send_email(email_list)
 
         runtime = (datetime.now() - startTime)
         print ("\n\nruntime: %s:  \n" % runtime)
+
+        if args.email:
+            send_email(email_list, runtime)
+
+
 
 ################################################################################################################################################
 ################################################################################################################################################

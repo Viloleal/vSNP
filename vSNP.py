@@ -948,8 +948,8 @@ class script1():
             os.remove(R1unzip)
             os.remove(R2unzip)
 
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=4
-                for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values()):
+            with Pool(maxtasksperchild=4) as pool: #max_workers=4
+                for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values(), chunksize=8):
                     for k, value in spoligo_dictionary.items():
                         if v == value:
                             count_summary.update({k:count})
@@ -1106,8 +1106,8 @@ class script1():
 
             count_summary={}
 
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values()):
+            with Pool(maxtasksperchild=4) as pool:
+                for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values(), chunksize=8):
                     for k, value in oligo_dictionary.items():
                         if v == value:
                             count_summary.update({k:count})
@@ -2669,8 +2669,8 @@ class script2():
                     mal = fix_vcf(each_vcf)
                     malformed = malformed + list(mal)
             else:
-                with futures.ProcessPoolExecutor() as pool:
-                    mal = pool.map(fix_vcf, vcf_list)
+                with Pool(maxtasksperchild=4) as pool:
+                    mal = pool.map(fix_vcf, vcf_list, chunksize=8)
                     malformed = malformed + list(mal)
             print("done fixing")
 
@@ -2762,8 +2762,8 @@ class script2():
                 group_calls_list.append(group_calls)
                 malformed.append(mal)
         else:
-            with futures.ProcessPoolExecutor() as pool:
-                for dict_amb, group_calls, mal in pool.map(group_files, files):
+            with Pool(maxtasksperchild=4) as pool:
+                for dict_amb, group_calls, mal in pool.map(group_files, files, chunksize=8):
                     all_list_amb.update(dict_amb)
                     group_calls_list.append(group_calls) # make list of list
                     malformed.append(mal)
@@ -2780,8 +2780,8 @@ class script2():
                 samples_in_fasta = get_snps(i)
                 samples_in_output.append(samples_in_fasta)
         else:
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for samples_in_fasta in pool.map(get_snps, directory_list):
+            with futures.ProcessPoolExecutor() as pool:
+                for samples_in_fasta in pool.map(get_snps, directory_list, chunksize=8):
                     samples_in_output.append(samples_in_fasta)
 
         def flatten(l):
@@ -3355,8 +3355,8 @@ def get_snps(directory):
             found_positions = find_positions(i)
             all_positions.update(found_positions)
     else:
-        with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-            for found_positions in pool.map(find_positions, files):
+        with Pool(maxtasksperchild=4) as pool:
+            for found_positions in pool.map(find_positions, files, chunksize=8):
                 all_positions.update(found_positions)
 
     print ("Directory %s found positions %s" % (directory, len(all_positions)))
@@ -3409,8 +3409,8 @@ def get_snps(directory):
                 no = []
                 dd_map = dict((k, dd_map.get(k, no) + dict_map.get(k, no)) for k in keys)
         else:
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for dict_qual, dict_map in pool.map(find_filter_dict, files):
+            with Pool(maxtasksperchild=4) as pool:
+                for dict_qual, dict_map in pool.map(find_filter_dict, files, chunksize=8):
                     keys = set(dd_qual).union(dict_qual)
                     no = []
                     dd_qual = dict((k, dd_qual.get(k, no) + dict_qual.get(k, no)) for k in keys)

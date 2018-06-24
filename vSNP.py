@@ -998,22 +998,22 @@ class script1():
                         print("\One mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
                         for k, v in count_summary.items():
                             print(k, v, file=write_out)
-            if not found:
-                octal = script1.binary_to_octal(bovis_string)
-                sbcode = "N/A"
-                print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string))
-                print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string), file=write_out)
-                print("SPOLIGO SB NUMBER NOT FOUND\n")
-                print("\nSPOLIGO SB NUMBER NOT FOUND\n", file=write_out)
-                print("\nOne mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
-                
-                for k, v in count_summary.items():
-                    print(k, v, file=write_out)
 
-            print("bovis_string: %s" % bovis_string, file=write_out)
-            print("binarycode  : %s" % binarycode, file=write_out)
-                
-            write_out.close()
+                        print("bovis_string: %s" % bovis_string, file=write_out)
+                        print("binarycode  : %s" % binarycode, file=write_out)
+                            
+                if not found:
+                    octal = script1.binary_to_octal(bovis_string)
+                    sbcode = "N/A"
+                    print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string))
+                    print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string), file=write_out)
+                    print("SPOLIGO SB NUMBER NOT FOUND\n")
+                    print("\nSPOLIGO SB NUMBER NOT FOUND\n", file=write_out)
+                    print("\nOne mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
+                    for k, v in count_summary.items():
+                        print(k, v, file=write_out)
+                    
+                write_out.close()
 
         def best_reference(self):
         

@@ -984,8 +984,8 @@ class script1():
                     elif bovis_string == binarycode:
                         found=True
                         print("Pattern found:")
-                        print("--%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode))
-                        print("--%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode), file=write_out)
+                        print("%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode))
+                        print("%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode), file=write_out)
                         print("\One mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
                         for k, v in count_summary.items():
                             print(k, v, file=write_out)

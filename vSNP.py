@@ -939,7 +939,7 @@ class script1():
                 #if < 100 then search all reads, not just those with repeat regions.
                 seq_string = "".join(sequence_list)
 
-            with Pool(maxtasksperchild=4) as pool: #max_workers=4
+            with Pool(maxtasksperchild=8) as pool: #max_workers=4
                 for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values(), chunksize=8):
                     for k, value in spoligo_dictionary.items():
                         if v == value:
@@ -1097,7 +1097,7 @@ class script1():
 
             count_summary={}
 
-            with Pool(maxtasksperchild=4) as pool:
+            with Pool(maxtasksperchild=8) as pool:
                 for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values(), chunksize=8):
                     for k, value in oligo_dictionary.items():
                         if v == value:
@@ -2660,7 +2660,7 @@ class script2():
                     mal = fix_vcf(each_vcf)
                     malformed = malformed + list(mal)
             else:
-                with Pool(maxtasksperchild=4) as pool:
+                with Pool(maxtasksperchild=8) as pool:
                     mal = pool.map(fix_vcf, vcf_list, chunksize=8)
                     malformed = malformed + list(mal)
             print("done fixing")
@@ -2753,7 +2753,7 @@ class script2():
                 group_calls_list.append(group_calls)
                 malformed.append(mal)
         else:
-            with Pool(maxtasksperchild=4) as pool:
+            with Pool(maxtasksperchild=8) as pool:
                 for dict_amb, group_calls, mal in pool.map(group_files, files, chunksize=8):
                     all_list_amb.update(dict_amb)
                     group_calls_list.append(group_calls) # make list of list
@@ -3346,7 +3346,7 @@ def get_snps(directory):
             found_positions = find_positions(i)
             all_positions.update(found_positions)
     else:
-        with Pool(maxtasksperchild=4) as pool:
+        with Pool(maxtasksperchild=8) as pool:
             for found_positions in pool.map(find_positions, files, chunksize=8):
                 all_positions.update(found_positions)
 
@@ -3400,7 +3400,7 @@ def get_snps(directory):
                 no = []
                 dd_map = dict((k, dd_map.get(k, no) + dict_map.get(k, no)) for k in keys)
         else:
-            with Pool(maxtasksperchild=4) as pool:
+            with Pool(maxtasksperchild=8) as pool:
                 for dict_qual, dict_map in pool.map(find_filter_dict, files, chunksize=8):
                     keys = set(dd_qual).union(dict_qual)
                     no = []

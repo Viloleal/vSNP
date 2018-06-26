@@ -85,11 +85,6 @@ class script1():
             
             R1 = zips + "/" + R1
             R2 = zips + "/" + R2
-            
-            global R1unzip
-            global R2unzip
-            R1unzip = re.sub('\.gz', '', R1)
-            R2unzip = re.sub('\.gz', '', R2)
 
             self.species = species
             
@@ -677,8 +672,8 @@ class script1():
 
         def finding_best_ref(v):
             count=0
-            for fastq in R1unzip, R2unzip:
-                with open(fastq) as in_handle:
+            for fastq in R1, R2:
+                with gzip.open(fastq, 'rt') as in_handle:
                     # all 3, title and seq and qual, were needed
                     for title, seq, qual in FastqGeneralIterator(in_handle):
                         count += seq.count(v)
@@ -929,22 +924,20 @@ class script1():
 
             global seq_string
             sequence_list = []
-            for fastq in R1unzip, R2unzip:
-                with open(fastq) as in_handle:
+            for fastq in R1, R2:
+                with gzip.open(fastq, "rt") as in_handle:
                     # all 3, title and seq and qual, were needed
                     for title, seq, qual in FastqGeneralIterator(in_handle):
                         sequence_list.append(seq)
+
             if len(seq) > 99:
+                #Three 10bp sequences dispersed across repeat region, forward and reverse
                 capture_spacer_sequence = re.compile(".*TTTCCGTCCC.*|.*GGGACGGAAA.*|.*TCTCGGGGTT.*|.*AACCCCGAGA.*|.*TGGGTCTGAC.*|.*GTCAGACCCA.*")
                 sequence_list = list(filter(capture_spacer_sequence.match, sequence_list))
                 seq_string = "".join(sequence_list)
             else:
                 #if < 100 then search all reads, not just those with repeat regions.
                 seq_string = "".join(sequence_list)
-
-            # for i in fastqs: #remove unzipped fastq files to save space
-            os.remove(R1unzip)
-            os.remove(R2unzip)
 
             with Pool(maxtasksperchild=4) as pool: #max_workers=4
                 for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values(), chunksize=8):

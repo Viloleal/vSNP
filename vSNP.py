@@ -878,11 +878,6 @@ class script1():
         def spoligo(self):
             
             print("\nFinding spoligotype pattern...\n")
-            
-            # fastqs = glob.glob(zips + '/*.fastq')
-            # if len(fastqs) < 2:
-            #     script1.unzipfiles()
-            # fastqs = glob.glob(zips + '/*.fastq')
           
             '''spoligo spacers'''
             spoligo_dictionary = {}

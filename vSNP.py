@@ -85,11 +85,6 @@ class script1():
             
             R1 = zips + "/" + R1
             R2 = zips + "/" + R2
-            
-            global R1unzip
-            global R2unzip
-            R1unzip = re.sub('\.gz', '', R1)
-            R2unzip = re.sub('\.gz', '', R2)
 
             self.species = species
             
@@ -677,8 +672,8 @@ class script1():
 
         def finding_best_ref(v):
             count=0
-            for fastq in R1unzip, R2unzip:
-                with open(fastq) as in_handle:
+            for fastq in R1, R2:
+                with gzip.open(fastq, 'rt') as in_handle:
                     # all 3, title and seq and qual, were needed
                     for title, seq, qual in FastqGeneralIterator(in_handle):
                         count += seq.count(v)
@@ -878,11 +873,6 @@ class script1():
         def spoligo(self):
             
             print("\nFinding spoligotype pattern...\n")
-            
-            # fastqs = glob.glob(zips + '/*.fastq')
-            # if len(fastqs) < 2:
-            #     script1.unzipfiles()
-            # fastqs = glob.glob(zips + '/*.fastq')
           
             '''spoligo spacers'''
             spoligo_dictionary = {}
@@ -934,19 +924,23 @@ class script1():
 
             global seq_string
             sequence_list = []
-            for fastq in R1unzip, R2unzip:
-                with open(fastq) as in_handle:
+            for fastq in R1, R2:
+                with gzip.open(fastq, "rt") as in_handle:
                     # all 3, title and seq and qual, were needed
                     for title, seq, qual in FastqGeneralIterator(in_handle):
                         sequence_list.append(seq)
-            seq_string = "".join(sequence_list)
 
-            # for i in fastqs: #remove unzipped fastq files to save space
-            os.remove(R1unzip)
-            os.remove(R2unzip)
+            if len(seq) > 99:
+                #Three 10bp sequences dispersed across repeat region, forward and reverse
+                capture_spacer_sequence = re.compile(".*TTTCCGTCCC.*|.*GGGACGGAAA.*|.*TCTCGGGGTT.*|.*AACCCCGAGA.*|.*TGGGTCTGAC.*|.*GTCAGACCCA.*")
+                sequence_list = list(filter(capture_spacer_sequence.match, sequence_list))
+                seq_string = "".join(sequence_list)
+            else:
+                #if < 100 then search all reads, not just those with repeat regions.
+                seq_string = "".join(sequence_list)
 
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=4
-                for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values()):
+            with Pool(maxtasksperchild=8) as pool: #max_workers=4
+                for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values(), chunksize=8):
                     for k, value in spoligo_dictionary.items():
                         if v == value:
                             count_summary.update({k:count})
@@ -995,22 +989,22 @@ class script1():
                         print("\One mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
                         for k, v in count_summary.items():
                             print(k, v, file=write_out)
-            if not found:
-                octal = script1.binary_to_octal(bovis_string)
-                sbcode = "N/A"
-                print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string))
-                print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string), file=write_out)
-                print("SPOLIGO SB NUMBER NOT FOUND\n")
-                print("\nSPOLIGO SB NUMBER NOT FOUND\n", file=write_out)
-                print("\nOne mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
-                
-                for k, v in count_summary.items():
-                    print(k, v, file=write_out)
 
-            print("bovis_string: %s" % bovis_string, file=write_out)
-            print("binarycode  : %s" % binarycode, file=write_out)
-                
-            write_out.close()
+                        print("bovis_string: %s" % bovis_string, file=write_out)
+                        print("binarycode  : %s" % binarycode, file=write_out)
+
+                if not found:
+                    octal = script1.binary_to_octal(bovis_string)
+                    sbcode = "N/A"
+                    print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string))
+                    print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string), file=write_out)
+                    print("SPOLIGO SB NUMBER NOT FOUND\n")
+                    print("\nSPOLIGO SB NUMBER NOT FOUND\n", file=write_out)
+                    print("\nOne mismatch allowed spacer search against both R1 and R2 reads.\n", file=write_out)
+                    for k, v in count_summary.items():
+                        print(k, v, file=write_out)
+
+                write_out.close()
 
         def best_reference(self):
         
@@ -1103,8 +1097,8 @@ class script1():
 
             count_summary={}
 
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values()):
+            with Pool(maxtasksperchild=8) as pool:
+                for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values(), chunksize=8):
                     for k, value in oligo_dictionary.items():
                         if v == value:
                             count_summary.update({k:count})
@@ -2666,8 +2660,8 @@ class script2():
                     mal = fix_vcf(each_vcf)
                     malformed = malformed + list(mal)
             else:
-                with futures.ProcessPoolExecutor() as pool:
-                    mal = pool.map(fix_vcf, vcf_list)
+                with Pool(maxtasksperchild=8) as pool:
+                    mal = pool.map(fix_vcf, vcf_list, chunksize=8)
                     malformed = malformed + list(mal)
             print("done fixing")
 
@@ -2759,8 +2753,8 @@ class script2():
                 group_calls_list.append(group_calls)
                 malformed.append(mal)
         else:
-            with futures.ProcessPoolExecutor() as pool:
-                for dict_amb, group_calls, mal in pool.map(group_files, files):
+            with Pool(maxtasksperchild=8) as pool:
+                for dict_amb, group_calls, mal in pool.map(group_files, files, chunksize=8):
                     all_list_amb.update(dict_amb)
                     group_calls_list.append(group_calls) # make list of list
                     malformed.append(mal)
@@ -2777,8 +2771,8 @@ class script2():
                 samples_in_fasta = get_snps(i)
                 samples_in_output.append(samples_in_fasta)
         else:
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for samples_in_fasta in pool.map(get_snps, directory_list):
+            with futures.ProcessPoolExecutor() as pool:
+                for samples_in_fasta in pool.map(get_snps, directory_list, chunksize=8):
                     samples_in_output.append(samples_in_fasta)
 
         def flatten(l):
@@ -3035,6 +3029,7 @@ def read_aligner(directory):
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
     except:
+        print("### Unable to return stat_summary")
         return #(stat_summary)
         pass
 
@@ -3351,8 +3346,8 @@ def get_snps(directory):
             found_positions = find_positions(i)
             all_positions.update(found_positions)
     else:
-        with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-            for found_positions in pool.map(find_positions, files):
+        with Pool(maxtasksperchild=8) as pool:
+            for found_positions in pool.map(find_positions, files, chunksize=8):
                 all_positions.update(found_positions)
 
     print ("Directory %s found positions %s" % (directory, len(all_positions)))
@@ -3405,8 +3400,8 @@ def get_snps(directory):
                 no = []
                 dd_map = dict((k, dd_map.get(k, no) + dict_map.get(k, no)) for k in keys)
         else:
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for dict_qual, dict_map in pool.map(find_filter_dict, files):
+            with Pool(maxtasksperchild=8) as pool:
+                for dict_qual, dict_map in pool.map(find_filter_dict, files, chunksize=8):
                     keys = set(dd_qual).union(dict_qual)
                     no = []
                     dd_qual = dict((k, dd_qual.get(k, no) + dict_qual.get(k, no)) for k in keys)
@@ -4128,9 +4123,22 @@ class loop():
             print("Bioinfo not connected")
 
         if path_found:
-            summary_cumulative_file = copy_to + '/stat_alignment_culmulative_summary' + '.xlsx'
-            summary_cumulative_file_temp = copy_to + '/stat_alignment_culmulative_summary-' + st + '-temp.xlsx'
-            temp_folder = copy_to + '/temp'
+            try:
+                summary_cumulative_file = copy_to + '/stat_alignment_culmulative_summary' + '.xlsx'
+                summary_cumulative_file_temp = copy_to + '/stat_alignment_culmulative_summary-' + st + '-temp.xlsx'
+                temp_folder = copy_to + '/temp'
+            except OSError:
+                print("\n\nBioinfo unresponsive\n\nUnable to copy to stats file\n\n")
+                text = "ERROR, Bioinfo unresponsive unable to copy to stats file"
+                msg = MIMEMultipart()
+                msg['From'] = "tod.p.stuber@aphis.usda.gov"
+                msg['To'] = "tod.p.stuber@aphis.usda.gov"
+                msg['Date'] = formatdate(localtime = True)
+                msg['Subject'] = "### No coverage file"
+                msg.attach(MIMEText(text))
+                smtp = smtplib.SMTP('10.10.8.12')
+                smtp.send_message(msg)
+                smtp.quit()
         ###
 
         directory_list=[]
@@ -4158,7 +4166,7 @@ class loop():
                     stat_summary = read_aligner(d)
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
-                    #worksheet.write(row, col, value)
+
                     worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
                     worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
                     worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
@@ -4187,7 +4195,7 @@ class loop():
             else: # run all in run_list in parallel
                 print("SAMPLES RAN IN PARALLEL")
                 with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
-                    for stat_summary in pool.map(read_aligner, run_list, chunksize=1): #run in parallel run_list in read_aligner (script1)
+                    for stat_summary in pool.map(read_aligner, run_list): #run in parallel run_list in read_aligner (script1)
                         df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                         frames.append(df_stat_summary) #frames to concatenate
 
@@ -4242,7 +4250,7 @@ class loop():
                     print("Path to cumulative stat summary file not found")
 
 ####send email:
-        def send_email(email_list):
+        def send_email(email_list, runtime):
             text = "See attached:  "
             send_from = "tod.p.stuber@aphis.usda.gov"
             send_to = email_list
@@ -4253,7 +4261,7 @@ class loop():
             if not path_found:
                 msg['Subject'] = "###CUMULATIVE STATS NOT UPDATED - Script1 stats summary"
             else:
-                msg['Subject'] = "Script1 stats summary"
+                msg['Subject'] = "Script1 stats summary, runtime: {}" .format(runtime)
             msg.attach(MIMEText(text))
 
             part = MIMEBase('application', "octet-stream")
@@ -4271,11 +4279,14 @@ class loop():
             smtp.quit()
 
         workbook.close()
-        if args.email:
-            send_email(email_list)
 
         runtime = (datetime.now() - startTime)
         print ("\n\nruntime: %s:  \n" % runtime)
+
+        if args.email:
+            send_email(email_list, runtime)
+
+
 
 ################################################################################################################################################
 ################################################################################################################################################
@@ -4325,7 +4336,7 @@ global cpu_count
 global limited_cpu_count
 #set cpu usage
 cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count/6)
+limited_cpu_count = int(cpu_count/4)
 if limited_cpu_count == 0:
     limited_cpu_count = 1
 

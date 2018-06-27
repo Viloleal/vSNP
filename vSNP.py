@@ -2771,7 +2771,7 @@ class script2():
                 samples_in_fasta = get_snps(i)
                 samples_in_output.append(samples_in_fasta)
         else:
-            with Pool(maxtasksperchild=8) as pool:
+            with futures.ProcessPoolExecutor() as pool:
                 for samples_in_fasta in pool.map(get_snps, directory_list, chunksize=8):
                     samples_in_output.append(samples_in_fasta)
 

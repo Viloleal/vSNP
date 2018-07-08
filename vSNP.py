@@ -2983,24 +2983,6 @@ class script2():
 ###################map pooled##################
 ###############################################
 ###############################################
-# def mean_quality_size(fastq_file):
-#     mean_quality_list=[]
-#     mean_high = 0
-#     mean_low = 0 
-#     handle = gzip.open(fastq_file, "rt")
-#     count = 0
-#     seq_record_list = []
-#     for rec in SeqIO.parse(handle, "fastq"):
-#         # if count < 100:
-#         mean_q = int(mean(rec.letter_annotations["phred_quality"]))
-#         if mean_q >= 30:
-#             mean_high+=1
-#             seq_record_list.append(rec)
-#         else:
-#             mean_low+=1
-#         mean_quality_list.append(mean_q)
-#         count+=1
-#     return mean_quality_list, mean_high, count
 
 def get_read_mean(rec):
     mean_q = int(mean(rec.letter_annotations['phred_quality']))
@@ -3013,19 +2995,6 @@ def read_aligner(directory):
     R2 = glob.glob('*_R2*fastq.gz')
 
     ###
-    # print("R1 and R2: %s %s" % (R1, R2))
-    # print("Getting mean for {}" .format(R1[0]))
-    # mean_quality_list1, mean_high1, count1 = mean_quality_size(R1[0])
-    # print("Getting mean for {}" .format(R2[0]))
-    # mean_quality_list2, mean_high2, count2 = mean_quality_size(R2[0])
-
-    # read_quality_stats = {}
-    # read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list1))
-    # read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list2))
-    # read_quality_stats["Q30_R1"] = "{:.1%}" .format(mean_high1/count1)
-    # read_quality_stats["Q30_R2"] = "{:.1%}" .format(mean_high2/count2)
-    ###
-
     read_quality_stats = {}
     print("Getting mean for {}" .format(R1[0]))
     handle = gzip.open(R1[0], "rt")
@@ -3033,10 +3002,6 @@ def read_aligner(directory):
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
         mean_quality_list.append(mean_q)
-
-    # with Pool() as pool:
-    #     for mean_q in pool.map(get_read_mean, SeqIO.parse(handle, "fastq"), chunksize=1000):
-    #         mean_quality_list.append(mean_q)
 
     read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
@@ -3049,14 +3014,11 @@ def read_aligner(directory):
         mean_q = get_read_mean(rec)
         mean_quality_list.append(mean_q)
 
-    # with Pool() as pool:
-    #     for mean_q in pool.map(get_read_mean, SeqIO.parse(handle, "fastq"), chunksize=1000):
-    #         mean_quality_list.append(mean_q)
-
     read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
-
+    ###
+    
     if args.species:
         sample = script1(R1[0], R2[0], args.species) #force species
     else:

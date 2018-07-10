@@ -287,21 +287,11 @@ class script1():
                 script_location = home # points to home directory
                 local = home + "/dependencies" + dependents_dir # sets dependencies directory to home directory
             else:
-                try:
-                    os.makedirs(home + "/dependencies")
-                    print("\n\nDOWNLOADING DEPENDENCIES FROM GITHUB... ***\n\n")
-                    #git.Repo.clone_from("https://github.com/stuber/dependencies.git", home + "/dependencies")
-                    git.Repo.clone_from("https://github.com/USDA-VS/dependencies.git", home + "/dependencies")
-                    upload_to ="not_found"
-                    remote = "no remote"
-                    script_location = home # points to home directory
-                    local = home + "/dependencies" + dependents_dir # sets dependencies directory to home directory
-                except FileExistsError:
-                    upload_to ="not_found"
-                    remote = "no remote"
-                    script_location = home # points to home directory
-                    local = home + "/dependencies" + dependents_dir # sets dependencies directory to home directory
-                    pass
+                os.makedirs(home + "/dependencies")
+                print("\n\nDOWNLOAD DEPENDENCIES FROM GITHUB... ***\n\n")
+                print("Git pull in your home directory.  This is where vSNP will look for the dependencies")
+                print("\t\t$ cd ~; git clone https://github.com/USDA-VS/dependencies.git\n\n")
+                sys.exit(0)
                 
             print("\n####################DIRECTORY LOCATION")
             print("####################upload_to: %s" % upload_to)

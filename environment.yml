@@ -17,6 +17,7 @@ dependencies:
   - samtools
   - picard
   - abyss
-  - gatk
+  - gatk=3.8
   - raxml
   - newick_utils
+  - cairosvg

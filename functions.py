@@ -39,6 +39,7 @@ from collections import Counter
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
+import parameters
 # import concurrent.futures as cf
 
 def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
@@ -235,8 +236,20 @@ def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
 
 def read_aligner(directory_name, args):
     os.chdir(directory_name)
+    zips = directory_name + "/zips"
+    
+    os.makedirs(zips)
+    shutil.move(R1, zips)
+    shutil.move(R2, zips)
+    
+    R1 = zips + "/" + R1
+    R2 = zips + "/" + R2
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
+
+    if len(R1) > 1:
+        print("#### Check for a duplicate file in {}" .format(directory_name))
+        sys.exit(0)
 
     ###
     read_quality_stats = {}
@@ -265,11 +278,12 @@ def read_aligner(directory_name, args):
     ###
     
     if args.species:
-        sample = script1(R1[0], R2[0], args.species) #force species
+        species_selection(R1[0], R2[0], args) #force species
     else:
-        sample = script1(R1[0], R2[0]) #no species give, will find best
+        species_selection(R1[0], R2[0], args) #no species give, will find best
+
     try:
-        stat_summary = sample.align_reads(read_quality_stats)
+        stat_summary = align_reads(read_quality_stats)
         return(stat_summary)
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
@@ -278,22 +292,11 @@ def read_aligner(directory_name, args):
         return #(stat_summary)
         pass
 
-def species_selection():
-    directory = str(os.getcwd())
-    zips = directory + "/zips"
-    
-    os.makedirs(zips)
-    shutil.move(R1, zips)
-    shutil.move(R2, zips)
-    
-    R1 = zips + "/" + R1
-    R2 = zips + "/" + R2
+def species_selection(R1, R2, args):
 
-    self.species = species
-    
-    if self.species:
-        species_force = species
-        print("Sample will be ran as %s" % self.species)
+    if args.species:
+        species_force = args.species
+        print("Sample will be ran as {}" .format(species_force))
     else:
         species_force=None
 

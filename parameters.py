@@ -16,17 +16,20 @@ class parameters():
             upload_to = None
 
     def salmonella():
-        found=True
-        #Remove network path at and left of "Results"
-        dependents_dir = dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
-        upload_to, script_dependents = script1.update_directory(dependents_dir)#***FUNCTION CALL
+        return(self.dependents_dir + "fake_directory")
 
-        spoligo_db = script_dependents + "/nospoligo.txt"
-        reference = script_dependents + "/NC_016856-NC_016855.fasta"
-        print("Reference being used: %s" % reference)
-        hqs = script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf"
-        gbk_file = script_dependents + "/NC_016856-NC_016855.gbk"
-        email_list = "tod.p.stuber@aphis.usda.gov"
+
+        # found=True
+        # #Remove network path at and left of "Results"
+        # dependents_dir = dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
+        # upload_to, script_dependents = script1.update_directory(dependents_dir)#***FUNCTION CALL
+
+        # spoligo_db = script_dependents + "/nospoligo.txt"
+        # reference = script_dependents + "/NC_016856-NC_016855.fasta"
+        # print("Reference being used: %s" % reference)
+        # hqs = script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf"
+        # gbk_file = script_dependents + "/NC_016856-NC_016855.gbk"
+        # email_list = "tod.p.stuber@aphis.usda.gov"
 
 #     option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
 #     return option_list, found

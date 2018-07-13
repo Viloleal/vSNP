@@ -1,29 +1,32 @@
 import os
 
-def __init__():
-    real_path = os.path.dirname(os.path.realpath(__file__))
-    print("real path command --> {}".format(real_path))
-    real_path = real_path.split('/')
-    root_path = '/'.join(real_path[:-1])
-    dependents_dir = root_path + "/dependencies"
-    
-    if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
-        upload_to = "/bioinfo11/TStuber/Results"
-    else:
-        upload_to = None
 
-def salmonella():
-    found=True
-    #Remove network path at and left of "Results"
-    dependents_dir = dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
-    upload_to, script_dependents = script1.update_directory(dependents_dir)#***FUNCTION CALL
+class parameters():
 
-    spoligo_db = script_dependents + "/nospoligo.txt"
-    reference = script_dependents + "/NC_016856-NC_016855.fasta"
-    print("Reference being used: %s" % reference)
-    hqs = script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf"
-    gbk_file = script_dependents + "/NC_016856-NC_016855.gbk"
-    email_list = "tod.p.stuber@aphis.usda.gov"
+    def __init__(self):
+        real_path = os.path.dirname(os.path.realpath(__file__))
+        print("real path command --> {}".format(real_path))
+        real_path = real_path.split('/')
+        root_path = '/'.join(real_path[:-1])
+        dependents_dir = root_path + "/dependencies"
+        
+        if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
+            upload_to = "/bioinfo11/TStuber/Results"
+        else:
+            upload_to = None
+
+    def salmonella():
+        found=True
+        #Remove network path at and left of "Results"
+        dependents_dir = dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
+        upload_to, script_dependents = script1.update_directory(dependents_dir)#***FUNCTION CALL
+
+        spoligo_db = script_dependents + "/nospoligo.txt"
+        reference = script_dependents + "/NC_016856-NC_016855.fasta"
+        print("Reference being used: %s" % reference)
+        hqs = script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf"
+        gbk_file = script_dependents + "/NC_016856-NC_016855.gbk"
+        email_list = "tod.p.stuber@aphis.usda.gov"
 
 #     option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
 #     return option_list, found

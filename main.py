@@ -1,47 +1,13 @@
 #!/usr/bin/env python
 
-import zipfile
-import xlsxwriter
-import xlrd
-import vcf
-import time
-import sys
-import subprocess
-import smtplib,ssl
-import shutil
-import regex
-import re
-import numpy as np
-import pandas as pd
 import os
+import sys
 import multiprocessing
-from multiprocessing import Pool
-import gzip
-import glob
-import git
-import csv
 import argparse
 import textwrap
-import signal
-import json
-from collections import defaultdict
-from collections import Iterable
-from cairosvg import svg2pdf
-from numpy import mean
-from functools import partial
-from email.utils import formatdate
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
-from distutils.dir_util import copy_tree
-from datetime import datetime
-from concurrent import futures
-from collections import OrderedDict
-from collections import Counter
-from Bio.SeqIO.QualityIO import FastqGeneralIterator
-from Bio import SeqIO
+import glob
 
+import functions
 
 root_dir = str(os.getcwd())
 
@@ -70,20 +36,16 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
 #universal
 parser.add_argument('-s', '--species', action='store', dest='species', help='OPTIONAL: Used to FORCE species type <see options above>')
-
 parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', help='debug, run without loop.map for loops')
 parser.add_argument('-g', '--get', action='store_true', dest='get', help='get, get to the core functions for debugging')
 parser.add_argument('-n', '--no_annotation', action='store_true', dest='no_annotation', help='no_annotation, run without annotation')
 parser.add_argument('-a', '--all_vcf', action='store_true', dest='all_vcf', help='make tree using all VCFs')
 parser.add_argument('-e', '--elite', action='store_true', dest='elite', help='create a tree with on elite sample representation')
 parser.add_argument('-f', '--filter', action='store_true', dest='filter', help='Find possible positions to filter')
-
 parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', help='[**APHIS only**] prevent stats going to cumlative collection')
 parser.add_argument('-m', '--email', action='store', dest='email', help='[**APHIS only**, specify own SMTP address for functionality] email options: all, s, tod, jess, suelee, chris, email_address')
 parser.add_argument('-u', '--upload', action='store_true', dest='upload', help='[**APHIS only**, specify own storage for functionality] upload files to the bioinfo drive')
-
 parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.1')
-
 args = parser.parse_args()
 print ("\nSET ARGUMENTS: ")
 print (args)
@@ -114,6 +76,7 @@ all_file_types_count = len(glob.glob('*.*'))
 fastq_check = len(glob.glob('*fastq.gz'))
 vcf_check = len(glob.glob('*vcf'))
 
+# Check that there are either FASTQs or VCFs, not both
 if fastq_check > 0:
     fastq_check = True
 if vcf_check > 0:
@@ -122,6 +85,7 @@ if fastq_check and vcf_check:
     print("\n#####You have a mix of FASTQ and VCF files.  This is not allowed\n\n")
     sys.exit(0)
 
+# Check that there an equal number of both R1 and R2 reads
 if fastq_check:
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
@@ -142,14 +106,13 @@ if fastq_check:
             print("#####Incorrect use of options when running loop/script 1")
             sys.exit(0)
         else:
-            print("\n--> RUNNING LOOP/SCRIPT 1\n") #
-            loop().run_loop()
+            print("\n--> RUNNING LOOP/SCRIPT 1\n")
+            #Enter script 1 -->
+            functions.run_loop()
 elif vcf_check:
-
     if not args.species:
-        args.species = get_species()
+        args.species = functions.get_species()
         print("args.species %s" % args.species)
-
     vcfs_count = len(glob.glob('*vcf'))
     if (all_file_types_count != vcfs_count):
         print("\n#####You have more than just VCF files in your directory.  Only VCF files are allowed if running script 2\n\n")
@@ -160,12 +123,12 @@ elif vcf_check:
             sys.exit(0)
         else:
             if args.species:
-                print("\n--> RUNNING SCRIPT 2\n") #
-                script2().run_script2()
+                print("\n--> RUNNING SCRIPT 2\n")
+                #Enter script 2 -->
+                functions.run_script2()
             else:
                 print("#####Based on VCF CHROM id (reference used to build VCF) a matching species cannot be found neither was there a -s option given")
                 sys.exit(0)
-
 else:
     print ("#####Error determining file type.")
     sys.exit(0)

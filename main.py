@@ -108,7 +108,7 @@ if fastq_check:
         else:
             print("\n--> RUNNING LOOP/SCRIPT 1\n")
             #Enter script 1 -->
-            functions.run_loop()
+            functions.run_loop(root_dir, limited_cpu_count, args)
 elif vcf_check:
     if not args.species:
         args.species = functions.get_species()

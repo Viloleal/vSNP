@@ -14,6 +14,7 @@ import pandas as pd
 import os
 import multiprocessing
 from multiprocessing import Pool
+from itertools import repeat as itertools_repeat
 import gzip
 import glob
 import git
@@ -38,7 +39,9 @@ from collections import Counter
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
-def run_loop():
+# import concurrent.futures as cf
+
+def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
 
     startTime = datetime.now()
     print ("\n\n*** START ***\n")
@@ -50,15 +53,12 @@ def run_loop():
         print("\n#####Check paired files.  Unpaired files seen by odd number of counted FASTQs\n\n")
         sys.exit(0)
 
-    for file in list_of_files:
-        prefix_name=re.sub('_.*', '', file)
+    for afile in list_of_files:
+        prefix_name=re.sub('_.*', '', afile)
         print(prefix_name)
         if not os.path.exists(prefix_name):
             os.makedirs(prefix_name)
-        shutil.move(file, prefix_name)
-
-    ###
-    #Run stats
+        shutil.move(afile, prefix_name)
 
     ts = time.time()
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
@@ -85,7 +85,7 @@ def run_loop():
         path_found = True
         copy_to = "/Volumes/root/TStuber/Results/stats"
     else:
-        copy_to="no_path"
+        copy_to = None
         print("Bioinfo not connected")
 
     if path_found:
@@ -127,9 +127,9 @@ def run_loop():
         print("Iterating directories")
         frames = []
         if args.debug_call: #run just one sample at a time to debug
-            for d in run_list:
+            for directory_name in run_list:
                 print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
-                stat_summary = read_aligner(d)
+                stat_summary = read_aligner(directory_name, args)
                 df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                 frames.append(df_stat_summary) #frames to concatenate
 
@@ -159,9 +159,15 @@ def run_loop():
 
                 os.chdir(root_dir)
         else: # run all in run_list in parallel
+
             print("SAMPLES RAN IN PARALLEL")
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool: #max_workers=cpu_count
-                for stat_summary in pool.map(read_aligner, run_list): #run in parallel run_list in read_aligner (script1)
+            # itertools allows additional arguments to pass
+            # Need to speed test which why is faster
+            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
+                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(args)):
+            # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
+            #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
+
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
 
@@ -227,6 +233,51 @@ def run_loop():
         if args.email:
             send_email(email_list, runtime)
 
+def read_aligner(directory_name, args):
+    os.chdir(directory_name)
+    R1 = glob.glob('*_R1*fastq.gz')
+    R2 = glob.glob('*_R2*fastq.gz')
+
+    ###
+    read_quality_stats = {}
+    print(args)
+    print("Getting mean for {}" .format(R1[0]))
+    handle = gzip.open(R1[0], "rt")
+    mean_quality_list=[]
+    for rec in SeqIO.parse(handle, "fastq"):
+        mean_q = get_read_mean(rec)
+        mean_quality_list.append(mean_q)
+
+    read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
+    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+    read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+
+    print("Getting mean for {}" .format(R2[0]))
+    handle = gzip.open(R2[0], "rt")
+    mean_quality_list=[]
+    for rec in SeqIO.parse(handle, "fastq"):
+        mean_q = get_read_mean(rec)
+        mean_quality_list.append(mean_q)
+
+    read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
+    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    ###
+    
+    if args.species:
+        sample = script1(R1[0], R2[0], args.species) #force species
+    else:
+        sample = script1(R1[0], R2[0]) #no species give, will find best
+    try:
+        stat_summary = sample.align_reads(read_quality_stats)
+        return(stat_summary)
+        for k, v in stat_summary.items():
+            print("%s: %s" % (k, v))
+    except:
+        print("### Unable to return stat_summary")
+        return #(stat_summary)
+        pass
+
 def species_selection():
     directory = str(os.getcwd())
     zips = directory + "/zips"
@@ -247,7 +298,7 @@ def species_selection():
         species_force=None
 
     if species_force:
-        option_list, found = script1.parameters(species_force)
+        option_list, found = parameters(species_force)
         dependents_dir = option_list[0]
         reference = option_list[1]
         hqs = option_list[2]
@@ -258,10 +309,10 @@ def species_selection():
         spoligo_db = option_list[7]
 
     else:
-        best_ref_found = script1.best_reference(self)
+        best_ref_found = best_reference(self)
         self.species = best_ref_found
         try: # exit if best ref isn't in parameter list
-            option_list, found = script1.parameters(best_ref_found)
+            option_list, found = parameters(best_ref_found)
             dependents_dir = option_list[0]
             reference = option_list[1]
             hqs = option_list[2]
@@ -375,7 +426,7 @@ def mlst(self):
 
     fastqs = glob.glob(zips + '/*.fastq')
     if len(fastqs) < 2:
-        script1.unzipfiles()
+        unzipfiles()
     fastqs = glob.glob(zips + '/*.fastq')
     
     #https://bmcmicrobiol.biomedcentral.com/articles/10.1186/1471-2180-7-34
@@ -632,7 +683,7 @@ def spoligo(self):
         seq_string = "".join(sequence_list)
 
     with Pool(maxtasksperchild=4) as pool: #max_workers=4
-        for v, count in pool.map(script1.finding_sp, spoligo_dictionary.values(), chunksize=8):
+        for v, count in pool.map(finding_sp, spoligo_dictionary.values(), chunksize=8):
             for k, value in spoligo_dictionary.items():
                 if v == value:
                     count_summary.update({k:count})
@@ -651,7 +702,7 @@ def spoligo(self):
     for v in spoligo_binary_dictionary.values():
         spoligo_binary_list.append(v)
     bovis_string=''.join(str(e) for e in spoligo_binary_list) #bovis_string correct
-    hexadecimal = script1.binary_to_hex(bovis_string)
+    hexadecimal = binary_to_hex(bovis_string)
     
     write_out = open("spoligo.txt", 'w')
     
@@ -686,7 +737,7 @@ def spoligo(self):
                 print("binarycode  : %s" % binarycode, file=write_out)
 
         if not found:
-            octal = script1.binary_to_octal(bovis_string)
+            octal = binary_to_octal(bovis_string)
             sbcode = "N/A"
             print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string))
             print("%s %s %s %s" % (octal, sbcode, hexadecimal, bovis_string), file=write_out)
@@ -704,7 +755,7 @@ def best_reference(self):
     
     fastqs = glob.glob(zips + '/*.fastq')
     if len(fastqs) < 2:
-        script1.unzipfiles()
+        unzipfiles()
     fastqs = glob.glob(zips + '/*.fastq')
 
     print("\nFinding the best reference\n")
@@ -790,7 +841,7 @@ def best_reference(self):
     count_summary={}
 
     with Pool(maxtasksperchild=4) as pool:
-        for v, count in pool.map(script1.finding_best_ref, oligo_dictionary.values(), chunksize=8):
+        for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), chunksize=8):
             for k, value in oligo_dictionary.items():
                 if v == value:
                     count_summary.update({k:count})
@@ -971,8 +1022,8 @@ def align_reads(self, read_quality_stats):
     if self.species == "NO FINDINGS":
         read_base = os.path.basename(R1)
         sample_name=re.sub('_.*', '', read_base)
-        R1size = script1.sizeof_fmt(os.path.getsize(R1))
-        R2size = script1.sizeof_fmt(os.path.getsize(R2))
+        R1size = sizeof_fmt(os.path.getsize(R1))
+        R2size = sizeof_fmt(os.path.getsize(R2))
         stat_summary = {}
         stat_summary["time_stamp"] = st
         stat_summary["sample_name"] = sample_name
@@ -1143,7 +1194,7 @@ def align_reads(self, read_quality_stats):
 
         try: 
             print("Getting Zero Coverage...\n")
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = script1.add_zero_coverage(coverage_file, hapall, loc_sam)
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
         except FileNotFoundError:
             print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
             text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
@@ -1170,7 +1221,7 @@ def align_reads(self, read_quality_stats):
                 with open(zero_coverage_vcf) as vfile:
                     print("finding annotations...\n")
                     for line in vfile:
-                        annotated_line = script1.get_annotations(line, in_annotation_as_dict)
+                        annotated_line = get_annotations(line, in_annotation_as_dict)
                         print("%s" % annotated_line, file=write_out)
                 write_out.close()
             except AttributeError:
@@ -1240,8 +1291,8 @@ def align_reads(self, read_quality_stats):
         ave_coverage = "{:0.1f}".format(float(ave_coverage))
         print("average_coverage: %s" % ave_coverage)
 
-        R1size = script1.sizeof_fmt(os.path.getsize(R1))
-        R2size = script1.sizeof_fmt(os.path.getsize(R2))
+        R1size = sizeof_fmt(os.path.getsize(R1))
+        R2size = sizeof_fmt(os.path.getsize(R2))
 
         try:
             with open("mlst.txt") as f:
@@ -2002,50 +2053,6 @@ def get_filters(excelinfile, filter_files):
 def get_read_mean(rec):
     mean_q = int(mean(rec.letter_annotations['phred_quality']))
     return mean_q
-
-def read_aligner(directory):
-    os.chdir(directory)
-    R1 = glob.glob('*_R1*fastq.gz')
-    R2 = glob.glob('*_R2*fastq.gz')
-
-    ###
-    read_quality_stats = {}
-    print("Getting mean for {}" .format(R1[0]))
-    handle = gzip.open(R1[0], "rt")
-    mean_quality_list=[]
-    for rec in SeqIO.parse(handle, "fastq"):
-        mean_q = get_read_mean(rec)
-        mean_quality_list.append(mean_q)
-
-    read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
-    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
-
-    print("Getting mean for {}" .format(R2[0]))
-    handle = gzip.open(R2[0], "rt")
-    mean_quality_list=[]
-    for rec in SeqIO.parse(handle, "fastq"):
-        mean_q = get_read_mean(rec)
-        mean_quality_list.append(mean_q)
-
-    read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
-    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
-    ###
-    
-    if args.species:
-        sample = script1(R1[0], R2[0], args.species) #force species
-    else:
-        sample = script1(R1[0], R2[0]) #no species give, will find best
-    try:
-        stat_summary = sample.align_reads(read_quality_stats)
-        return(stat_summary)
-        for k, v in stat_summary.items():
-            print("%s: %s" % (k, v))
-    except:
-        print("### Unable to return stat_summary")
-        return #(stat_summary)
-        pass
 
 def fix_vcf(each_vcf):
     mal = []

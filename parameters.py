@@ -1,38 +1,60 @@
 import os
 
+class Get_Specie_Parameters_Step1():
 
-class parameters():
-
-    def __init__(self):
+    def __init(self):
         real_path = os.path.dirname(os.path.realpath(__file__))
         print("real path command --> {}".format(real_path))
         real_path = real_path.split('/')
         root_path = '/'.join(real_path[:-1])
-        dependents_dir = root_path + "/dependencies"
-        
+        self.dependents_dir = root_path + "/dependencies"
         if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
-            upload_to = "/bioinfo11/TStuber/Results"
+            self.upload_to = "/bioinfo11/TStuber/Results"
         else:
-            upload_to = None
+            self.upload_to = None
 
-    def salmonella():
-        return(self.dependents_dir + "fake_directory")
+    def choose(self, species_selection):
+        if species_selection == "salmonella":
+            parameters = {
+                "script_dependents": self.dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1",
+                "upload_to": self.upload_to,
+                "spoligo_db": None,
+                "reference": self.dependents_dir + "/NC_016856-NC_016855.fasta", 
+                "hqs": self.dependents_dir + "/NC_016856-NC_016855HighestQualitySNPs.vcf",
+                "gbk_file": self.dependents_dir + "/NC_016856-NC_016855.gbk",
+            }
+            return(parameters)
+
+        elif species_selection == "ab1":
+            parameters = {
+                "script_dependents": self.dependents_dir + "/brucella/abortus1/script_dependents/script1",
+                "upload_to": self.upload_to,
+                "spoligo_db": None,
+                "reference": self.dependents_dir + "/NC_00693c.fasta", 
+                "hqs": self.dependents_dir + "/NC_00693cHighestQualitySNPs.vcf",
+                "gbk_file": self.dependents_dir + "/NC_006932-NC_006933.gbk",
+            }
+            return(parameters)
+
+        else:
+            parameters = None
+            return(parameters)
+            
 
 
-        # found=True
-        # #Remove network path at and left of "Results"
-        # dependents_dir = dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
-        # upload_to, script_dependents = script1.update_directory(dependents_dir)#***FUNCTION CALL
 
-        # spoligo_db = script_dependents + "/nospoligo.txt"
-        # reference = script_dependents + "/NC_016856-NC_016855.fasta"
-        # print("Reference being used: %s" % reference)
-        # hqs = script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf"
-        # gbk_file = script_dependents + "/NC_016856-NC_016855.gbk"
-        # email_list = "tod.p.stuber@aphis.usda.gov"
+    # def template(self):
+    #     parameters = {
+    #         "script_dependents": self.dependents_dir + "",
+    #         "upload_to": self.upload_to,
+    #         "spoligo_db": None,
+    #         "reference": self.dependents_dir + "", 
+    #         "hqs": self.dependents_dir + "",
+    #         "gbk_file": self.dependents_dir + "",
+    #     }
+    #     return(parameters)
 
-#     option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
-#     return option_list, found
+
 
 #     if give_option == "ab1":
 #         found=True

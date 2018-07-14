@@ -49,6 +49,7 @@ parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.1
 args = parser.parse_args()
 print ("\nSET ARGUMENTS: ")
 print (args)
+args_options = args
 print("")
 
 if args.email == "all":
@@ -108,7 +109,7 @@ if fastq_check:
         else:
             print("\n--> RUNNING LOOP/SCRIPT 1\n")
             #Enter script 1 -->
-            functions.run_loop(root_dir, limited_cpu_count, args)
+            functions.run_loop(root_dir, limited_cpu_count, args_options)
 elif vcf_check:
     if not args.species:
         args.species = functions.get_species()

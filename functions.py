@@ -39,14 +39,15 @@ from collections import Counter
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
-import parameters
+from parameters import Get_Specie_Parameters_Step1
 # import concurrent.futures as cf
 
-def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
+def run_loop(root_dir, limited_cpu_count, args_options): #calls read_aligner
 
     startTime = datetime.now()
-    print ("\n\n*** START ***\n")
-    print ("Start time: %s" % startTime)
+    ts = time.time()
+    st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
+    print ("Start time: %s" % st)
 
     list_of_files = glob.glob('*gz')
     list_len = len(list_of_files)
@@ -60,9 +61,6 @@ def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
         if not os.path.exists(prefix_name):
             os.makedirs(prefix_name)
         shutil.move(afile, prefix_name)
-
-    ts = time.time()
-    st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
 
     #placed at root
     #get file opened and give a header
@@ -127,10 +125,10 @@ def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
 
         print("Iterating directories")
         frames = []
-        if args.debug_call: #run just one sample at a time to debug
+        if args_options.debug_call: #run just one sample at a time to debug
             for directory_name in run_list:
                 print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
-                stat_summary = read_aligner(directory_name, args)
+                stat_summary = read_aligner(directory_name, args_options)
                 df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                 frames.append(df_stat_summary) #frames to concatenate
 
@@ -165,7 +163,7 @@ def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
             # itertools allows additional arguments to pass
             # Need to speed test which why is faster
             with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(args)):
+                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(args_options)):
             # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
             #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
 
@@ -196,7 +194,7 @@ def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
                     worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
                     row += 1
 
-            if not args.quiet and path_found:
+            if not args_options.quiet and path_found:
                 try:
                     open_check = open(summary_cumulative_file, 'a') #'a' is very important, 'w' will leave you with an empty file
                     open_check.close()
@@ -231,19 +229,13 @@ def run_loop(root_dir, limited_cpu_count, args): #calls read_aligner
         runtime = (datetime.now() - startTime)
         print ("\n\nruntime: %s:  \n" % runtime)
 
-        if args.email:
+        if args_options.email:
             send_email(email_list, runtime)
 
-def read_aligner(directory_name, args):
+def read_aligner(directory_name, args_options):
     os.chdir(directory_name)
     zips = directory_name + "/zips"
     
-    os.makedirs(zips)
-    shutil.move(R1, zips)
-    shutil.move(R2, zips)
-    
-    R1 = zips + "/" + R1
-    R2 = zips + "/" + R2
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
 
@@ -251,11 +243,18 @@ def read_aligner(directory_name, args):
         print("#### Check for a duplicate file in {}" .format(directory_name))
         sys.exit(0)
 
+    os.makedirs(zips)
+    shutil.move(R1[0], zips)
+    shutil.move(R2[0], zips)
+    
+    R1 = zips + "/" + R1[0]
+    R2 = zips + "/" + R2[0]
+    fastq_list = [R1, R2]
+
     ###
     read_quality_stats = {}
-    print(args)
-    print("Getting mean for {}" .format(R1[0]))
-    handle = gzip.open(R1[0], "rt")
+    print("Getting mean for {}" .format(R1))
+    handle = gzip.open(R1, "rt")
     mean_quality_list=[]
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
@@ -265,8 +264,8 @@ def read_aligner(directory_name, args):
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
 
-    print("Getting mean for {}" .format(R2[0]))
-    handle = gzip.open(R2[0], "rt")
+    print("Getting mean for {}" .format(R2))
+    handle = gzip.open(R2, "rt")
     mean_quality_list=[]
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
@@ -276,11 +275,8 @@ def read_aligner(directory_name, args):
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
     ###
-    
-    if args.species:
-        species_selection(R1[0], R2[0], args) #force species
-    else:
-        species_selection(R1[0], R2[0], args) #no species give, will find best
+
+    species_selection(fastq_list, args_options, directory_name) #force species
 
     try:
         stat_summary = align_reads(read_quality_stats)
@@ -292,57 +288,192 @@ def read_aligner(directory_name, args):
         return #(stat_summary)
         pass
 
-def species_selection(R1, R2, args):
+def species_selection(fastq_list, args_options, directory_name):
+    all_parameters = Get_Specie_Parameters_Step1()
 
-    if args.species:
-        species_force = args.species
+    if args_options.species:
+        species_force = args_options.species
         print("Sample will be ran as {}" .format(species_force))
+        specie_para_dict = all_parameters.choose(species_force)
     else:
-        species_force=None
+        best_ref_found = best_reference(fastq_list)
+        print("Sample will be ran as {}" .format(best_ref_found))
+        specie_para_dict = all_parameters.choose(best_ref_found)
+        if specie_para_dict is None:
+            print("No specie parameters found for: \n\t{} \n\t{}" .format(fastq_list[0], fastq_list[1]))
+            sys.exit(0)
+    shutil.copy2(specie_para_dict["reference"], directory_name)
+    shutil.copy2(specie_para_dict["hqs"], directory_name)
 
-    if species_force:
-        option_list, found = parameters(species_force)
-        dependents_dir = option_list[0]
-        reference = option_list[1]
-        hqs = option_list[2]
-        gbk_file = option_list[3]
-        email_list = option_list[4]
-        upload_to = option_list[5]
-        script_dependents = option_list[6]
-        spoligo_db = option_list[7]
+def best_reference(fastq_list):
 
-    else:
-        best_ref_found = best_reference(self)
-        self.species = best_ref_found
-        try: # exit if best ref isn't in parameter list
-            option_list, found = parameters(best_ref_found)
-            dependents_dir = option_list[0]
-            reference = option_list[1]
-            hqs = option_list[2]
-            gbk_file = option_list[3]
-            email_list = option_list[4]
-            upload_to = option_list[5]
-            script_dependents = option_list[6]
-            spoligo_db = option_list[7]
-        except UnboundLocalError:
-            print("\nprinted options list:")
-            for i in option_list:
-                print(i)
-            print("\nNo parameters options for best_ref_found or species given - UnboundLocalError\n\n")
-            self.species = "NO FINDINGS"
-        except TypeError:
-            print("No parameters options for best_ref_found or species given - TypeError")
-            self.species = "NO FINDINGS"
-    try:
-        shutil.copy2(reference, directory)
-        shutil.copy2(hqs, directory)
-    except FileNotFoundError:
-        time.sleep(5)
-        shutil.copy2(reference, directory)
-        shutil.copy2(hqs, directory)
-    except NameError:
-        print("No parameters options for best_ref_found or species given - NameError")
-        self.species = "NO FINDINGS"
+    '''Use oligos to determine species.  Most often if the absents of a single oligo from a set specific for either brucella or bovis will confer species type.  Some species will the absents of more than one oligo.  Oligo findings are translated to binary patterns.'''
+    print("\nFinding the best reference\n")
+    
+    write_out = open("best_reference.txt", 'w')
+    
+    '''get the species'''
+    oligo_dictionary = {}
+    oligo_dictionary["01_ab1"] = "AATTGTCGGATAGCCTGGCGATAACGACGC"
+    oligo_dictionary["02_ab3"] = "CACACGCGGGCCGGAACTGCCGCAAATGAC"
+    oligo_dictionary["03_ab5"] = "GCTGAAGCGGCAGACCGGCAGAACGAATAT"
+    oligo_dictionary["04_mel"] = "TGTCGCGCGTCAAGCGGCGTGAAATCTCTG"
+    oligo_dictionary["05_suis1"] = "TGCGTTGCCGTGAAGCTTAATTCGGCTGAT"
+    oligo_dictionary["06_suis2"] = "GGCAATCATGCGCAGGGCTTTGCATTCGTC"
+    oligo_dictionary["07_suis3"] = "CAAGGCAGATGCACATAATCCGGCGACCCG"
+    oligo_dictionary["08_ceti1"] = "GTGAATATAGGGTGAATTGATCTTCAGCCG"
+    oligo_dictionary["09_ceti2"] = "TTACAAGCAGGCCTATGAGCGCGGCGTGAA"
+    oligo_dictionary["10_canis4"] = "CTGCTACATAAAGCACCCGGCGACCGAGTT"
+    oligo_dictionary["11_canis"] = "ATCGTTTTGCGGCATATCGCTGACCACAGC"
+    oligo_dictionary["12_ovis"] = "CACTCAATCTTCTCTACGGGCGTGGTATCC"
+    oligo_dictionary["13_ether2"] = "CGAAATCGTGGTGAAGGACGGGACCGAACC"
+    oligo_dictionary["14_63B1"] = "CCTGTTTAAAAGAATCGTCGGAACCGCTCT"
+    oligo_dictionary["15_16M0"] = "TCCCGCCGCCATGCCGCCGAAAGTCGCCGT"
+    oligo_dictionary["16_mel1b"] = "TCTGTCCAAACCCCGTGACCGAACAATAGA" #added 2018-01-30
+    oligo_dictionary["17_tb157"] = "CTCTTCGTATACCGTTCCGTCGTCACCATGGTCCT"
+    oligo_dictionary["18_tb7"] = "TCACGCAGCCAACGATATTCGTGTACCGCGACGGT"
+    oligo_dictionary["19_tbbov"] = "CTGGGCGACCCGGCCGACCTGCACACCGCGCATCA"
+    oligo_dictionary["20_tb5"] = "CCGTGGTGGCGTATCGGGCCCCTGGATCGCGCCCT"
+    oligo_dictionary["21_tb2"] = "ATGTCTGCGTAAAGAAGTTCCATGTCCGGGAAGTA"
+    oligo_dictionary["22_tb3"] = "GAAGACCTTGATGCCGATCTGGGTGTCGATCTTGA"
+    oligo_dictionary["23_tb4"] = "CGGTGTTGAAGGGTCCCCCGTTCCAGAAGCCGGTG"
+    oligo_dictionary["24_tb6"] = "ACGGTGATTCGGGTGGTCGACACCGATGGTTCAGA"
+    oligo_dictionary["25_para"] = "CCTTTCTTGAAGGGTGTTCG"
+    oligo_dictionary["26_para2"] = "CGAACACCCTTCAAGAAAGG"
+
+    brucella_identifications = {}
+    brucella_identifications["1111111111111111"] = "odd" #Unexpected findings
+    brucella_identifications["0111111111111111"] = "ab1" #Brucella abortus bv 1, 2 or 4
+    brucella_identifications["1011111111111111"] = "ab3" #Brucella abortus bv 3
+    brucella_identifications["1101111111111111"] = "ab1" #Brucella abortus bv 5, 6 or 9
+    brucella_identifications["1110111111111101"] = "mel1"
+    brucella_identifications["0000010101101101"] = "mel1"
+    brucella_identifications["1110111111111100"] = "mel1b" #added 2018-01-30
+    brucella_identifications["0000010101101100"] = "mel1b" #added 2018-01-30
+    brucella_identifications["1110111111111011"] = "mel2"
+    brucella_identifications["0000010101101001"] = "mel2"
+    brucella_identifications["0100010101101001"] = "mel2"
+    brucella_identifications["1110011111101011"] = "mel2"
+    brucella_identifications["1110111111110111"] = "mel3"
+    brucella_identifications["1110011111100111"] = "mel3"
+    brucella_identifications["1111011111111111"] = "suis1"
+    brucella_identifications["1111101111111111"] = "suis2"
+    brucella_identifications["1111110111111101"] = "suis3"
+    brucella_identifications["1111111011111111"] = "ceti1"
+    brucella_identifications["1111111001111111"] = "ceti1"
+    brucella_identifications["1111111101111111"] = "ceti2"
+    brucella_identifications["1111111110111101"] = "suis4"
+    brucella_identifications["1111111110011101"] = "canis"
+    brucella_identifications["1111111111101111"] = "ovis"
+
+    bovis_identifications = {}
+    bovis_identifications["11101111"] = "h37" #tb1
+    bovis_identifications["11101101"] = "h37" #tb1
+    bovis_identifications["01100111"] = "h37" #tb2
+    bovis_identifications["01101011"] = "h37" #tb3
+    bovis_identifications["11101011"] = "h37" #tb3
+    bovis_identifications["01101111"] = "h37" #tb4a
+    bovis_identifications["01101101"] = "h37" #tb4b
+    bovis_identifications["11101101"] = "h37" #tb4b
+    bovis_identifications["01101111"] = "h37" #tb4b
+    bovis_identifications["11111111"] = "h37" #tb5
+    bovis_identifications["11001111"] = "h37" #tb6
+    bovis_identifications["10101110"] = "h37" #tb7
+    bovis_identifications["11001110"] = "af" #bovis
+    bovis_identifications["11011110"] = "af" #bovis
+    bovis_identifications["11001100"] = "af" #bovis
+    
+    para_identifications = {}
+    para_identifications["1"] = "para"
+    para_identifications["01"] = "para"
+    para_identifications["11"] = "para"
+
+    count_summary={}
+
+    with Pool(maxtasksperchild=4) as pool:
+        for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), itertools_repeat(fastq_list), chunksize=8):
+            for k, value in oligo_dictionary.items():
+                if v == value:
+                    count_summary.update({k:count})
+                    count_summary=OrderedDict(sorted(count_summary.items()))
+
+    count_list=[]
+    for v in count_summary.values():
+        count_list.append(v)
+    brucella_sum=sum(count_list[:16])
+    bovis_sum=sum(count_list[16:24])
+    para_sum=sum(count_list[24:])
+    
+    print("Best reference Brucella counts:", file=write_out)
+    for i in count_list[:16]:
+        print(i,  end=',', file=write_out)
+        
+    print("\nBest reference TB counts:", file=write_out)
+    for i in count_list[16:24]:
+        print(i,  end=',', file=write_out)
+
+    print("\nBest reference Para counts:", file=write_out)
+    for i in count_list[24:]:
+        print(i,  end=',', file=write_out)
+
+    #Binary dictionary
+    binary_dictionary={}
+    for k, v in count_summary.items():
+        if v > 1:
+            binary_dictionary.update({k:1})
+        else:
+            binary_dictionary.update({k:0})
+    binary_dictionary=OrderedDict(sorted(binary_dictionary.items()))
+
+    binary_list=[]
+    for v in binary_dictionary.values():
+        binary_list.append(v)
+    brucella_binary=binary_list[:16]
+    brucella_string=''.join(str(e) for e in brucella_binary)
+    bovis_binary=binary_list[16:24]
+    bovis_string=''.join(str(e) for e in bovis_binary)
+    para_binary=binary_list[24:]
+    para_string=''.join(str(e) for e in para_binary)
+
+    if brucella_sum > 3:
+        if brucella_string in brucella_identifications:
+            print("Brucella group, species %s" % brucella_identifications[brucella_string])
+            print("\n\nBrucella group, species %s" % brucella_identifications[brucella_string], file=write_out)
+            return(brucella_identifications[brucella_string]) # return to set parameters
+        else:
+            print("Brucella group, but no match")
+            print("\n\nBrucella group, but no match", file=write_out)
+    elif bovis_sum > 3:
+        if bovis_string in bovis_identifications:
+            print("TB group, species %s" % bovis_identifications[bovis_string])
+            print("\n\nTB group, species %s" % bovis_identifications[bovis_string], file=write_out)
+            return(bovis_identifications[bovis_string]) # return to set parameters
+        else:
+            print("TB group, but no match")
+            print("\n\nTB group, but no match", file=write_out)
+    elif para_sum >= 1:
+        if para_string in para_identifications:
+            print("Para group")
+            print("\n\nPara group", file=write_out)
+            return("para") # return to set parameters
+        else:
+            print("No match")
+            print("\n\nNo match", file=write_out)
+
+    write_out.close()
+    
+    for i in fastqs: #remove unzipped fastq files to save space
+        os.remove(i)
+
+def finding_best_ref(v, fastq_list):
+    count=0
+    for fastq in fastq_list:
+        with gzip.open(fastq, 'rt') as in_handle:
+            # all 3, title and seq and qual, were needed
+            for title, seq, qual in FastqGeneralIterator(in_handle):
+                count += seq.count(v)
+    return(v, count)
+
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','K','M','G','T','P','E','Z']:
@@ -415,15 +546,6 @@ def get_annotations(line, in_annotation_as_dict):
             split_line[2] = annotation_found
             annotated_line = "\t".join(split_line)
             return(annotated_line)
-
-def finding_best_ref(v):
-    count=0
-    for fastq in R1, R2:
-        with gzip.open(fastq, 'rt') as in_handle:
-            # all 3, title and seq and qual, were needed
-            for title, seq, qual in FastqGeneralIterator(in_handle):
-                count += seq.count(v)
-    return(v, count)
 
 def mlst(self):
 
@@ -751,172 +873,6 @@ def spoligo(self):
                 print(k, v, file=write_out)
 
         write_out.close()
-
-def best_reference(self):
-
-    '''Use oligos to determine species.  Most often if the absents of a single oligo from a set specific for either brucella or bovis will confer species type.  Some species will the absents of more than one oligo.  Oligo findings are translated to binary patterns.'''
-    
-    fastqs = glob.glob(zips + '/*.fastq')
-    if len(fastqs) < 2:
-        unzipfiles()
-    fastqs = glob.glob(zips + '/*.fastq')
-
-    print("\nFinding the best reference\n")
-    
-    write_out = open("best_reference.txt", 'w')
-    
-    '''get the species'''
-    oligo_dictionary = {}
-    oligo_dictionary["01_ab1"] = "AATTGTCGGATAGCCTGGCGATAACGACGC"
-    oligo_dictionary["02_ab3"] = "CACACGCGGGCCGGAACTGCCGCAAATGAC"
-    oligo_dictionary["03_ab5"] = "GCTGAAGCGGCAGACCGGCAGAACGAATAT"
-    oligo_dictionary["04_mel"] = "TGTCGCGCGTCAAGCGGCGTGAAATCTCTG"
-    oligo_dictionary["05_suis1"] = "TGCGTTGCCGTGAAGCTTAATTCGGCTGAT"
-    oligo_dictionary["06_suis2"] = "GGCAATCATGCGCAGGGCTTTGCATTCGTC"
-    oligo_dictionary["07_suis3"] = "CAAGGCAGATGCACATAATCCGGCGACCCG"
-    oligo_dictionary["08_ceti1"] = "GTGAATATAGGGTGAATTGATCTTCAGCCG"
-    oligo_dictionary["09_ceti2"] = "TTACAAGCAGGCCTATGAGCGCGGCGTGAA"
-    oligo_dictionary["10_canis4"] = "CTGCTACATAAAGCACCCGGCGACCGAGTT"
-    oligo_dictionary["11_canis"] = "ATCGTTTTGCGGCATATCGCTGACCACAGC"
-    oligo_dictionary["12_ovis"] = "CACTCAATCTTCTCTACGGGCGTGGTATCC"
-    oligo_dictionary["13_ether2"] = "CGAAATCGTGGTGAAGGACGGGACCGAACC"
-    oligo_dictionary["14_63B1"] = "CCTGTTTAAAAGAATCGTCGGAACCGCTCT"
-    oligo_dictionary["15_16M0"] = "TCCCGCCGCCATGCCGCCGAAAGTCGCCGT"
-    oligo_dictionary["16_mel1b"] = "TCTGTCCAAACCCCGTGACCGAACAATAGA" #added 2018-01-30
-    oligo_dictionary["17_tb157"] = "CTCTTCGTATACCGTTCCGTCGTCACCATGGTCCT"
-    oligo_dictionary["18_tb7"] = "TCACGCAGCCAACGATATTCGTGTACCGCGACGGT"
-    oligo_dictionary["19_tbbov"] = "CTGGGCGACCCGGCCGACCTGCACACCGCGCATCA"
-    oligo_dictionary["20_tb5"] = "CCGTGGTGGCGTATCGGGCCCCTGGATCGCGCCCT"
-    oligo_dictionary["21_tb2"] = "ATGTCTGCGTAAAGAAGTTCCATGTCCGGGAAGTA"
-    oligo_dictionary["22_tb3"] = "GAAGACCTTGATGCCGATCTGGGTGTCGATCTTGA"
-    oligo_dictionary["23_tb4"] = "CGGTGTTGAAGGGTCCCCCGTTCCAGAAGCCGGTG"
-    oligo_dictionary["24_tb6"] = "ACGGTGATTCGGGTGGTCGACACCGATGGTTCAGA"
-    oligo_dictionary["25_para"] = "CCTTTCTTGAAGGGTGTTCG"
-    oligo_dictionary["26_para2"] = "CGAACACCCTTCAAGAAAGG"
-
-    brucella_identifications = {}
-    brucella_identifications["1111111111111111"] = "odd" #Unexpected findings
-    brucella_identifications["0111111111111111"] = "ab1" #Brucella abortus bv 1, 2 or 4
-    brucella_identifications["1011111111111111"] = "ab3" #Brucella abortus bv 3
-    brucella_identifications["1101111111111111"] = "ab1" #Brucella abortus bv 5, 6 or 9
-    brucella_identifications["1110111111111101"] = "mel1"
-    brucella_identifications["0000010101101101"] = "mel1"
-    brucella_identifications["1110111111111100"] = "mel1b" #added 2018-01-30
-    brucella_identifications["0000010101101100"] = "mel1b" #added 2018-01-30
-    brucella_identifications["1110111111111011"] = "mel2"
-    brucella_identifications["0000010101101001"] = "mel2"
-    brucella_identifications["0100010101101001"] = "mel2"
-    brucella_identifications["1110011111101011"] = "mel2"
-    brucella_identifications["1110111111110111"] = "mel3"
-    brucella_identifications["1110011111100111"] = "mel3"
-    brucella_identifications["1111011111111111"] = "suis1"
-    brucella_identifications["1111101111111111"] = "suis2"
-    brucella_identifications["1111110111111101"] = "suis3"
-    brucella_identifications["1111111011111111"] = "ceti1"
-    brucella_identifications["1111111001111111"] = "ceti1"
-    brucella_identifications["1111111101111111"] = "ceti2"
-    brucella_identifications["1111111110111101"] = "suis4"
-    brucella_identifications["1111111110011101"] = "canis"
-    brucella_identifications["1111111111101111"] = "ovis"
-
-    bovis_identifications = {}
-    bovis_identifications["11101111"] = "h37" #tb1
-    bovis_identifications["11101101"] = "h37" #tb1
-    bovis_identifications["01100111"] = "h37" #tb2
-    bovis_identifications["01101011"] = "h37" #tb3
-    bovis_identifications["11101011"] = "h37" #tb3
-    bovis_identifications["01101111"] = "h37" #tb4a
-    bovis_identifications["01101101"] = "h37" #tb4b
-    bovis_identifications["11101101"] = "h37" #tb4b
-    bovis_identifications["01101111"] = "h37" #tb4b
-    bovis_identifications["11111111"] = "h37" #tb5
-    bovis_identifications["11001111"] = "h37" #tb6
-    bovis_identifications["10101110"] = "h37" #tb7
-    bovis_identifications["11001110"] = "af" #bovis
-    bovis_identifications["11011110"] = "af" #bovis
-    bovis_identifications["11001100"] = "af" #bovis
-    
-    para_identifications = {}
-    para_identifications["1"] = "para"
-    para_identifications["01"] = "para"
-    para_identifications["11"] = "para"
-
-    count_summary={}
-
-    with Pool(maxtasksperchild=4) as pool:
-        for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), chunksize=8):
-            for k, value in oligo_dictionary.items():
-                if v == value:
-                    count_summary.update({k:count})
-                    count_summary=OrderedDict(sorted(count_summary.items()))
-
-    count_list=[]
-    for v in count_summary.values():
-        count_list.append(v)
-    brucella_sum=sum(count_list[:16])
-    bovis_sum=sum(count_list[16:24])
-    para_sum=sum(count_list[24:])
-    
-    print("Best reference Brucella counts:", file=write_out)
-    for i in count_list[:16]:
-        print(i,  end=',', file=write_out)
-        
-    print("\nBest reference TB counts:", file=write_out)
-    for i in count_list[16:24]:
-        print(i,  end=',', file=write_out)
-
-    print("\nBest reference Para counts:", file=write_out)
-    for i in count_list[24:]:
-        print(i,  end=',', file=write_out)
-
-    #Binary dictionary
-    binary_dictionary={}
-    for k, v in count_summary.items():
-        if v > 1:
-            binary_dictionary.update({k:1})
-        else:
-            binary_dictionary.update({k:0})
-    binary_dictionary=OrderedDict(sorted(binary_dictionary.items()))
-
-    binary_list=[]
-    for v in binary_dictionary.values():
-        binary_list.append(v)
-    brucella_binary=binary_list[:16]
-    brucella_string=''.join(str(e) for e in brucella_binary)
-    bovis_binary=binary_list[16:24]
-    bovis_string=''.join(str(e) for e in bovis_binary)
-    para_binary=binary_list[24:]
-    para_string=''.join(str(e) for e in para_binary)
-
-    if brucella_sum > 3:
-        if brucella_string in brucella_identifications:
-            print("Brucella group, species %s" % brucella_identifications[brucella_string])
-            print("\n\nBrucella group, species %s" % brucella_identifications[brucella_string], file=write_out)
-            return(brucella_identifications[brucella_string]) # return to set parameters
-        else:
-            print("Brucella group, but no match")
-            print("\n\nBrucella group, but no match", file=write_out)
-    elif bovis_sum > 3:
-        if bovis_string in bovis_identifications:
-            print("TB group, species %s" % bovis_identifications[bovis_string])
-            print("\n\nTB group, species %s" % bovis_identifications[bovis_string], file=write_out)
-            return(bovis_identifications[bovis_string]) # return to set parameters
-        else:
-            print("TB group, but no match")
-            print("\n\nTB group, but no match", file=write_out)
-    elif para_sum >= 1:
-        if para_string in para_identifications:
-            print("Para group")
-            print("\n\nPara group", file=write_out)
-            return("para") # return to set parameters
-        else:
-            print("No match")
-            print("\n\nNo match", file=write_out)
-
-    write_out.close()
-    
-    for i in fastqs: #remove unzipped fastq files to save space
-        os.remove(i)
 
 def add_zero_coverage(coverage_in, vcf_file, loc_sam):
     
@@ -1923,107 +1879,6 @@ def change_names():
     print("done fixing")
 
     return names_not_changed
-
-def update_directory(dependents_dir):
-    home = os.path.expanduser("~")
-    print("dependents_dir %s\n" % dependents_dir)
-    
-    if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
-        upload_to = "/bioinfo11/TStuber/Results"
-        remote="/bioinfo11/TStuber/Results" + dependents_dir
-        if os.path.isdir("/Users/Shared"):
-            dep_path = "/Users/Shared"
-            dir_split = dependents_dir.split('/')[1:]
-            for i in dir_split:
-                dep_path += '/' + i
-                if not os.path.exists(dep_path):
-                    os.makedirs(dep_path)
-            local = "/Users/Shared" + dependents_dir
-            if os.path.isdir(local):
-                try:
-                    shutil.rmtree(local)
-                    shutil.copytree(remote, local)
-                except:
-                    pass
-        elif os.path.isdir("/home/shared"):
-            dep_path = "/home/shared"
-            dir_split = dependents_dir.split('/')[1:]
-            for i in dir_split:
-                dep_path += '/' + i
-                if not os.path.exists(dep_path):
-                    os.makedirs(dep_path)
-            local = "/home/shared" + dependents_dir
-            if os.path.isdir(local):
-                try:
-                    shutil.rmtree(local)
-                    shutil.copytree(remote, local)
-                except:
-                    pass
-
-    elif os.path.isdir("/Volumes/root/TStuber/Results"): #check bioinfo from Mac
-        upload_to = "/Volumes/root/TStuber/Results"
-        remote="/Volumes/root/TStuber/Results" + dependents_dir
-        if os.path.isdir("/Users/Shared"):
-            dep_path = "/Users/Shared"
-            dir_split = dependents_dir.split('/')[1:]
-            for i in dir_split:
-                dep_path += '/' + i
-                if not os.path.exists(dep_path):
-                    os.makedirs(dep_path)
-            local = "/Users/Shared" + dependents_dir
-            if os.path.isdir(local):
-                try:
-                    shutil.rmtree(local)
-                    shutil.copytree(remote, local)
-                except:
-                    pass
-        elif os.path.isdir("/home/shared"):
-            dep_path = "/home/shared"
-            dir_split = dependents_dir.split('/')[1:]
-            for i in dir_split:
-                dep_path += '/' + i
-                if not os.path.exists(dep_path):
-                    os.makedirs(dep_path)
-            local = "/home/shared" + dependents_dir
-            if os.path.isdir(local):
-                try:
-                    shutil.rmtree(local)
-                    shutil.copytree(remote, local)
-                except:
-                    pass
-
-    #### PLACE A CHECK FROM GITHUB
-    
-    elif os.path.isdir("/Users/Shared" + dependents_dir): #check local copy in shared folder
-        upload_to ="not_found"
-        remote = "not_found"
-        local = "/Users/Shared" + dependents_dir
-            
-    elif os.path.isdir("/home/shared" + dependents_dir): #check local copy in shared folder
-        upload_to ="not_found"
-        remote = "not_found"
-        local = "/home/shared" + dependents_dir
-    
-    elif os.path.isdir(home + "/dependencies" + dependents_dir): #check local copy from Git repo
-        upload_to ="not_found"
-        remote = "no remote"
-        script_location = home # points to home directory
-        local = home + "/dependencies" + dependents_dir # sets dependencies directory to home directory
-    else:
-        os.makedirs(home + "/dependencies")
-        print("\n\nDOWNLOADING DEPENDENCIES FROM GITHUB... ***\n\n")
-        git.Repo.clone_from("https://github.com/USDA-VS/dependencies.git", home + "/dependencies")
-        upload_to ="not_found"
-        remote = "no remote"
-        script_location = home # points to home directory
-        local = home + "/dependencies" + dependents_dir # sets dependencies directory to home directory
-    
-    print("\n####################DIRECTORY LOCATION")
-    print("####################upload_to: %s" % upload_to)
-    print("####################remote: %s" % remote)
-    print("####################local: %s\n" % local)
-    
-    return upload_to, remote, local
 
 def get_filters(excelinfile, filter_files):
     for i in glob.glob(filter_files + "/*"):

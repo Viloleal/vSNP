@@ -252,28 +252,28 @@ def read_aligner(directory_name, args_options):
     fastq_list = [R1, R2]
 
     ###
-    read_quality_stats = {}
-    print("Getting mean for {}" .format(R1))
-    handle = gzip.open(R1, "rt")
-    mean_quality_list=[]
-    for rec in SeqIO.parse(handle, "fastq"):
-        mean_q = get_read_mean(rec)
-        mean_quality_list.append(mean_q)
+    # read_quality_stats = {}
+    # print("Getting mean for {}" .format(R1))
+    # handle = gzip.open(R1, "rt")
+    # mean_quality_list=[]
+    # for rec in SeqIO.parse(handle, "fastq"):
+    #     mean_q = get_read_mean(rec)
+    #     mean_quality_list.append(mean_q)
 
-    read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
-    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    # read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
+    # thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+    # read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
 
-    print("Getting mean for {}" .format(R2))
-    handle = gzip.open(R2, "rt")
-    mean_quality_list=[]
-    for rec in SeqIO.parse(handle, "fastq"):
-        mean_q = get_read_mean(rec)
-        mean_quality_list.append(mean_q)
+    # print("Getting mean for {}" .format(R2))
+    # handle = gzip.open(R2, "rt")
+    # mean_quality_list=[]
+    # for rec in SeqIO.parse(handle, "fastq"):
+    #     mean_q = get_read_mean(rec)
+    #     mean_quality_list.append(mean_q)
 
-    read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
-    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    # read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
+    # thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+    # read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
     ###
 
     species_selection(fastq_list, args_options, directory_name) #force species
@@ -292,9 +292,9 @@ def species_selection(fastq_list, args_options, directory_name):
     all_parameters = Get_Specie_Parameters_Step1()
 
     if args_options.species:
-        species_force = args_options.species
-        print("Sample will be ran as {}" .format(species_force))
-        specie_para_dict = all_parameters.choose(species_force)
+        species_selection = args_options.species
+        print("Sample will be ran as {}" .format(species_selection))
+        specie_para_dict = all_parameters.choose(species_selection)
     else:
         best_ref_found = best_reference(fastq_list)
         print("Sample will be ran as {}" .format(best_ref_found))
@@ -390,8 +390,8 @@ def best_reference(fastq_list):
 
     count_summary={}
 
-    with Pool(maxtasksperchild=4) as pool:
-        for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), itertools_repeat(fastq_list), chunksize=8):
+    with futures.ProcessPoolExecutor(max_workers=4) as pool:
+        for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), itertools_repeat(fastq_list)):
             for k, value in oligo_dictionary.items():
                 if v == value:
                     count_summary.update({k:count})
@@ -461,9 +461,6 @@ def best_reference(fastq_list):
             print("\n\nNo match", file=write_out)
 
     write_out.close()
-    
-    for i in fastqs: #remove unzipped fastq files to save space
-        os.remove(i)
 
 def finding_best_ref(v, fastq_list):
     count=0

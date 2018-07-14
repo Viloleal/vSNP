@@ -2,11 +2,11 @@ import os
 
 class Get_Specie_Parameters_Step1():
 
-    def __init(self):
+    def __init__(self):
         real_path = os.path.dirname(os.path.realpath(__file__))
         print("real path command --> {}".format(real_path))
         real_path = real_path.split('/')
-        root_path = '/'.join(real_path[:-1])
+        root_path = '/'.join(real_path)
         self.dependents_dir = root_path + "/dependencies"
         if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
             self.upload_to = "/bioinfo11/TStuber/Results"
@@ -15,24 +15,26 @@ class Get_Specie_Parameters_Step1():
 
     def choose(self, species_selection):
         if species_selection == "salmonella":
+            script_dependents = self.dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
             parameters = {
-                "script_dependents": self.dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1",
+                "script_dependents": script_dependents,
                 "upload_to": self.upload_to,
                 "spoligo_db": None,
-                "reference": self.dependents_dir + "/NC_016856-NC_016855.fasta", 
-                "hqs": self.dependents_dir + "/NC_016856-NC_016855HighestQualitySNPs.vcf",
-                "gbk_file": self.dependents_dir + "/NC_016856-NC_016855.gbk",
+                "reference": script_dependents + "/NC_016856-NC_016855.fasta", 
+                "hqs": script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf",
+                "gbk_file": script_dependents + "/NC_016856-NC_016855.gbk",
             }
             return(parameters)
 
         elif species_selection == "ab1":
+            script_dependents = self.dependents_dir + "/brucella/abortus1/script_dependents/script1"
             parameters = {
-                "script_dependents": self.dependents_dir + "/brucella/abortus1/script_dependents/script1",
+                "script_dependents": script_dependents,
                 "upload_to": self.upload_to,
                 "spoligo_db": None,
-                "reference": self.dependents_dir + "/NC_00693c.fasta", 
-                "hqs": self.dependents_dir + "/NC_00693cHighestQualitySNPs.vcf",
-                "gbk_file": self.dependents_dir + "/NC_006932-NC_006933.gbk",
+                "reference": script_dependents + "/NC_00693c.fasta", 
+                "hqs": script_dependents + "/NC_00693cHighestQualitySNPs.vcf",
+                "gbk_file": script_dependents + "/NC_006932-NC_006933.gbk",
             }
             return(parameters)
 

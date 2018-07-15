@@ -23,6 +23,7 @@ class Get_Specie_Parameters_Step1():
                 "reference": script_dependents + "/NC_016856-NC_016855.fasta", 
                 "hqs": script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf",
                 "gbk_file": script_dependents + "/NC_016856-NC_016855.gbk",
+                "species": "salmonella",
             }
             return(parameters)
 
@@ -35,6 +36,7 @@ class Get_Specie_Parameters_Step1():
                 "reference": script_dependents + "/NC_00693c.fasta", 
                 "hqs": script_dependents + "/NC_00693cHighestQualitySNPs.vcf",
                 "gbk_file": script_dependents + "/NC_006932-NC_006933.gbk",
+                "species": "ab1",
             }
             return(parameters)
 

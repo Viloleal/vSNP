@@ -126,9 +126,9 @@ def run_loop(root_dir, limited_cpu_count, args_options): #calls read_aligner
         print("Iterating directories")
         frames = []
         if args_options.debug_call: #run just one sample at a time to debug
-            for directory_name in run_list:
+            for sample_name in run_list:
                 print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
-                stat_summary = read_aligner(directory_name, args_options)
+                stat_summary = read_aligner(sample_name, args_options)
                 df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                 frames.append(df_stat_summary) #frames to concatenate
 
@@ -232,54 +232,53 @@ def run_loop(root_dir, limited_cpu_count, args_options): #calls read_aligner
         if args_options.email:
             send_email(email_list, runtime)
 
-def read_aligner(directory_name, args_options):
-    os.chdir(directory_name)
-    zips = directory_name + "/zips"
+def read_aligner(sample_name, args_options):
+    os.chdir(sample_name)
     
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
 
     if len(R1) > 1:
-        print("#### Check for a duplicate file in {}" .format(directory_name))
+        print("#### Check for a duplicate file in {}" .format(sample_name))
         sys.exit(0)
 
-    os.makedirs(zips)
-    shutil.move(R1[0], zips)
-    shutil.move(R2[0], zips)
+    os.makedirs("zips")
+    shutil.move(R1[0], "zips")
+    shutil.move(R2[0], "zips")
     
     R1 = zips + "/" + R1[0]
     R2 = zips + "/" + R2[0]
     fastq_list = [R1, R2]
 
     ###
-    # read_quality_stats = {}
-    # print("Getting mean for {}" .format(R1))
-    # handle = gzip.open(R1, "rt")
-    # mean_quality_list=[]
-    # for rec in SeqIO.parse(handle, "fastq"):
-    #     mean_q = get_read_mean(rec)
-    #     mean_quality_list.append(mean_q)
+    read_quality_stats = {}
+    print("Getting mean for {}" .format(R1))
+    handle = gzip.open(R1, "rt")
+    mean_quality_list=[]
+    for rec in SeqIO.parse(handle, "fastq"):
+        mean_q = get_read_mean(rec)
+        mean_quality_list.append(mean_q)
 
-    # read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
-    # thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    # read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
+    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+    read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
 
-    # print("Getting mean for {}" .format(R2))
-    # handle = gzip.open(R2, "rt")
-    # mean_quality_list=[]
-    # for rec in SeqIO.parse(handle, "fastq"):
-    #     mean_q = get_read_mean(rec)
-    #     mean_quality_list.append(mean_q)
+    print("Getting mean for {}" .format(R2))
+    handle = gzip.open(R2, "rt")
+    mean_quality_list=[]
+    for rec in SeqIO.parse(handle, "fastq"):
+        mean_q = get_read_mean(rec)
+        mean_quality_list.append(mean_q)
 
-    # read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
-    # thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    # read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
+    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
     ###
 
-    species_selection(fastq_list, args_options, directory_name) #force species
+    specie_para_dict = species_selection(read_quality_stats, args_options, sample_name, R1, R2) #force species
 
     try:
-        stat_summary = align_reads(read_quality_stats)
+        stat_summary = align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2)
         return(stat_summary)
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
@@ -288,7 +287,7 @@ def read_aligner(directory_name, args_options):
         return #(stat_summary)
         pass
 
-def species_selection(fastq_list, args_options, directory_name):
+def species_selection(read_quality_stats, args_options, sample_name, R1, R2):
     all_parameters = Get_Specie_Parameters_Step1()
 
     if args_options.species:
@@ -296,14 +295,18 @@ def species_selection(fastq_list, args_options, directory_name):
         print("Sample will be ran as {}" .format(species_selection))
         specie_para_dict = all_parameters.choose(species_selection)
     else:
-        best_ref_found = best_reference(fastq_list)
+        best_ref_found = best_reference([R1, R2])
         print("Sample will be ran as {}" .format(best_ref_found))
         specie_para_dict = all_parameters.choose(best_ref_found)
-        if specie_para_dict is None:
-            print("No specie parameters found for: \n\t{} \n\t{}" .format(fastq_list[0], fastq_list[1]))
+        if specie_para_dict:
+            shutil.copy2(specie_para_dict["reference"], sample_name)
+            shutil.copy2(specie_para_dict["hqs"], sample_name)
+        elif specie_para_dict is None:
+            print("No specie parameters found for: \n\t{} \n\t{}" .format(R1, R2))
+        else:
+            print("### See species_selection function")
             sys.exit(0)
-    shutil.copy2(specie_para_dict["reference"], directory_name)
-    shutil.copy2(specie_para_dict["hqs"], directory_name)
+    return specie_para_dict
 
 def best_reference(fastq_list):
 
@@ -471,6 +474,401 @@ def finding_best_ref(v, fastq_list):
                 count += seq.count(v)
     return(v, count)
 
+def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
+    working_directory = os.getcwd()
+    print("Working on: {}" .format(working_directory))
+    ts = time.time()
+    st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
+
+    if specie_para_dict["species"] == "NO FINDINGS":
+        read_base = os.path.basename(R1)
+        sample_name=re.sub('_.*', '', read_base)
+        R1size = sizeof_fmt(os.path.getsize(R1))
+        R2size = sizeof_fmt(os.path.getsize(R2))
+        stat_summary = {}
+        stat_summary["time_stamp"] = st
+        stat_summary["sample_name"] = sample_name
+        stat_summary["self.species"] = "NOT_FOUND"
+        stat_summary["reference_sequence_name"] = "N/A"
+        stat_summary["R1size"] = R1size
+        stat_summary["R2size"] = R2size
+        stat_summary["allbam_mapped_reads"] = "CHECK SAMPLE *****************************************"
+        stat_summary = {**stat_summary, **read_quality_stats}
+        return(stat_summary)
+    else:
+        startTime = datetime.now()
+        print ("\n\n*** START ***\n")
+        print ("Start time: %s" % startTime)
+
+        read_base = os.path.basename(R1)
+        sample_name=re.sub('_.*', '', read_base)
+        
+        print("species: %s" % specie_para_dict["species"])
+        if specie_para_dict["species"] in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
+            print("Brucella")
+            mlst(R1, R2, working_directory, sample_name)
+        elif specie_para_dict["species"] in ["h37", "af"]: #removed bovis
+            print("TB")
+            spoligo(R1, R2)
+        
+        os.chdir(working_directory)
+        sample_reference=glob.glob(working_directory + '/*fasta')
+        hqs=glob.glob(working_directory + '/*vcf')
+
+        print ("reference: %s" % sample_reference)
+        ref=re.sub('\.fasta', '', os.path.basename(sample_reference[0]))
+        if len(sample_reference) != 1:
+            print("### ERROR reference not available or too many")
+            sys.exit(0)
+        if len(hqs) != 1:
+            print("### ERROR high quality snps not available or too many")
+            sys.exit(0)
+        sample_reference=sample_reference[0]
+        hqs=hqs[0]
+        
+        print ("--")
+        print("sample name: %s" % sample_name)
+        print("sample reference: %s" % sample_reference)
+        print("Read 1: %s" % R1)
+        print("Read 2: %s\n" % R2)
+        print("working_directory: %s" % working_directory)
+        print ("--")
+
+        loc_sam = working_directory + "/" + sample_name
+        
+        os.system("samtools faidx {}" .format(sample_reference))
+        os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
+        os.system("bwa index {}" .format(sample_reference))
+        samfile = loc_sam + ".sam"
+        allbam = loc_sam + "-all.bam"
+        unmapsam = loc_sam + "-unmapped.sam"
+        unmapped_read1 = loc_sam + "-unmapped_R1.fastq"
+        unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
+        unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
+        unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
+        abyss_out = loc_sam + "-unmapped_contigs.fasta"
+        sortedbam = loc_sam + "-sorted.bam"
+        nodupbam = loc_sam + "-nodup.bam"
+        metrics = loc_sam + "-metrics.txt"
+        indel_realigner = loc_sam + ".intervals"
+        realignedbam = loc_sam + "-realigned.bam"
+        recal_group = loc_sam + "-recal_group"
+        prebam=loc_sam + "-pre.bam"
+        qualitybam = loc_sam + "-quality.bam"
+        coverage_file=loc_sam + "-coverage.txt"
+        hapall = loc_sam + "-hapall.vcf"
+        bamout = loc_sam + "-bamout.bam"
+        
+        print("\n@@@ BWA mem")
+        os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
+
+        print("\nAdd read group and out all BAM")
+        os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile, allbam, sample_name))
+        os.system("samtools index {}" .format(allbam))
+
+        print("\n@@@ Samtools unmapped")
+        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, allbam, unmapsam))
+
+        print("\n@@@ Unmapped to FASTQ")
+        os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
+        
+        print("\n@@@ Abyss")
+        abyss_contig_count=0
+
+        os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
+        try:
+            with open(abyss_out) as f:
+                for line in f:
+                    abyss_contig_count += line.count(">")
+        except FileNotFoundError:
+            abyss_contig_count = 0
+
+        print("\n@@@ Sort BAM")
+        os.system("samtools sort {} -o {}" .format(allbam, sortedbam))
+        os.system("samtools index {}" .format(sortedbam))
+        
+        print("\n@@@ Write stats to file")
+        stat_file = "stat_align.txt"
+        stat_out = open(stat_file, 'w')
+        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
+        stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
+        stat_out.close()
+
+        with open(stat_file) as f:
+            first_line = f.readline()
+            first_line = first_line.rstrip()
+            first_line=re.split(':|\t', first_line)
+            reference_sequence_name = str(first_line[0])
+            sequence_length = "{:,}".format(int(first_line[1]))
+            allbam_mapped_reads = int(first_line[2])
+            allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
+
+        print("\n@@@ Find duplicate reads")
+        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
+        os.system("samtools index {}" .format(nodupbam))
+        
+        duplicate_stat_file = "duplicate_stat_align.txt"
+        duplicate_stat_out = open(duplicate_stat_file, 'w')
+        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
+        duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
+        duplicate_stat_out.close()
+        with open(duplicate_stat_file) as f:
+            dup_first_line = f.readline()
+            dup_first_line = dup_first_line.rstrip()
+            dup_first_line=re.split(':|\t', dup_first_line)
+            nodupbam_mapped_reads = int(dup_first_line[2])
+            nodupbam_unmapped_reads = int(dup_first_line[3])
+        try:
+            unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
+        except:
+            unmapped_reads = "none_found"
+        
+        allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
+        print(unmapped_reads)
+
+        print("\n@@@  Realign indels")
+        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        if not os.path.isfile(indel_realigner):
+            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+        if not os.path.isfile(realignedbam):
+            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+
+        print("\n@@@ Base recalibration")
+        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+        if not os.path.isfile(realignedbam):
+            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+
+        print("\n@@@ Make realigned BAM")
+        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
+        if not os.path.isfile(prebam):
+            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
+
+        print("\n@@@ Clip reads")
+        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
+        os.system("samtools index {}" .format(qualitybam))
+
+        print("\n@@@ Depth of coverage using GATK")
+        os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+
+        print("\n@@@ Calling SNPs with HaplotypeCaller")
+        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+
+        try: 
+            print("Getting Zero Coverage...\n")
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
+        except FileNotFoundError:
+            print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
+            text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
+            msg = MIMEMultipart()
+            msg['From'] = "tod.p.stuber@aphis.usda.gov"
+            msg['To'] = "tod.p.stuber@aphis.usda.gov"
+            msg['Date'] = formatdate(localtime = True)
+            msg['Subject'] = "### No coverage file"
+            msg.attach(MIMEText(text))
+            smtp = smtplib.SMTP('10.10.8.12')
+            smtp.send_message(msg)
+            smtp.quit()
+
+            # process_id = os.getpid()
+            # os.kill(process_id, signal.SIGKILL)
+
+        ###
+        if specie_para_dict["gbk_file"] is not "None" and not args_options.no_annotation:
+            try:
+                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(gbk_file, "genbank"))
+                annotated_vcf = loc_sam + "-annotated.vcf"
+                write_out=open(annotated_vcf, 'w')
+                
+                with open(zero_coverage_vcf) as vfile:
+                    print("finding annotations...\n")
+                    for line in vfile:
+                        annotated_line = get_annotations(line, in_annotation_as_dict)
+                        print("%s" % annotated_line, file=write_out)
+                write_out.close()
+            except AttributeError:
+                pass
+
+        os.remove(coverage_file)
+        os.remove(samfile)
+        os.remove(allbam)
+        os.remove(nodupbam)
+        os.remove(nodupbam + ".bai")
+        os.remove(unmapsam)
+        os.remove(sortedbam)
+        os.remove(sortedbam + ".bai")
+        os.remove(indel_realigner)
+        os.remove(realignedbam)
+        os.remove(loc_sam + "-realigned.bai")
+        os.remove(recal_group)
+        os.remove(prebam)
+        os.remove(loc_sam + "-pre.bai")
+        os.remove(hqs)
+        os.remove(hqs + ".idx")
+        os.remove(sample_reference + ".amb")
+        os.remove(sample_reference + ".ann")
+        os.remove(sample_reference + ".bwt")
+        os.remove(sample_reference + ".pac")
+        os.remove(sample_reference + ".sa")
+        os.remove(ref + ".dict")
+        os.remove(duplicate_stat_file)
+        os.remove(stat_file)
+
+        unmapped = working_directory + "/unmapped"
+        os.makedirs(unmapped)
+
+        newZip = zipfile.ZipFile(unmapped_read1gz, 'w')
+        newZip.write(unmapped_read1, compress_type=zipfile.ZIP_DEFLATED)
+        newZip.close()
+        newZip = zipfile.ZipFile(unmapped_read2gz, 'w')
+        newZip.write(unmapped_read2, compress_type=zipfile.ZIP_DEFLATED)
+        newZip.close()
+        os.remove(unmapped_read1)
+        os.remove(unmapped_read2)
+        
+        try:
+            shutil.move(unmapped_read1gz, unmapped)
+            shutil.move(unmapped_read2gz, unmapped)
+            shutil.move(abyss_out, unmapped)
+        except FileNotFoundError:
+            pass
+        
+        alignment = working_directory + "/alignment"
+        os.makedirs(alignment)
+        movefiles = glob.glob('*-*')
+        for i in movefiles:
+            shutil.move(i, alignment)
+        try:
+            shutil.move(sample_reference, alignment)
+            shutil.move(sample_reference + ".fai", alignment)
+        except shutil.Error:
+            pass
+        except FileNotFoundError:
+            pass
+        except FileExistsError:
+            pass
+
+        runtime = (datetime.now() - startTime)
+        print ("\n\nruntime: %s:  \n" % runtime)
+        ave_coverage = "{:0.1f}".format(float(ave_coverage))
+        print("average_coverage: %s" % ave_coverage)
+
+        R1size = sizeof_fmt(os.path.getsize(R1))
+        R2size = sizeof_fmt(os.path.getsize(R2))
+
+        try:
+            with open("mlst.txt") as f:
+                first_line = f.readline()
+                mlst_type = first_line.rstrip()
+                first_line = first_line.split()
+                mlst_type = first_line[1:]
+                mlst_type = '-'.join(mlst_type)
+        except FileNotFoundError:
+            mlst_type = "N/A"
+
+        try:
+            with open("spoligo.txt") as f:
+                first_line = f.readline()
+                first_line = first_line.rstrip()
+                first_line = first_line.split()
+                octalcode = first_line[0]
+                sbcode = first_line[1]
+                hexcode = first_line[2]
+                binarycode = first_line[3]
+        except FileNotFoundError:
+            octalcode = "N/A"
+            sbcode = "N/A"
+            hexcode = "N/A"
+            binarycode = "N/A"
+            
+        #Capture program versions for step 1
+        try:
+            verison_out = open("version_capture.txt", 'w')
+            print(os.popen('conda list bwa | grep -v "^#"; \
+                conda list abyss | grep -v "^#"; \
+                conda list picard | grep -v "^#"; \
+                conda list samtools | grep -v "^#"; \
+                conda list gatk | grep -v "^#"; \
+                conda list biopython | grep -v "^#"').read(), file=verison_out)
+            verison_out.close()
+        except:
+            pass
+
+        sequence_count = 0
+        total_length = 0
+        with gzip.open(R2, "rt") as handle:
+            for r in SeqIO.parse(handle, "fastq"):
+                total_length = total_length + len(r.seq)
+                sequence_count = sequence_count + 1
+        ave_read_length = total_length/sequence_count
+        ave_read_length = "{:0.1f}".format(float(ave_read_length))
+
+        ts = time.time()
+        st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
+
+        stat_summary={}
+
+        #
+
+        stat_summary["time_stamp"] = st
+        stat_summary["sample_name"] = sample_name
+        stat_summary["self.species"] = specie_para_dict["species"]
+        stat_summary["reference_sequence_name"] = reference_sequence_name
+        stat_summary["R1size"] = R1size
+        stat_summary["R2size"] = R2size
+        stat_summary["allbam_mapped_reads"] = allbam_mapped_reads
+        stat_summary["genome_coverage"] = genome_coverage
+        stat_summary["ave_coverage"] = ave_coverage
+        stat_summary["ave_read_length"] = ave_read_length
+        stat_summary["unmapped_reads"] = unmapped_reads
+        stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
+        stat_summary["good_snp_count"] = good_snp_count
+        stat_summary["mlst_type"] = mlst_type
+        stat_summary["octalcode"] = octalcode
+        stat_summary["sbcode"] = sbcode
+        stat_summary["hexadecimal_code"] = hexcode
+        stat_summary["binarycode"] = binarycode
+        
+        ###
+        # Create a sample stats file in the sample's script1 directory
+        summary_file = loc_sam + "_" + st + '.xlsx'
+        workbook = xlsxwriter.Workbook(summary_file)
+        worksheet = workbook.add_worksheet()
+        row = 0
+        col = 0
+
+        top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+        for header in top_row_header:
+            worksheet.write(row, col, header)
+            col += 1
+            # worksheet.write(row, col, v)
+        
+        stat_summary = {**stat_summary, **read_quality_stats}
+        worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
+        worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
+        worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+        worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+        worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
+        worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
+        worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+        worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+        worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
+        worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
+        worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+        worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
+        worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
+        worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
+        worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
+        worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+        worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
+        worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
+        worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
+        worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
+        worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+        worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
+        workbook.close()
+        
+        return(stat_summary)
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','K','M','G','T','P','E','Z']:
@@ -544,13 +942,8 @@ def get_annotations(line, in_annotation_as_dict):
             annotated_line = "\t".join(split_line)
             return(annotated_line)
 
-def mlst(self):
+def mlst(R1, R2, working_directory, sample_name):
 
-    fastqs = glob.glob(zips + '/*.fastq')
-    if len(fastqs) < 2:
-        unzipfiles()
-    fastqs = glob.glob(zips + '/*.fastq')
-    
     #https://bmcmicrobiol.biomedcentral.com/articles/10.1186/1471-2180-7-34
     write_ref = open("ST1-MLST.fasta", 'w')
     print(">ST1-MLST", file=write_ref)
@@ -560,8 +953,6 @@ def mlst(self):
     directory = str(os.getcwd())
     print(directory)
     sample_reference_mlst_location = directory + "/ST1-MLST.fasta"
-    read_base = os.path.basename(R1)
-    sample_name = re.sub('_.*', '', read_base)
     sample_name_mlst = sample_name + "-mlst"
     print ("mlst reference: %s" % sample_reference_mlst_location)
     ref=re.sub('\.fasta', '', os.path.basename(sample_reference_mlst_location))
@@ -655,9 +1046,6 @@ def mlst(self):
     mlst_dictionary["CCCCCGGGCCGACCCGAGCGAAGCGGGGAGACCACGGCGCATAAGTGGCCAGGCACCTGTCCCGCGGGGTA"] = "MLST type 27"
     mlst_dictionary["CCCTCGGGCCGACCTGAGCGAAGCGGGGAGACCACGGCGCATAAGTGGCCAGGCTCCTGTCCCGCGGGGTA"] = "MLST type 28"
 
-    for i in fastqs: #remove unzipped fastq files to save space
-        os.remove(i)
-
     remove_files = glob.glob('ST1-MLST*')
     for i in remove_files:
         os.remove(i)
@@ -735,7 +1123,7 @@ def binary_to_hex(binary):
 
     return(hex_section1.replace('0x', '').upper() + "-" + hex_section2.replace('0x', '').upper() + "-" + hex_section3.replace('0x', '').upper() + "-" + hex_section4.replace('0x', '').upper() + "-" + hex_section5.replace('0x', '').upper() + "-" + hex_section6.replace('0x', '').upper())
 
-def spoligo(self):
+def spoligo(R1, R2):
     
     print("\nFinding spoligotype pattern...\n")
     
@@ -969,400 +1357,6 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
             print ("TypeError error found")
 
     return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-
-def align_reads(self, read_quality_stats):
-
-    ts = time.time()
-    st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
-
-    if self.species == "NO FINDINGS":
-        read_base = os.path.basename(R1)
-        sample_name=re.sub('_.*', '', read_base)
-        R1size = sizeof_fmt(os.path.getsize(R1))
-        R2size = sizeof_fmt(os.path.getsize(R2))
-        stat_summary = {}
-        stat_summary["time_stamp"] = st
-        stat_summary["sample_name"] = sample_name
-        stat_summary["self.species"] = "NOT_FOUND"
-        stat_summary["reference_sequence_name"] = "N/A"
-        stat_summary["R1size"] = R1size
-        stat_summary["R2size"] = R2size
-        stat_summary["allbam_mapped_reads"] = "CHECK SAMPLE *****************************************"
-        stat_summary = {**stat_summary, **read_quality_stats}
-        return(stat_summary)
-    else:
-        startTime = datetime.now()
-        print ("\n\n*** START ***\n")
-        print ("Start time: %s" % startTime)
-
-        read_base = os.path.basename(R1)
-        sample_name=re.sub('_.*', '', read_base)
-
-        sample_reference=glob.glob(directory + '/*fasta')
-        hqs=glob.glob(directory + '/*vcf')
-        
-        print("self.species: %s" % self.species)
-        if self.species in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
-            print("Brucella")
-            self.mlst()
-        elif self.species in ["h37", "af"]: #removed bovis
-            print("TB")
-            self.spoligo()
-        
-        print ("reference: %s" % sample_reference)
-        ref=re.sub('\.fasta', '', os.path.basename(sample_reference[0]))
-        if len(sample_reference) != 1:
-            print("### ERROR reference not available or too many")
-            sys.exit(0)
-        if len(hqs) != 1:
-            print("### ERROR high quality snps not available or too many")
-            sys.exit(0)
-        sample_reference=sample_reference[0]
-        hqs=hqs[0]
-        
-        print ("--")
-        print("sample name: %s" % sample_name)
-        print("sample reference: %s" % sample_reference)
-        print("Read 1: %s" % R1)
-        print("Read 2: %s\n" % R2)
-        print("directory: %s" % directory)
-        print ("--")
-
-        loc_sam=directory + "/" + sample_name
-        
-        os.system("samtools faidx {}" .format(sample_reference))
-        os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, directory + "/" + ref + ".dict"))
-        os.system("bwa index {}" .format(sample_reference))
-        samfile = loc_sam + ".sam"
-        allbam = loc_sam + "-all.bam"
-        unmapsam = loc_sam + "-unmapped.sam"
-        unmapped_read1 = loc_sam + "-unmapped_R1.fastq"
-        unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
-        unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
-        unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
-        abyss_out = loc_sam + "-unmapped_contigs.fasta"
-        sortedbam = loc_sam + "-sorted.bam"
-        nodupbam = loc_sam + "-nodup.bam"
-        metrics = loc_sam + "-metrics.txt"
-        indel_realigner = loc_sam + ".intervals"
-        realignedbam = loc_sam + "-realigned.bam"
-        recal_group = loc_sam + "-recal_group"
-        prebam=loc_sam + "-pre.bam"
-        qualitybam = loc_sam + "-quality.bam"
-        coverage_file=loc_sam + "-coverage.txt"
-        hapall = loc_sam + "-hapall.vcf"
-        bamout = loc_sam + "-bamout.bam"
-        
-        print("\n@@@ BWA mem")
-        os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
-
-        print("\nAdd read group and out all BAM")
-        os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile, allbam, sample_name))
-        os.system("samtools index {}" .format(allbam))
-
-        print("\n@@@ Samtools unmapped")
-        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, allbam, unmapsam))
-
-        print("\n@@@ Unmapped to FASTQ")
-        os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
-        
-        print("\n@@@ Abyss")
-        abyss_contig_count=0
-
-        os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
-        try:
-            with open(abyss_out) as f:
-                for line in f:
-                    abyss_contig_count += line.count(">")
-        except FileNotFoundError:
-            abyss_contig_count = 0
-
-        print("\n@@@ Sort BAM")
-        os.system("samtools sort {} -o {}" .format(allbam, sortedbam))
-        os.system("samtools index {}" .format(sortedbam))
-        
-        print("\n@@@ Write stats to file")
-        stat_file = "stat_align.txt"
-        stat_out = open(stat_file, 'w')
-        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
-        stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
-        stat_out.close()
-
-        with open(stat_file) as f:
-            first_line = f.readline()
-            first_line = first_line.rstrip()
-            first_line=re.split(':|\t', first_line)
-            reference_sequence_name = str(first_line[0])
-            sequence_length = "{:,}".format(int(first_line[1]))
-            allbam_mapped_reads = int(first_line[2])
-            allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
-
-        print("\n@@@ Find duplicate reads")
-        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
-        os.system("samtools index {}" .format(nodupbam))
-        
-        duplicate_stat_file = "duplicate_stat_align.txt"
-        duplicate_stat_out = open(duplicate_stat_file, 'w')
-        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
-        duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
-        duplicate_stat_out.close()
-        with open(duplicate_stat_file) as f:
-            dup_first_line = f.readline()
-            dup_first_line = dup_first_line.rstrip()
-            dup_first_line=re.split(':|\t', dup_first_line)
-            nodupbam_mapped_reads = int(dup_first_line[2])
-            nodupbam_unmapped_reads = int(dup_first_line[3])
-        try:
-            unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
-        except:
-            unmapped_reads = "none_found"
-        
-        allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
-        print(unmapped_reads)
-
-        print("\n@@@  Realign indels")
-        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        if not os.path.isfile(indel_realigner):
-            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-
-        print("\n@@@ Base recalibration")
-        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-
-        print("\n@@@ Make realigned BAM")
-        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
-        if not os.path.isfile(prebam):
-            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
-
-        print("\n@@@ Clip reads")
-        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
-        os.system("samtools index {}" .format(qualitybam))
-
-        print("\n@@@ Depth of coverage using GATK")
-        os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
-
-        print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
-
-        try: 
-            print("Getting Zero Coverage...\n")
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
-        except FileNotFoundError:
-            print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
-            text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
-            msg = MIMEMultipart()
-            msg['From'] = "tod.p.stuber@aphis.usda.gov"
-            msg['To'] = "tod.p.stuber@aphis.usda.gov"
-            msg['Date'] = formatdate(localtime = True)
-            msg['Subject'] = "### No coverage file"
-            msg.attach(MIMEText(text))
-            smtp = smtplib.SMTP('10.10.8.12')
-            smtp.send_message(msg)
-            smtp.quit()
-
-            # process_id = os.getpid()
-            # os.kill(process_id, signal.SIGKILL)
-
-        ###
-        if gbk_file is not "None" and not args.no_annotation:
-            try:
-                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(gbk_file, "genbank"))
-                annotated_vcf = loc_sam + "-annotated.vcf"
-                write_out=open(annotated_vcf, 'w')
-                
-                with open(zero_coverage_vcf) as vfile:
-                    print("finding annotations...\n")
-                    for line in vfile:
-                        annotated_line = get_annotations(line, in_annotation_as_dict)
-                        print("%s" % annotated_line, file=write_out)
-                write_out.close()
-            except AttributeError:
-                pass
-
-        os.remove(coverage_file)
-        os.remove(samfile)
-        os.remove(allbam)
-        os.remove(nodupbam)
-        os.remove(nodupbam + ".bai")
-        os.remove(unmapsam)
-        os.remove(sortedbam)
-        os.remove(sortedbam + ".bai")
-        os.remove(indel_realigner)
-        os.remove(realignedbam)
-        os.remove(loc_sam + "-realigned.bai")
-        os.remove(recal_group)
-        os.remove(prebam)
-        os.remove(loc_sam + "-pre.bai")
-        os.remove(hqs)
-        os.remove(hqs + ".idx")
-        os.remove(sample_reference + ".amb")
-        os.remove(sample_reference + ".ann")
-        os.remove(sample_reference + ".bwt")
-        os.remove(sample_reference + ".pac")
-        os.remove(sample_reference + ".sa")
-        os.remove(ref + ".dict")
-        os.remove(duplicate_stat_file)
-        os.remove(stat_file)
-
-        unmapped = directory + "/unmapped"
-        os.makedirs(unmapped)
-
-        newZip = zipfile.ZipFile(unmapped_read1gz, 'w')
-        newZip.write(unmapped_read1, compress_type=zipfile.ZIP_DEFLATED)
-        newZip.close()
-        newZip = zipfile.ZipFile(unmapped_read2gz, 'w')
-        newZip.write(unmapped_read2, compress_type=zipfile.ZIP_DEFLATED)
-        newZip.close()
-        os.remove(unmapped_read1)
-        os.remove(unmapped_read2)
-        
-        try:
-            shutil.move(unmapped_read1gz, unmapped)
-            shutil.move(unmapped_read2gz, unmapped)
-            shutil.move(abyss_out, unmapped)
-        except FileNotFoundError:
-            pass
-        
-        alignment = directory + "/alignment"
-        os.makedirs(alignment)
-        movefiles = glob.glob('*-*')
-        for i in movefiles:
-            shutil.move(i, alignment)
-        try:
-            shutil.move(sample_reference, alignment)
-            shutil.move(sample_reference + ".fai", alignment)
-        except shutil.Error:
-            pass
-        except FileNotFoundError:
-            pass
-        except FileExistsError:
-            pass
-
-        runtime = (datetime.now() - startTime)
-        print ("\n\nruntime: %s:  \n" % runtime)
-        ave_coverage = "{:0.1f}".format(float(ave_coverage))
-        print("average_coverage: %s" % ave_coverage)
-
-        R1size = sizeof_fmt(os.path.getsize(R1))
-        R2size = sizeof_fmt(os.path.getsize(R2))
-
-        try:
-            with open("mlst.txt") as f:
-                first_line = f.readline()
-                mlst_type = first_line.rstrip()
-                first_line = first_line.split()
-                mlst_type = first_line[1:]
-                mlst_type = '-'.join(mlst_type)
-        except FileNotFoundError:
-            mlst_type = "N/A"
-
-        try:
-            with open("spoligo.txt") as f:
-                first_line = f.readline()
-                first_line = first_line.rstrip()
-                first_line = first_line.split()
-                octalcode = first_line[0]
-                sbcode = first_line[1]
-                hexcode = first_line[2]
-                binarycode = first_line[3]
-        except FileNotFoundError:
-            octalcode = "N/A"
-            sbcode = "N/A"
-            hexcode = "N/A"
-            binarycode = "N/A"
-            
-        #Capture program versions for step 1
-        try:
-            verison_out = open("version_capture.txt", 'w')
-            print(os.popen('conda list bwa | grep -v "^#"; \
-                conda list abyss | grep -v "^#"; \
-                conda list picard | grep -v "^#"; \
-                conda list samtools | grep -v "^#"; \
-                conda list gatk | grep -v "^#"; \
-                conda list biopython | grep -v "^#"').read(), file=verison_out)
-            verison_out.close()
-        except:
-            pass
-
-        sequence_count = 0
-        total_length = 0
-        with gzip.open(R2, "rt") as handle:
-            for r in SeqIO.parse(handle, "fastq"):
-                total_length = total_length + len(r.seq)
-                sequence_count = sequence_count + 1
-        ave_read_length = total_length/sequence_count
-        ave_read_length = "{:0.1f}".format(float(ave_read_length))
-
-        ts = time.time()
-        st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
-
-        stat_summary={}
-
-        #
-
-        stat_summary["time_stamp"] = st
-        stat_summary["sample_name"] = sample_name
-        stat_summary["self.species"] = self.species
-        stat_summary["reference_sequence_name"] = reference_sequence_name
-        stat_summary["R1size"] = R1size
-        stat_summary["R2size"] = R2size
-        stat_summary["allbam_mapped_reads"] = allbam_mapped_reads
-        stat_summary["genome_coverage"] = genome_coverage
-        stat_summary["ave_coverage"] = ave_coverage
-        stat_summary["ave_read_length"] = ave_read_length
-        stat_summary["unmapped_reads"] = unmapped_reads
-        stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
-        stat_summary["good_snp_count"] = good_snp_count
-        stat_summary["mlst_type"] = mlst_type
-        stat_summary["octalcode"] = octalcode
-        stat_summary["sbcode"] = sbcode
-        stat_summary["hexadecimal_code"] = hexcode
-        stat_summary["binarycode"] = binarycode
-        
-        ###
-        # Create a sample stats file in the sample's script1 directory
-        summary_file = loc_sam + "_" + st + '.xlsx'
-        workbook = xlsxwriter.Workbook(summary_file)
-        worksheet = workbook.add_worksheet()
-        row = 0
-        col = 0
-
-        top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
-        for header in top_row_header:
-            worksheet.write(row, col, header)
-            col += 1
-            # worksheet.write(row, col, v)
-        
-        stat_summary = {**stat_summary, **read_quality_stats}
-        worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
-        worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
-        worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
-        worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-        worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
-        worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))
-        worksheet.write(1, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-        worksheet.write(1, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-        worksheet.write(1, 8, stat_summary.get('Q30_R1', 'n/a'))
-        worksheet.write(1, 9, stat_summary.get('Q30_R2', 'n/a'))
-        worksheet.write(1, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-        worksheet.write(1, 11, stat_summary.get('genome_coverage', 'n/a'))
-        worksheet.write(1, 12, stat_summary.get('ave_coverage', 'n/a'))
-        worksheet.write(1, 13, stat_summary.get('ave_read_length', 'n/a'))
-        worksheet.write(1, 14, stat_summary.get('unmapped_reads', 'n/a'))
-        worksheet.write(1, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-        worksheet.write(1, 16, stat_summary.get('good_snp_count', 'n/a'))
-        worksheet.write(1, 17, stat_summary.get('mlst_type', 'n/a'))
-        worksheet.write(1, 18, stat_summary.get('octalcode', 'n/a'))
-        worksheet.write(1, 19, stat_summary.get('sbcode', 'n/a'))
-        worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-        worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
-        workbook.close()
-        
-        return(stat_summary)
 
 def run_script2():
 

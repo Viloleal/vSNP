@@ -52,6 +52,7 @@ print (args)
 args_options = args
 print("")
 
+email_list = None
 if args.email == "all":
     email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, patrick.m.camp@aphis.usda.gov, David.T.Farrell@aphis.usda.gov, Robin.L.Swanson@aphis.usda.gov, hannah.m.tharp@aphis.usda.gov, Doris.M.Bravo@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov"
 elif args.email == "tod":
@@ -109,7 +110,8 @@ if fastq_check:
         else:
             print("\n--> RUNNING LOOP/SCRIPT 1\n")
             #Enter script 1 -->
-            functions.run_loop(root_dir, limited_cpu_count, args_options)
+            functions.run_loop(root_dir, limited_cpu_count, args_options, email_list)
+            print("See files, vSNP has finished alignments")
 elif vcf_check:
     if not args.species:
         args.species = functions.get_species()

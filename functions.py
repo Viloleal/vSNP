@@ -42,7 +42,7 @@ from Bio import SeqIO
 from parameters import Get_Specie_Parameters_Step1
 # import concurrent.futures as cf
 
-def run_loop(root_dir, limited_cpu_count, args_options): #calls read_aligner
+def run_loop(root_dir, limited_cpu_count, args_options, email_list): #calls read_aligner
 
     startTime = datetime.now()
     ts = time.time()
@@ -230,9 +230,11 @@ def run_loop(root_dir, limited_cpu_count, args_options): #calls read_aligner
         print ("\n\nruntime: %s:  \n" % runtime)
 
         if args_options.email:
-            send_email(email_list, runtime)
+            send_email_step1(email_list, runtime, path_found, summary_file)
 
 def read_aligner(sample_name, args_options):
+
+    sample_directory = str(os.getcwd())
     os.chdir(sample_name)
     
     R1 = glob.glob('*_R1*fastq.gz')
@@ -246,8 +248,8 @@ def read_aligner(sample_name, args_options):
     shutil.move(R1[0], "zips")
     shutil.move(R2[0], "zips")
     
-    R1 = zips + "/" + R1[0]
-    R2 = zips + "/" + R2[0]
+    R1 = sample_directory + "/" + sample_name + "/zips/" + R1[0]
+    R2 = sample_directory + "/" + sample_name + "/zips/" + R2[0]
     fastq_list = [R1, R2]
 
     ###
@@ -279,9 +281,9 @@ def read_aligner(sample_name, args_options):
 
     try:
         stat_summary = align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2)
-        return(stat_summary)
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
+        return(stat_summary)
     except:
         print("### Unable to return stat_summary")
         return #(stat_summary)
@@ -480,7 +482,7 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
     ts = time.time()
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
 
-    if specie_para_dict["species"] == "NO FINDINGS":
+    if specie_para_dict["species"] is None:
         read_base = os.path.basename(R1)
         sample_name=re.sub('_.*', '', read_base)
         R1size = sizeof_fmt(os.path.getsize(R1))
@@ -501,7 +503,7 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
         print ("Start time: %s" % startTime)
 
         read_base = os.path.basename(R1)
-        sample_name=re.sub('_.*', '', read_base)
+        sample_name = re.sub('_.*', '', read_base)
         
         print("species: %s" % specie_para_dict["species"])
         if specie_para_dict["species"] in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
@@ -512,8 +514,10 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
             spoligo(R1, R2)
         
         os.chdir(working_directory)
-        sample_reference=glob.glob(working_directory + '/*fasta')
-        hqs=glob.glob(working_directory + '/*vcf')
+        shutil.copy(specie_para_dict["reference"], working_directory)
+        shutil.copy(specie_para_dict["hqs"], working_directory)
+        sample_reference = glob.glob(working_directory + '/*fasta')
+        hqs = glob.glob(working_directory + '/*vcf')
 
         print ("reference: %s" % sample_reference)
         ref=re.sub('\.fasta', '', os.path.basename(sample_reference[0]))
@@ -523,8 +527,8 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
         if len(hqs) != 1:
             print("### ERROR high quality snps not available or too many")
             sys.exit(0)
-        sample_reference=sample_reference[0]
-        hqs=hqs[0]
+        sample_reference = sample_reference[0]
+        hqs = hqs[0]
         
         print ("--")
         print("sample name: %s" % sample_name)
@@ -590,7 +594,6 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
         print("\n@@@ Write stats to file")
         stat_file = "stat_align.txt"
         stat_out = open(stat_file, 'w')
-        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
         stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
         stat_out.close()
 
@@ -676,7 +679,7 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
         ###
         if specie_para_dict["gbk_file"] is not "None" and not args_options.no_annotation:
             try:
-                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(gbk_file, "genbank"))
+                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(specie_para_dict["gbk_file"], "genbank"))
                 annotated_vcf = loc_sam + "-annotated.vcf"
                 write_out=open(annotated_vcf, 'w')
                 
@@ -757,7 +760,7 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
         R2size = sizeof_fmt(os.path.getsize(R2))
 
         try:
-            with open("mlst.txt") as f:
+            with open("mlst/mlst.txt") as f:
                 first_line = f.readline()
                 mlst_type = first_line.rstrip()
                 first_line = first_line.split()
@@ -944,6 +947,8 @@ def get_annotations(line, in_annotation_as_dict):
 
 def mlst(R1, R2, working_directory, sample_name):
 
+    sample_directory = str(os.getcwd())
+
     #https://bmcmicrobiol.biomedcentral.com/articles/10.1186/1471-2180-7-34
     write_ref = open("ST1-MLST.fasta", 'w')
     print(">ST1-MLST", file=write_ref)
@@ -1068,6 +1073,11 @@ def mlst(R1, R2, working_directory, sample_name):
     
     write_out.close()
 
+    os.makedirs("mlst")
+    shutil.move(vcf_mlst, "mlst")
+    shutil.move("mlst.txt", "mlst")
+    os.chdir(sample_directory)
+
 def finding_sp(v):
     total=0
     total_finds=0
@@ -1124,6 +1134,8 @@ def binary_to_hex(binary):
     return(hex_section1.replace('0x', '').upper() + "-" + hex_section2.replace('0x', '').upper() + "-" + hex_section3.replace('0x', '').upper() + "-" + hex_section4.replace('0x', '').upper() + "-" + hex_section5.replace('0x', '').upper() + "-" + hex_section6.replace('0x', '').upper())
 
 def spoligo(R1, R2):
+    
+    sample_directory = str(os.getcwd())
     
     print("\nFinding spoligotype pattern...\n")
     
@@ -1258,6 +1270,8 @@ def spoligo(R1, R2):
                 print(k, v, file=write_out)
 
         write_out.close()
+    
+    os.chdir(sample_directory)
 
 def add_zero_coverage(coverage_in, vcf_file, loc_sam):
     
@@ -1357,6 +1371,34 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
             print ("TypeError error found")
 
     return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
+
+def send_email_step1(email_list, runtime, path_found, summary_file):
+    text = "See attached:  "
+    send_from = "tod.p.stuber@aphis.usda.gov"
+    send_to = email_list
+    msg = MIMEMultipart()
+    msg['From'] = send_from
+    msg['To'] = send_to
+    msg['Date'] = formatdate(localtime = True)
+    if not path_found:
+        msg['Subject'] = "###CUMULATIVE STATS NOT UPDATED - Script1 stats summary"
+    else:
+        msg['Subject'] = "Script1 stats summary, runtime: {}" .format(runtime)
+    msg.attach(MIMEText(text))
+
+    part = MIMEBase('application', "octet-stream")
+    part.set_payload(open(summary_file, "rb").read())
+    encoders.encode_base64(part)
+    part.add_header('Content-Disposition', 'attachment; filename="summary_file.xlsx"')
+    msg.attach(part)
+
+    #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
+    #SSL connection only working on Python 3+
+    smtp = smtplib.SMTP('10.10.8.12')
+
+    smtp.send_message(msg)
+    #smtp.sendmail(send_from, send_to, msg.as_string())
+    smtp.quit()
 
 def run_script2():
 
@@ -1663,7 +1705,7 @@ def run_script2():
 
     htmlfile.close()
 
-def send_email():
+def send_email_step2(email_list):
     print ("Sending Email...")
     print ("Sending to:")
 
@@ -1692,7 +1734,7 @@ def send_email():
     if args.email == "none":
         print ("\n\temail not sent")
     elif args.email:
-        send_email()
+        send_email_step2(email_list)
         print ("\n\temail sent to: %s" % email_list)
     else:
         print ("\n\temail not sent")
@@ -2929,34 +2971,6 @@ def excelwriter(filename):
     ws.set_row(i-1, 400, formatannotation)
 
     wb.close()
-
-def send_email(email_list, runtime):
-    text = "See attached:  "
-    send_from = "tod.p.stuber@aphis.usda.gov"
-    send_to = email_list
-    msg = MIMEMultipart()
-    msg['From'] = send_from
-    msg['To'] = send_to
-    msg['Date'] = formatdate(localtime = True)
-    if not path_found:
-        msg['Subject'] = "###CUMULATIVE STATS NOT UPDATED - Script1 stats summary"
-    else:
-        msg['Subject'] = "Script1 stats summary, runtime: {}" .format(runtime)
-    msg.attach(MIMEText(text))
-
-    part = MIMEBase('application', "octet-stream")
-    part.set_payload(open(summary_file, "rb").read())
-    encoders.encode_base64(part)
-    part.add_header('Content-Disposition', 'attachment; filename="summary_file.xlsx"')
-    msg.attach(part)
-
-    #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
-    #SSL connection only working on Python 3+
-    smtp = smtplib.SMTP('10.10.8.12')
-
-    smtp.send_message(msg)
-    #smtp.sendmail(send_from, send_to, msg.as_string())
-    smtp.quit()
 
 def get_species():
 

@@ -17,7 +17,7 @@ vSNP INSTALLATION
 
 Linux or macOS required.  Minimum 4 cores, 8GB memory.
 
-Script is written in Python and must be ran using Python 3.  Currently tested with Python 3.6. 
+Script is written in Python 3 and must be ran using the conda build environment.  Currently tested with Python 3.6. 
 
 Anaconda is a highly trusted Python package and scientific software distrubution platform.  
 
@@ -37,8 +37,10 @@ Clone script to home directory:
     $ conda env create
     $ conda activate vsnp
 
-When GATK 3.8 is downloaded using Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package, unzip it, and run:
-
+When GATK 3.8 is downloaded using Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package: https://software.broadinstitute.org/gatk/download/archive
+unzip it:  
+    $ tar -vxjf GenomeAnalysisTK-3.8*
+and run:
     $ gatk-register /path/to/Downloads/GenomeAnalysisTK*/GenomeAnalysisTK.jar
     
 After `gatk-register` is ran, GATK just downloaded from the GATK website, can be deleted.  The download was only needed to register the Anaconda GATK package.

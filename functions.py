@@ -224,13 +224,17 @@ def run_loop(root_dir, limited_cpu_count, args_options, email_list): #calls read
             else:
                 print("Path to cumulative stat summary file not found")
 
-        workbook.close()
+    workbook.close()
 
-        runtime = (datetime.now() - startTime)
-        print ("\n\nruntime: %s:  \n" % runtime)
+    runtime = (datetime.now() - startTime)
+    print ("\n\nruntime: %s:  \n" % runtime)
 
-        if args_options.email:
+    if args_options.email:
+        try:
             send_email_step1(email_list, runtime, path_found, summary_file)
+        except TimeoutError:
+            print("Unable to send email with current smtp setting\n")
+            pass
 
 def read_aligner(sample_name, args_options):
 
@@ -304,7 +308,7 @@ def species_selection(read_quality_stats, args_options, sample_name, R1, R2):
             shutil.copy2(specie_para_dict["reference"], sample_name)
             shutil.copy2(specie_para_dict["hqs"], sample_name)
         elif specie_para_dict is None:
-            print("No specie parameters found for: \n\t{} \n\t{}" .format(R1, R2))
+            print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(R1, R2))
         else:
             print("### See species_selection function")
             sys.exit(0)
@@ -511,7 +515,7 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
             mlst(R1, R2, working_directory, sample_name)
         elif specie_para_dict["species"] in ["h37", "af"]: #removed bovis
             print("TB")
-            spoligo(R1, R2)
+            spoligo(R1, R2, specie_para_dict)
         
         os.chdir(working_directory)
         shutil.copy(specie_para_dict["reference"], working_directory)
@@ -880,33 +884,6 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
-def unzipfiles():
-    try:
-        for zip_filename in R1, R2:
-            print("Unzipping... %s" % zip_filename)
-            name_nogz = os.path.splitext(zip_filename)[0]
-            write_out = open(name_nogz, 'wt')
-            with gzip.open(zip_filename, 'rt') as f:
-                file_content = f.read()
-                print(file_content, file=write_out)
-            write_out.close()
-    except OSError:
-        print("#### ZIP FILE APPEARS TO HAVE AN ERROR: %s" % zip_filename)
-        text = "ZIP FILE APPEARS TO HAVE AN ERROR: " + zip_filename
-        msg = MIMEMultipart()
-        msg['From'] = "tod.p.stuber@aphis.usda.gov"
-        msg['To'] = "tod.p.stuber@aphis.usda.gov"
-        msg['Date'] = formatdate(localtime = True)
-        msg['Subject'] = "###fastq.gz unzipping problem"
-        msg.attach(MIMEText(text))
-        smtp = smtplib.SMTP('10.10.8.12')
-        smtp.send_message(msg)
-        smtp.quit()
-
-        for zip_filename in R1, R2:
-            os.remove(zip_filename)
-        os.rename("zips", "zips_currupt")
-
 def get_annotations(line, in_annotation_as_dict):
     #pos_found = False
     line=line.rstrip()
@@ -1133,7 +1110,7 @@ def binary_to_hex(binary):
 
     return(hex_section1.replace('0x', '').upper() + "-" + hex_section2.replace('0x', '').upper() + "-" + hex_section3.replace('0x', '').upper() + "-" + hex_section4.replace('0x', '').upper() + "-" + hex_section5.replace('0x', '').upper() + "-" + hex_section6.replace('0x', '').upper())
 
-def spoligo(R1, R2):
+def spoligo(R1, R2, specie_para_dict):
     
     sample_directory = str(os.getcwd())
     
@@ -1209,27 +1186,27 @@ def spoligo(R1, R2):
             for k, value in spoligo_dictionary.items():
                 if v == value:
                     count_summary.update({k:count})
-                    count_summary=OrderedDict(sorted(count_summary.items()))
+                    count_summary = OrderedDict(sorted(count_summary.items()))
     seq_string = ""
 
-    spoligo_binary_dictionary={}
+    spoligo_binary_dictionary = {}
     for k, v in count_summary.items():
         if v > 4:
             spoligo_binary_dictionary.update({k:1})
         else:
             spoligo_binary_dictionary.update({k:0})
-    spoligo_binary_dictionary=OrderedDict(sorted(spoligo_binary_dictionary.items()))
+    spoligo_binary_dictionary = OrderedDict(sorted(spoligo_binary_dictionary.items()))
     
     spoligo_binary_list=[]
     for v in spoligo_binary_dictionary.values():
         spoligo_binary_list.append(v)
-    bovis_string=''.join(str(e) for e in spoligo_binary_list) #bovis_string correct
+    bovis_string = ''.join(str(e) for e in spoligo_binary_list) #bovis_string correct
     hexadecimal = binary_to_hex(bovis_string)
     
     write_out = open("spoligo.txt", 'w')
     
     found = False
-    with open(spoligo_db) as f: # put into dictionary or list
+    with open(specie_para_dict["spoligo_db"]) as f: # put into dictionary or list
         for line in f:
             line=line.rstrip()
             octalcode = line.split()[0] #no arg splits on whitespace

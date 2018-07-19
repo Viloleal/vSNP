@@ -17,26 +17,36 @@ class Get_Specie_Parameters_Step1():
         if species_selection == "salmonella":
             script_dependents = self.dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
             parameters = {
-                "script_dependents": script_dependents,
                 "upload_to": self.upload_to,
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_016856-NC_016855.fasta", 
                 "hqs": script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf",
                 "gbk_file": script_dependents + "/NC_016856-NC_016855.gbk",
-                "species": "salmonella",
+                "species": species_selection,
             }
             return(parameters)
 
         elif species_selection == "ab1":
             script_dependents = self.dependents_dir + "/brucella/abortus1/script_dependents/script1"
             parameters = {
-                "script_dependents": script_dependents,
                 "upload_to": self.upload_to,
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_00693c.fasta", 
                 "hqs": script_dependents + "/NC_00693cHighestQualitySNPs.vcf",
                 "gbk_file": script_dependents + "/NC_006932-NC_006933.gbk",
-                "species": "ab1",
+                "species": species_selection,
+            }
+            return(parameters)
+
+        elif species_selection == "af":
+            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents/script1"
+            parameters = {
+                "upload_to": self.upload_to,
+                "spoligo_db": script_dependents + "/spoligotype_db.txt",
+                "reference": script_dependents + "/NC_002945v4.fasta", 
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": script_dependents + "/NC_002945v4.gbk",
+                "species": species_selection,
             }
             return(parameters)
 
@@ -46,17 +56,36 @@ class Get_Specie_Parameters_Step1():
             
 
 
+#     if give_option == "af":
+#         found=True
+#         #Remove network path at and left of "Results"
+#         dependents_dir="/mycobacterium/tbc/af2122/script_dependents/script1"
+#         upload_to, remote, script_dependents = script1.update_directory(dependents_dir) #***FUNCTION CALL
+        
+#         spoligo_db = script_dependents + "/spoligotype_db.txt"
+#         reference = script_dependents + "/NC_002945v4.fasta"
+#         print("Reference being used: %s" % reference)
+#         hqs = script_dependents + "/highqualitysnps.vcf"
+#         gbk_file = script_dependents + "/NC_002945v4.gbk"
+#         email_list = "tod.p.stuber@aphis.usda.gov"
+        
+#         option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
+#         return option_list, found
+
 
     # def template(self):
-    #     parameters = {
-    #         "script_dependents": self.dependents_dir + "",
-    #         "upload_to": self.upload_to,
-    #         "spoligo_db": None,
-    #         "reference": self.dependents_dir + "", 
-    #         "hqs": self.dependents_dir + "",
-    #         "gbk_file": self.dependents_dir + "",
-    #     }
-    #     return(parameters)
+
+        # elif species_selection == "":
+        #     script_dependents = self.dependents_dir + "/script_dependents/script1"
+        #     parameters = {
+        #         "upload_to": self.upload_to,
+        #         "spoligo_db": None,
+        #         "reference": script_dependents + "", 
+        #         "hqs": script_dependents + "",
+        #         "gbk_file": script_dependents + "",
+        #         "species": species_selection,
+        #     }
+        #     return(parameters)
 
 
 
@@ -312,22 +341,6 @@ class Get_Specie_Parameters_Step1():
 #         print("Reference being used: %s" % reference)
 #         hqs = script_dependents + "/HighestQualitySNPs.vcf"
 #         gbk_file = script_dependents + "/NC_002945.gbk"
-#         email_list = "tod.p.stuber@aphis.usda.gov"
-        
-#         option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
-#         return option_list, found
-        
-#     if give_option == "af":
-#         found=True
-#         #Remove network path at and left of "Results"
-#         dependents_dir="/mycobacterium/tbc/af2122/script_dependents/script1"
-#         upload_to, remote, script_dependents = script1.update_directory(dependents_dir) #***FUNCTION CALL
-        
-#         spoligo_db = script_dependents + "/spoligotype_db.txt"
-#         reference = script_dependents + "/NC_002945v4.fasta"
-#         print("Reference being used: %s" % reference)
-#         hqs = script_dependents + "/highqualitysnps.vcf"
-#         gbk_file = script_dependents + "/NC_002945v4.gbk"
 #         email_list = "tod.p.stuber@aphis.usda.gov"
         
 #         option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]

@@ -41,15 +41,24 @@ parser.add_argument('-g', '--get', action='store_true', dest='get', help='get, g
 parser.add_argument('-n', '--no_annotation', action='store_true', dest='no_annotation', help='no_annotation, run without annotation')
 parser.add_argument('-a', '--all_vcf', action='store_true', dest='all_vcf', help='make tree using all VCFs')
 parser.add_argument('-e', '--elite', action='store_true', dest='elite', help='create a tree with on elite sample representation')
-parser.add_argument('-f', '--filter', action='store_true', dest='filter', help='Find possible positions to filter')
+parser.add_argument('-f', '--filter', action='store_true', dest='filter_finder', help='Find possible positions to filter')
 parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', help='[**APHIS only**] prevent stats going to cumlative collection')
 parser.add_argument('-m', '--email', action='store', dest='email', help='[**APHIS only**, specify own SMTP address for functionality] email options: all, s, tod, jess, suelee, chris, email_address')
 parser.add_argument('-u', '--upload', action='store_true', dest='upload', help='[**APHIS only**, specify own storage for functionality] upload files to the bioinfo drive')
-parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.1')
 args = parser.parse_args()
 print ("\nSET ARGUMENTS: ")
 print (args)
-args_options = args
+arg_options = {
+    "species": args.species,
+    "debug_call": args.debug_call,
+    "get": args.get,
+    "no_annotation": args.no_annotation,
+    "all_vcf": args.all_vcf,
+    "elite": args.elite,
+    "filter_finder": args.filter_finder,
+    "quiet": args.quiet,
+    "upload": args.upload,
+}
 print("")
 
 email_list = None
@@ -72,6 +81,7 @@ elif args.email == "doris":
 else:
     email_list = "tod.p.stuber@aphis.usda.gov"
 
+arg_options['email_list'] = email_list
 ################################################################################################################################################
 
 all_file_types_count = len(glob.glob('*.*'))
@@ -86,6 +96,10 @@ if vcf_check > 0:
 if fastq_check and vcf_check:
     print("\n#####You have a mix of FASTQ and VCF files.  This is not allowed\n\n")
     sys.exit(0)
+
+arg_options['root_dir'] = root_dir
+arg_options['cpu_count'] = cpu_count
+arg_options['limited_cpu_count'] = limited_cpu_count
 
 # Check that there an equal number of both R1 and R2 reads
 if fastq_check:
@@ -104,31 +118,31 @@ if fastq_check:
         print("\n#####Only zipped FASTQ files are allowed in directory\n\n")
         sys.exit(0)
     elif (fastq_count > 1):
-        if args.all_vcf or args.elite or args.upload or args.filter:
+        if arg_options['all_vcf'] or arg_options['elite'] or arg_options['upload'] or arg_options['filter_finder']:
             print("#####Incorrect use of options when running loop/script 1")
             sys.exit(0)
         else:
             print("\n--> RUNNING LOOP/SCRIPT 1\n")
             #Enter script 1 -->
-            functions.run_loop(root_dir, limited_cpu_count, args_options, email_list)
+            functions.run_loop(arg_options)
             print("See files, vSNP has finished alignments")
 elif vcf_check:
-    if not args.species:
-        args.species = functions.get_species()
-        print("args.species %s" % args.species)
+    if not arg_options['species']:
+        species = functions.get_species()
+        print("species %s" % species)
     vcfs_count = len(glob.glob('*vcf'))
     if (all_file_types_count != vcfs_count):
         print("\n#####You have more than just VCF files in your directory.  Only VCF files are allowed if running script 2\n\n")
         sys.exit(0)
     else:
-        if args.quiet:
+        if arg_options['quiet']:
             print("#####Incorrect use of options when running script 2")
             sys.exit(0)
         else:
-            if args.species:
+            if arg_options['species']:
                 print("\n--> RUNNING SCRIPT 2\n")
                 #Enter script 2 -->
-                functions.run_script2()
+                functions.run_script2(arg_options)
             else:
                 print("#####Based on VCF CHROM id (reference used to build VCF) a matching species cannot be found neither was there a -s option given")
                 sys.exit(0)

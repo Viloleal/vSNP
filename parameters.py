@@ -15,9 +15,9 @@ class Get_Specie_Parameters_Step1():
 
     def choose(self, species_selection):
         if species_selection == "salmonella":
-            script_dependents = self.dependents_dir + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/gen-bact/salmonella/snp_pipeline/script_dependents/script1"
             parameters = {
-                "upload_to": self.upload_to,
+                "upload_to": str(self.upload_to),
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_016856-NC_016855.fasta", 
                 "hqs": script_dependents + "/NC_016856-NC_016855HighestQualitySNPs.vcf",
@@ -27,9 +27,9 @@ class Get_Specie_Parameters_Step1():
             return(parameters)
 
         elif species_selection == "ab1":
-            script_dependents = self.dependents_dir + "/brucella/abortus1/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents/script1"
             parameters = {
-                "upload_to": self.upload_to,
+                "upload_to": str(self.upload_to) + "/brucella/abortus1/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_00693c.fasta", 
                 "hqs": script_dependents + "/NC_00693cHighestQualitySNPs.vcf",
@@ -39,9 +39,9 @@ class Get_Specie_Parameters_Step1():
             return(parameters)
 
         elif species_selection == "af":
-            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/af2122/script_dependents/script1"
             parameters = {
-                "upload_to": self.upload_to,
+                "upload_to": str(self.upload_to) + "/mycobacterium/tbc/af2122/script1",
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
                 "reference": script_dependents + "/NC_002945v4.fasta", 
                 "hqs": script_dependents + "/highqualitysnps.vcf",
@@ -51,10 +51,15 @@ class Get_Specie_Parameters_Step1():
             return(parameters)
 
         else:
-            parameters = None
+            parameters = {
+                "upload_to": None,
+                "spoligo_db": None,
+                "reference": None, 
+                "hqs": None,
+                "gbk_file": None,
+                "species": None,
+            }
             return(parameters)
-            
-
 
 #     if give_option == "af":
 #         found=True
@@ -379,9 +384,72 @@ class Get_Specie_Parameters_Step1():
 #         return option_list, found
 
 
-# ################
-# # SCRIPT 2
-# ################
+class Get_Specie_Parameters_Step2():
+
+    def __init__(self):
+        real_path = os.path.dirname(os.path.realpath(__file__))
+        print("real path command --> {}".format(real_path))
+        real_path = real_path.split('/')
+        root_path = '/'.join(real_path)
+        self.dependents_dir = root_path + "/dependencies"
+        if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
+            self.upload_to = "/bioinfo11/TStuber/Results"
+        else:
+            self.upload_to = None
+
+    def choose(self, species_selection):
+        if species_selection == "af":
+            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents/scripts"
+            parameters = {
+                "qual_gatk_threshold": 150,
+                "N_gatk_threshold": 150,
+                "genotypingcodes": self.upload_to + "/mycobacterium/genotyping_codes.xlsx",
+                "gbk_file": script_dependents + "/NC_002945v4.gbk",
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx", 
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                    "filter_file": script_dependents + "/Filtered_Regions.xlsx", # previous excelinfile
+                "step2_upload": self.upload_to + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
+            }
+            return(parameters)
+
+
+
+# elif args.species == "af":
+    
+#     qual_gatk_threshold = 150
+#     N_gatk_threshold = 150
+    
+#     #Remove network path at and left of "Results"
+#     dependents_dir="/mycobacterium/tbc/af2122/script_dependents/script2"
+    
+#     upload_to, remote, script_dependents = update_directory(dependents_dir) #***FUNCTION CALL
+#     try:
+#         shutil.copy(upload_to + "/mycobacterium/genotyping_codes.xlsx", script_dependents)
+#     except FileNotFoundError:
+#         print ("will use previously used genotyping_codes.xlsx file")
+#     genotypingcodes = script_dependents + "/genotyping_codes.xlsx"
+#     gbk_file = script_dependents + "/NC_002945v4.gbk"
+#     # This file tells the script how to cluster VCFs
+#     definingSNPs = script_dependents + "/DefiningSNPsGroupDesignations.xlsx"
+#     remove_from_analysis = script_dependents + "/RemoveFromAnalysis.xlsx"
+#     bioinfoVCF = upload_to + "/mycobacterium/tbc/af2122/script2"
+#     excelinfile = script_dependents + "/Filtered_Regions.xlsx"
+#     filter_files = script_dependents + "/filter_files"
+#     print ("filter_files %s" % filter_files)
+#     if os.path.isdir(filter_files):
+#         shutil.rmtree(filter_files)
+#         os.mkdir(filter_files)
+#     else:
+#         os.mkdir(filter_files)
+#     get_filters(excelinfile, filter_files) #***FUNCTION CALL
+#     if not args.email:
+#         email_list = "tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov"
+
+
+
+
+
+
 
 # if args.species == "salmonella":
 

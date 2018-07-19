@@ -40,9 +40,14 @@ from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
 from parameters import Get_Specie_Parameters_Step1
+from parameters import Get_Specie_Parameters_Step2
 # import concurrent.futures as cf
 
-def run_loop(root_dir, limited_cpu_count, args_options, email_list): #calls read_aligner
+def run_loop(arg_options): #calls read_aligner
+
+    root_dir = arg_options['root_dir']
+    limited_cpu_count = arg_options['limited_cpu_count']
+    email_list = arg_options['email_list']
 
     startTime = datetime.now()
     ts = time.time()
@@ -125,48 +130,15 @@ def run_loop(root_dir, limited_cpu_count, args_options, email_list): #calls read
 
         print("Iterating directories")
         frames = []
-        if args_options.debug_call: #run just one sample at a time to debug
+        if arg_options['debug_call']: #run just one sample at a time to debug
             for sample_name in run_list:
                 print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
-                stat_summary = read_aligner(sample_name, args_options)
-                df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
-                frames.append(df_stat_summary) #frames to concatenate
-
-                worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
-                worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
-                worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
-                worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
-                worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
-                worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
-                worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
-                worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
-                worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
-                worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
-                worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
-                worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
-                worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
-                worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
-                worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
-                row += 1
-
-                os.chdir(root_dir)
-        else: # run all in run_list in parallel
-
-            print("SAMPLES RAN IN PARALLEL")
-            # itertools allows additional arguments to pass
-            # Need to speed test which why is faster
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(args_options)):
-            # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
-            #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
-
+                stat_summary = read_aligner(sample_name, arg_options)
+                if stat_summary is None:
+                    worksheet.write(row, 0, "Error" .format(sample_name))
+                    worksheet.write(row, 1, sample_name)
+                    row += 1
+                else:
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
 
@@ -194,7 +166,49 @@ def run_loop(root_dir, limited_cpu_count, args_options, email_list): #calls read
                     worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
                     row += 1
 
-            if not args_options.quiet and path_found:
+                    os.chdir(root_dir)
+        else: # run all in run_list in parallel
+
+            print("SAMPLES RAN IN PARALLEL")
+            # itertools allows additional arguments to pass
+            # Need to speed test which why is faster
+            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
+                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(arg_options)):
+            # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
+            #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
+                    if stat_summary is None:
+                        worksheet.write(row, 0, "Error" .format(sample_name))
+                        worksheet.write(row, 1, sample_name)
+                        row += 1
+                    else:
+                        df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
+                        frames.append(df_stat_summary) #frames to concatenate
+
+                        worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
+                        worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
+                        worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                        worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                        worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
+                        worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
+                        worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                        worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                        worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
+                        worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
+                        worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                        worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
+                        worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
+                        worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
+                        worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                        worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                        worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
+                        worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
+                        worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
+                        worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
+                        worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                        worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
+                        row += 1
+
+            if not arg_options['quiet'] and path_found:
                 try:
                     open_check = open(summary_cumulative_file, 'a') #'a' is very important, 'w' will leave you with an empty file
                     open_check.close()
@@ -229,14 +243,14 @@ def run_loop(root_dir, limited_cpu_count, args_options, email_list): #calls read
     runtime = (datetime.now() - startTime)
     print ("\n\nruntime: %s:  \n" % runtime)
 
-    if args_options.email:
+    if arg_options['email_list']:
         try:
-            send_email_step1(email_list, runtime, path_found, summary_file)
+            send_email_step1(arg_options['email_list'], runtime, path_found, summary_file)
         except TimeoutError:
             print("Unable to send email with current smtp setting\n")
             pass
 
-def read_aligner(sample_name, args_options):
+def read_aligner(sample_name, arg_options):
 
     sample_directory = str(os.getcwd())
     os.chdir(sample_name)
@@ -252,14 +266,13 @@ def read_aligner(sample_name, args_options):
     shutil.move(R1[0], "zips")
     shutil.move(R2[0], "zips")
     
-    R1 = sample_directory + "/" + sample_name + "/zips/" + R1[0]
-    R2 = sample_directory + "/" + sample_name + "/zips/" + R2[0]
-    fastq_list = [R1, R2]
+    arg_options['R1'] = sample_directory + "/" + sample_name + "/zips/" + R1[0]
+    arg_options['R2'] = sample_directory + "/" + sample_name + "/zips/" + R2[0]
 
     ###
     read_quality_stats = {}
-    print("Getting mean for {}" .format(R1))
-    handle = gzip.open(R1, "rt")
+    print("Getting mean for {}" .format(arg_options['R1']))
+    handle = gzip.open(arg_options['R1'], "rt")
     mean_quality_list=[]
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
@@ -269,8 +282,8 @@ def read_aligner(sample_name, args_options):
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
 
-    print("Getting mean for {}" .format(R2))
-    handle = gzip.open(R2, "rt")
+    print("Getting mean for {}" .format(arg_options['R2']))
+    handle = gzip.open(arg_options['R2'], "rt")
     mean_quality_list=[]
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
@@ -279,12 +292,15 @@ def read_aligner(sample_name, args_options):
     read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    arg_options.update(read_quality_stats)
     ###
 
-    specie_para_dict = species_selection(read_quality_stats, args_options, sample_name, R1, R2) #force species
-
+    arg_options['sample_name'] = sample_name
+    arg_options = species_selection_step1(arg_options)
+    if arg_options is None:
+        return None
     try:
-        stat_summary = align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2)
+        stat_summary = align_reads(arg_options)
         for k, v in stat_summary.items():
             print("%s: %s" % (k, v))
         return(stat_summary)
@@ -293,26 +309,29 @@ def read_aligner(sample_name, args_options):
         return #(stat_summary)
         pass
 
-def species_selection(read_quality_stats, args_options, sample_name, R1, R2):
+def species_selection_step1(arg_options):
     all_parameters = Get_Specie_Parameters_Step1()
 
-    if args_options.species:
-        species_selection = args_options.species
+    if arg_options['species']:
+        species_selection = arg_options.species
         print("Sample will be ran as {}" .format(species_selection))
         specie_para_dict = all_parameters.choose(species_selection)
     else:
-        best_ref_found = best_reference([R1, R2])
+        best_ref_found = best_reference([arg_options['R1'], arg_options['R2']])
         print("Sample will be ran as {}" .format(best_ref_found))
         specie_para_dict = all_parameters.choose(best_ref_found)
-        if specie_para_dict:
-            shutil.copy2(specie_para_dict["reference"], sample_name)
-            shutil.copy2(specie_para_dict["hqs"], sample_name)
-        elif specie_para_dict is None:
-            print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(R1, R2))
-        else:
-            print("### See species_selection function")
-            sys.exit(0)
-    return specie_para_dict
+
+    if specie_para_dict:
+        shutil.copy2(specie_para_dict["reference"], arg_options['sample_name'])
+        shutil.copy2(specie_para_dict["hqs"], arg_options['sample_name'])
+        arg_options.update(specie_para_dict)
+        return arg_options
+    elif specie_para_dict is None:
+        print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(arg_options['R1'], arg_options['R2']))
+        return None
+    else:
+        print("### See species_selection_step1 function")
+        return None
 
 def best_reference(fastq_list):
 
@@ -480,20 +499,20 @@ def finding_best_ref(v, fastq_list):
                 count += seq.count(v)
     return(v, count)
 
-def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
+def align_reads(arg_options):
     working_directory = os.getcwd()
     print("Working on: {}" .format(working_directory))
     ts = time.time()
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
-
-    if specie_para_dict["species"] is None:
-        read_base = os.path.basename(R1)
-        sample_name=re.sub('_.*', '', read_base)
+    R1 = arg_options['R1']
+    R2 = arg_options['R2']
+   
+    if arg_options["species"] is None:
         R1size = sizeof_fmt(os.path.getsize(R1))
         R2size = sizeof_fmt(os.path.getsize(R2))
         stat_summary = {}
         stat_summary["time_stamp"] = st
-        stat_summary["sample_name"] = sample_name
+        stat_summary["sample_name"] = arg_options["sample_name"]
         stat_summary["self.species"] = "NOT_FOUND"
         stat_summary["reference_sequence_name"] = "N/A"
         stat_summary["R1size"] = R1size
@@ -505,21 +524,19 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
         startTime = datetime.now()
         print ("\n\n*** START ***\n")
         print ("Start time: %s" % startTime)
-
-        read_base = os.path.basename(R1)
-        sample_name = re.sub('_.*', '', read_base)
+        sample_name = arg_options["sample_name"]
         
-        print("species: %s" % specie_para_dict["species"])
-        if specie_para_dict["species"] in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
+        print("species: %s" % arg_options["species"])
+        if arg_options["species"] in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
             print("Brucella")
-            mlst(R1, R2, working_directory, sample_name)
-        elif specie_para_dict["species"] in ["h37", "af"]: #removed bovis
+            mlst(arg_options)
+        elif arg_options["species"] in ["h37", "af"]: #removed bovis
             print("TB")
-            spoligo(R1, R2, specie_para_dict)
+            spoligo(arg_options)
         
         os.chdir(working_directory)
-        shutil.copy(specie_para_dict["reference"], working_directory)
-        shutil.copy(specie_para_dict["hqs"], working_directory)
+        shutil.copy(arg_options["reference"], working_directory)
+        shutil.copy(arg_options["hqs"], working_directory)
         sample_reference = glob.glob(working_directory + '/*fasta')
         hqs = glob.glob(working_directory + '/*vcf')
 
@@ -681,9 +698,9 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
             # os.kill(process_id, signal.SIGKILL)
 
         ###
-        if specie_para_dict["gbk_file"] is not "None" and not args_options.no_annotation:
+        if arg_options["gbk_file"] is not "None" and not arg_options.no_annotation:
             try:
-                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(specie_para_dict["gbk_file"], "genbank"))
+                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(arg_options["gbk_file"], "genbank"))
                 annotated_vcf = loc_sam + "-annotated.vcf"
                 write_out=open(annotated_vcf, 'w')
                 
@@ -819,7 +836,7 @@ def align_reads(read_quality_stats, specie_para_dict, args_options, R1, R2):
 
         stat_summary["time_stamp"] = st
         stat_summary["sample_name"] = sample_name
-        stat_summary["self.species"] = specie_para_dict["species"]
+        stat_summary["self.species"] = arg_options["species"]
         stat_summary["reference_sequence_name"] = reference_sequence_name
         stat_summary["R1size"] = R1size
         stat_summary["R2size"] = R2size
@@ -922,9 +939,12 @@ def get_annotations(line, in_annotation_as_dict):
             annotated_line = "\t".join(split_line)
             return(annotated_line)
 
-def mlst(R1, R2, working_directory, sample_name):
+def mlst(arg_options):
 
     sample_directory = str(os.getcwd())
+    R1 = arg_options['R1']
+    R2 = arg_options['R2']
+    sample_name = arg_options['sample_name']
 
     #https://bmcmicrobiol.biomedcentral.com/articles/10.1186/1471-2180-7-34
     write_ref = open("ST1-MLST.fasta", 'w')
@@ -1110,10 +1130,11 @@ def binary_to_hex(binary):
 
     return(hex_section1.replace('0x', '').upper() + "-" + hex_section2.replace('0x', '').upper() + "-" + hex_section3.replace('0x', '').upper() + "-" + hex_section4.replace('0x', '').upper() + "-" + hex_section5.replace('0x', '').upper() + "-" + hex_section6.replace('0x', '').upper())
 
-def spoligo(R1, R2, specie_para_dict):
+def spoligo(arg_options):
     
     sample_directory = str(os.getcwd())
-    
+    R1 = arg_options['R1']
+    R2 = arg_options['R2']
     print("\nFinding spoligotype pattern...\n")
     
     '''spoligo spacers'''
@@ -1206,7 +1227,7 @@ def spoligo(R1, R2, specie_para_dict):
     write_out = open("spoligo.txt", 'w')
     
     found = False
-    with open(specie_para_dict["spoligo_db"]) as f: # put into dictionary or list
+    with open(arg_options["spoligo_db"]) as f: # put into dictionary or list
         for line in f:
             line=line.rstrip()
             octalcode = line.split()[0] #no arg splits on whitespace
@@ -1377,7 +1398,7 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
     #smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.quit()
 
-def run_script2():
+def run_script2(args_option):
 
     # IF AVX2 IS AVAILABE (CHECK WITH `cat /proc/cpuinfo | grep -i "avx"`). CREATE A LINK TO: `ln -s path_to_raxmlHPC-PTHREADS-AVX2 raxml.  Place "raxml" in your path.  This will allow "raxml" to be found first which will call AVX2 version of RAxML
     
@@ -1408,9 +1429,6 @@ def run_script2():
                     sys.exit(0)
 
     print ("\n\n----> RAxML found in $PATH as: %s <-----" % sys_raxml)
-
-    global raxml_cpu
-
     if cpu_count < 20:
         raxml_cpu = 2
     else:
@@ -1419,6 +1437,8 @@ def run_script2():
     ##########################
     # Took out script 2 parameters
     ##########################
+
+    
     print ("\nSET VARIABLES")
     print ("\tgenotypingcodes: %s " % genotypingcodes)
 
@@ -1525,7 +1545,7 @@ def run_script2():
     group_calls_list = []
 
     print ("Grouping files...")
-    if args.debug_call and not args.get:
+    if args_option['debug_call'] and not args_option['get']:
         for i in files:
             dict_amb, group_calls, mal = group_files(i)
             all_list_amb.update(dict_amb)
@@ -1545,7 +1565,7 @@ def run_script2():
 
     samples_in_output = []
     print ("Getting SNPs in each directory")
-    if args.debug_call:
+    if args_option['debug_call']:
         for i in directory_list:
             samples_in_fasta = get_snps(i)
             samples_in_output.append(samples_in_fasta)
@@ -1585,14 +1605,14 @@ def run_script2():
     #############################################
     #MAKE HTML FILE:
     print ("<html>\n<head><style> table { font-family: arial, sans-serif; border-collapse: collapse; width: 40%; } td, th { border: 1px solid #dddddd; padding: 4px; text-align: left; font-size: 11px; } </style></head>\n<body style=\"font-size:12px;\">", file=htmlfile)
-    print ("<h2>Script ran using <u>%s</u> variables</h2>" % args.species.upper(), file=htmlfile)
+    print ("<h2>Script ran using <u>%s</u> variables</h2>" % args_option['species'].upper(), file=htmlfile)
     print ("<h4>There are %s VCFs in this run</h4>" % file_number, file=htmlfile)
 
     #OPTIONS
-    print ("Additional options ran: email: %s, args.filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (args.email, args.filter, args.all_vcf, args.elite, args.no_annotation, args.debug_call, args.get, args.upload), file=htmlfile)
-    if args.all_vcf:
+    print ("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (args_option['email'], args_option['filter_finder'], args_option['all_vcf'], args_option['elite'], args_option['no_annotation'], args_option['debug_call'], args_option['get'], args_option['upload']), file=htmlfile)
+    if args_option['all_vcf']:
         print ("\n<h4>All_VCFs is available</h4>", file=htmlfile)
-    elif args.elite:
+    elif args_option['elite']:
         print ("\n<h4>Elite VCF comparison available</h4>", file=htmlfile)
 
     #TIME
@@ -1682,6 +1702,18 @@ def run_script2():
 
     htmlfile.close()
 
+def species_selection_step2(arg_options, sample_name, R1, R2):
+    all_parameters = Get_Specie_Parameters_Step2()
+
+    if arg_options.species:
+        species_selection = arg_options.species
+        print("Sample will be ran as {}" .format(species_selection))
+        specie_para_dict = all_parameters.choose(species_selection)
+        return specie_para_dict
+    else:
+        print("### See species_selection_step2 function")
+        sys.exit(0)
+  
 def send_email_step2(email_list):
     print ("Sending Email...")
     print ("Sending to:")
@@ -1689,7 +1721,7 @@ def send_email_step2(email_list):
     msg = MIMEMultipart()
     msg['From'] = "tod.p.stuber@aphis.usda.gov"
     msg['To'] = email_list
-    msg['Subject'] = "Script 2 " + args.species
+    msg['Subject'] = "Script 2 " + args_option['species']
     with open(htmlfile_name) as fp:
         msg.attach(MIMEText(fp.read(), 'html'))
 
@@ -1708,15 +1740,15 @@ def send_email_step2(email_list):
     #smtp.sendmail("tod.p.stuber@aphis.usda.gov", email_list, msg.as_string())
     smtp.quit()
 
-    if args.email == "none":
+    if args_option['email'] == "none":
         print ("\n\temail not sent")
-    elif args.email:
+    elif args_option['email']:
         send_email_step2(email_list)
         print ("\n\temail sent to: %s" % email_list)
     else:
         print ("\n\temail not sent")
 
-    if args.upload:
+    if args_option['upload']:
         print ("Uploading Samples...")
         def copytree(src, dst, symlinks=False, ignore=None): #required to ignore permissions
             try:
@@ -1835,7 +1867,7 @@ def change_names():
                     names_not_changed.append(each_vcf)
     names_not_changed = set(names_not_changed) # remove duplicates
 
-    if args.elite:
+    if args_option['elite']:
         list_of_files = []
         list_of_files = glob.glob('*vcf')
         if not os.path.exists("temp_hold"):
@@ -1877,7 +1909,7 @@ def change_names():
     #fix files
     vcf_list = glob.glob('*vcf')
     print("Fixing files...\n")
-    if args.debug_call and not args.get:
+    if args_option['debug_call'] and not args_option['get']:
         for each_vcf in vcf_list:
             print(each_vcf)
             mal = fix_vcf(each_vcf)
@@ -1926,7 +1958,7 @@ def fix_vcf(each_vcf):
     mal = []
     ###
     # Fix common VCF errors
-    if args.debug_call and not args.get:
+    if args_option['debug_call'] and not args_option['get']:
         print ("FIXING FILE: " + each_vcf)
     temp_file = each_vcf + ".temp"
     write_out=open(temp_file, 'w') #r+ used for reading and writing to the same file
@@ -2061,7 +2093,7 @@ def group_files(each_vcf):
                 ### ADD AMBIGIOUS CALL TO LIST
                 group_calls.append("*" + directory + "-mix")
         # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
-        if args.all_vcf or args.elite:
+        if args_option['all_vcf'] or args_option['elite']:
             if not os.path.exists("All_VCFs"):
                 os.makedirs("All_VCFs")
             shutil.move(each_vcf, "All_VCFs")
@@ -2228,7 +2260,7 @@ def get_snps(directory):
 
     files = glob.glob('*vcf')
     all_positions = {}
-    if args.debug_call and not args.get:
+    if args_option['debug_call'] and not args_option['get']:
         for i in files:
             found_positions = find_positions(i)
             all_positions.update(found_positions)
@@ -2261,7 +2293,7 @@ def get_snps(directory):
     print ("Possible positions filtered %s" % format(len(filter_list), ",d"))
     print ("Positions after filtering %s\n" % format(len(all_positions), ",d"))
 
-    if args.filter:
+    if args_option['filter_finder']:
         #write to files
         positions_to_filter = "positions_to_filter.txt"
         positions_to_filter_details = "positions_to_filter_details.txt"
@@ -2275,7 +2307,7 @@ def get_snps(directory):
         #calculate mean/max qual and map at all possible positions
         dd_qual = {}
         dd_map = {}
-        if args.debug_call:
+        if args_option['debug_call']:
             for each_vcf in files:
                 print ("working on: %s" % each_vcf)
                 dict_qual, dict_map = find_filter_dict(each_vcf)
@@ -2614,7 +2646,7 @@ def get_snps(directory):
         mytable = mytable.transpose() #org
         mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
-        if mygbk and not args.no_annotation:
+        if mygbk and not args_option['no_annotation']:
             dict_annotation = get_annotations_table(parsimony_positions)
             write_out=open('annotations.txt', 'w+')
             print ('reference_pos\tannotations', file=write_out)

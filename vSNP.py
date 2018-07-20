@@ -128,7 +128,7 @@ if fastq_check:
             print("See files, vSNP has finished alignments")
 elif vcf_check:
     if not arg_options['species']:
-        species = functions.get_species()
+        species = functions.get_species(arg_options)
         print("species %s" % species)
     vcfs_count = len(glob.glob('*vcf'))
     if (all_file_types_count != vcfs_count):

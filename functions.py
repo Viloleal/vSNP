@@ -134,11 +134,45 @@ def run_loop(arg_options): #calls read_aligner
             for sample_name in run_list:
                 print("DEBUGGING, SAMPLES RAN INDIVIDUALLY")
                 stat_summary = read_aligner(sample_name, arg_options)
-                if stat_summary is None:
-                    worksheet.write(row, 0, "Error" .format(sample_name))
-                    worksheet.write(row, 1, sample_name)
-                    row += 1
-                else:
+
+                df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
+                frames.append(df_stat_summary) #frames to concatenate
+
+                worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
+                worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
+                worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
+                worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
+                worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
+                worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
+                worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
+                worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
+                worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
+                worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
+                worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
+                worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
+                worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
+                worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
+                worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
+                worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
+                worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
+                worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
+                worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
+                worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
+                worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
+                row += 1
+
+                os.chdir(root_dir)
+        else: # run all in run_list in parallel
+
+            print("SAMPLES RAN IN PARALLEL")
+            # itertools allows additional arguments to pass
+            # Need to speed test which why is faster
+            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
+                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(arg_options)):
+            # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
+            #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
+
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                     frames.append(df_stat_summary) #frames to concatenate
 
@@ -165,48 +199,6 @@ def run_loop(arg_options): #calls read_aligner
                     worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
                     worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
                     row += 1
-
-                    os.chdir(root_dir)
-        else: # run all in run_list in parallel
-
-            print("SAMPLES RAN IN PARALLEL")
-            # itertools allows additional arguments to pass
-            # Need to speed test which why is faster
-            with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
-                for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(arg_options)):
-            # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
-            #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
-                    if stat_summary is None:
-                        worksheet.write(row, 0, "Error" .format(sample_name))
-                        worksheet.write(row, 1, sample_name)
-                        row += 1
-                    else:
-                        df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
-                        frames.append(df_stat_summary) #frames to concatenate
-
-                        worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
-                        worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
-                        worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
-                        worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
-                        worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
-                        worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
-                        worksheet.write(row, 6, stat_summary.get('Q_ave_R1', 'n/a'))
-                        worksheet.write(row, 7, stat_summary.get('Q_ave_R2', 'n/a'))
-                        worksheet.write(row, 8, stat_summary.get('Q30_R1', 'n/a'))
-                        worksheet.write(row, 9, stat_summary.get('Q30_R2', 'n/a'))
-                        worksheet.write(row, 10, stat_summary.get('allbam_mapped_reads', 'n/a'))
-                        worksheet.write(row, 11, stat_summary.get('genome_coverage', 'n/a'))
-                        worksheet.write(row, 12, stat_summary.get('ave_coverage', 'n/a'))
-                        worksheet.write(row, 13, stat_summary.get('ave_read_length', 'n/a'))
-                        worksheet.write(row, 14, stat_summary.get('unmapped_reads', 'n/a'))
-                        worksheet.write(row, 15, stat_summary.get('unmapped_assembled_contigs', 'n/a'))
-                        worksheet.write(row, 16, stat_summary.get('good_snp_count', 'n/a'))
-                        worksheet.write(row, 17, stat_summary.get('mlst_type', 'n/a'))
-                        worksheet.write(row, 18, stat_summary.get('octalcode', 'n/a'))
-                        worksheet.write(row, 19, stat_summary.get('sbcode', 'n/a'))
-                        worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
-                        worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
-                        row += 1
 
             if not arg_options['quiet'] and path_found:
                 try:
@@ -292,7 +284,7 @@ def read_aligner(sample_name, arg_options):
     read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
-    arg_options.update(read_quality_stats)
+    arg_options['read_quality_stats'] = read_quality_stats 
     ###
 
     arg_options['sample_name'] = sample_name
@@ -313,7 +305,7 @@ def species_selection_step1(arg_options):
     all_parameters = Get_Specie_Parameters_Step1()
 
     if arg_options['species']:
-        species_selection = arg_options.species
+        species_selection = arg_options['species']
         print("Sample will be ran as {}" .format(species_selection))
         specie_para_dict = all_parameters.choose(species_selection)
     else:
@@ -518,7 +510,7 @@ def align_reads(arg_options):
         stat_summary["R1size"] = R1size
         stat_summary["R2size"] = R2size
         stat_summary["allbam_mapped_reads"] = "CHECK SAMPLE *****************************************"
-        stat_summary = {**stat_summary, **read_quality_stats}
+        stat_summary.update(arg_options['read_quality_stats'])
         return(stat_summary)
     else:
         startTime = datetime.now()
@@ -698,7 +690,7 @@ def align_reads(arg_options):
             # os.kill(process_id, signal.SIGKILL)
 
         ###
-        if arg_options["gbk_file"] is not "None" and not arg_options.no_annotation:
+        if arg_options["gbk_file"] is not "None" and not arg_options['no_annotation']:
             try:
                 in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(arg_options["gbk_file"], "genbank"))
                 annotated_vcf = loc_sam + "-annotated.vcf"
@@ -867,7 +859,7 @@ def align_reads(arg_options):
             col += 1
             # worksheet.write(row, col, v)
         
-        stat_summary = {**stat_summary, **read_quality_stats}
+        stat_summary.update(arg_options['read_quality_stats'])
         worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
         worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
         worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
@@ -1398,7 +1390,92 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
     #smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.quit()
 
-def run_script2(args_option):
+def fix_vcf(each_vcf, arg_options):
+    mal = []
+    ###
+    # Fix common VCF errors
+    if arg_options['debug_call'] and not arg_options['get']:
+        print ("FIXING FILE: " + each_vcf)
+    temp_file = each_vcf + ".temp"
+    write_out=open(temp_file, 'w') #r+ used for reading and writing to the same file
+    ###
+    with open(each_vcf, 'r') as file:
+        try:
+            for line in file:
+                if line.rstrip(): # true if not empty line'^$'
+                    line = line.rstrip() #remove right white space
+                    line = re.sub('"AC=', 'AC=', line)
+                    line = re.sub('""', '"', line)
+                    line = re.sub('""', '"', line)
+                    line = re.sub('""', '"', line)
+                    line = re.sub('"$', '', line)
+                    line = re.sub('GQ:PL\t"', 'GQ:PL\t', line)
+                    line = re.sub('[0-9]+\tGT\t.\/.$', '999\tGT:AD:DP:GQ:PL\t1/1:0,80:80:99:2352,239,0', line)
+                    line = re.sub('^"', '', line)
+                    if line.startswith('##') and line.endswith('"'):
+                        line = re.sub('"$', '', line)
+                    if line.startswith('##'):
+                        line = line.split('\t')
+                        line = ''.join(line[0])
+                    if not line.startswith('##'):
+                        line = re.sub('"', '', line)
+                        line = line.split('\t')
+                        line = "\t".join(line[0:10])
+                        print(line, file=write_out)
+                    else:
+                        print(line, file=write_out)
+        except IndexError:
+            print ("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
+            mal.append("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
+            os.remove(each_vcf)
+        except UnicodeDecodeError:
+            print ("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
+            mal.append("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
+            os.remove(each_vcf)
+
+    write_out.close()
+    os.rename(temp_file, each_vcf)
+    return mal
+
+def get_species(arg_options):
+
+    #species = corresponding NCBI accession
+    species_cross_reference = {}
+    species_cross_reference["salmonella"] = ["016856, 016855"]
+    species_cross_reference["bovis"] = ["AF2122_NC002945", "00879"]
+    species_cross_reference["af"] = ["NC_002945.4"]
+    species_cross_reference["h37"] = ["000962", "002755", "009525", "018143"]
+    species_cross_reference["para"] = ["NC_002944"]
+    species_cross_reference["ab1"] = ["006932", "006933"]
+    species_cross_reference["ab3"] = ["007682", "007683"]
+    species_cross_reference["canis"] = ["010103", "010104"]
+    species_cross_reference["ceti1"] = ["Bceti1Cudo"]
+    species_cross_reference["ceti2"] = ["022905", "022906"]
+    species_cross_reference["mel1"] = ["003317", "003318"]
+    species_cross_reference["mel1b"] = ["CP018508", "CP018509"]
+    species_cross_reference["mel2"] = ["012441", "012442"]
+    species_cross_reference["mel3"] = ["007760", "007761"]
+    species_cross_reference["ovis"] = ["009504", "009505"]
+    species_cross_reference["neo"] = ["KN046827"]
+    species_cross_reference["suis1"] = ["017250", "017251"]
+    species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
+    species_cross_reference["suis3"] = ["007719", "007718"]
+    species_cross_reference["suis4"] = ["B-REF-BS4-40"]
+    
+    vcf_list = glob.glob('*vcf')
+    for each_vcf in vcf_list:
+        print(each_vcf)
+        mal = fix_vcf(each_vcf, arg_options) # mal isn't getting picked up
+        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
+        print("single_vcf %s" % each_vcf)
+        for record in vcf_reader:
+            header = record.CHROM
+            for k, vlist in species_cross_reference.items():
+                for l in vlist:
+                    if l in header:
+                        return(k)
+
+def run_script2(arg_options):
 
     # IF AVX2 IS AVAILABE (CHECK WITH `cat /proc/cpuinfo | grep -i "avx"`). CREATE A LINK TO: `ln -s path_to_raxmlHPC-PTHREADS-AVX2 raxml.  Place "raxml" in your path.  This will allow "raxml" to be found first which will call AVX2 version of RAxML
     
@@ -1429,20 +1506,17 @@ def run_script2(args_option):
                     sys.exit(0)
 
     print ("\n\n----> RAxML found in $PATH as: %s <-----" % sys_raxml)
-    if cpu_count < 20:
+    if arg_options['cpu_count'] < 20:
         raxml_cpu = 2
     else:
-        raxml_cpu = int(cpu_count/10)
-    
-    ##########################
-    # Took out script 2 parameters
-    ##########################
+        raxml_cpu = int(arg_options['cpu_count']/10)
 
+    arg_options = species_selection_step2(arg_options)
     
     print ("\nSET VARIABLES")
-    print ("\tgenotypingcodes: %s " % genotypingcodes)
+    print ("\tgenotypingcodes: %s " % arg_options['genotypingcodes'])
 
-    htmlfile_name = root_dir+ "/summary_log.html"
+    htmlfile_name = arg_options['root_dir'] + "/summary_log.html"
     htmlfile = open(htmlfile_name, 'at')
 
     startTime = datetime.now()
@@ -1484,7 +1558,7 @@ def run_script2(args_option):
 
     if os.path.isfile(genotypingcodes):
         print ("\nChanging the VCF names")
-        names_not_changed = change_names() # check if genotypingcodes exist.  if not skip.
+        names_not_changed = change_names(args_option) # check if genotypingcodes exist.  if not skip.
     else:
         print("No mapping file for VCF names")
         names_not_changed = glob.glob("*.vcf")
@@ -1545,7 +1619,7 @@ def run_script2(args_option):
     group_calls_list = []
 
     print ("Grouping files...")
-    if args_option['debug_call'] and not args_option['get']:
+    if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
             dict_amb, group_calls, mal = group_files(i)
             all_list_amb.update(dict_amb)
@@ -1565,7 +1639,7 @@ def run_script2(args_option):
 
     samples_in_output = []
     print ("Getting SNPs in each directory")
-    if args_option['debug_call']:
+    if arg_options['debug_call']:
         for i in directory_list:
             samples_in_fasta = get_snps(i)
             samples_in_output.append(samples_in_fasta)
@@ -1605,14 +1679,14 @@ def run_script2(args_option):
     #############################################
     #MAKE HTML FILE:
     print ("<html>\n<head><style> table { font-family: arial, sans-serif; border-collapse: collapse; width: 40%; } td, th { border: 1px solid #dddddd; padding: 4px; text-align: left; font-size: 11px; } </style></head>\n<body style=\"font-size:12px;\">", file=htmlfile)
-    print ("<h2>Script ran using <u>%s</u> variables</h2>" % args_option['species'].upper(), file=htmlfile)
+    print ("<h2>Script ran using <u>%s</u> variables</h2>" % arg_options['species'].upper(), file=htmlfile)
     print ("<h4>There are %s VCFs in this run</h4>" % file_number, file=htmlfile)
 
     #OPTIONS
-    print ("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (args_option['email'], args_option['filter_finder'], args_option['all_vcf'], args_option['elite'], args_option['no_annotation'], args_option['debug_call'], args_option['get'], args_option['upload']), file=htmlfile)
-    if args_option['all_vcf']:
+    print ("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (arg_options['email'], arg_options['filter_finder'], arg_options['all_vcf'], arg_options['elite'], arg_options['no_annotation'], arg_options['debug_call'], arg_options['get'], arg_options['upload']), file=htmlfile)
+    if arg_options['all_vcf']:
         print ("\n<h4>All_VCFs is available</h4>", file=htmlfile)
-    elif args_option['elite']:
+    elif arg_options['elite']:
         print ("\n<h4>Elite VCF comparison available</h4>", file=htmlfile)
 
     #TIME
@@ -1702,11 +1776,11 @@ def run_script2(args_option):
 
     htmlfile.close()
 
-def species_selection_step2(arg_options, sample_name, R1, R2):
+def species_selection_step2(arg_options):
     all_parameters = Get_Specie_Parameters_Step2()
 
-    if arg_options.species:
-        species_selection = arg_options.species
+    if arg_options['species']:
+        species_selection = arg_options['species']
         print("Sample will be ran as {}" .format(species_selection))
         specie_para_dict = all_parameters.choose(species_selection)
         return specie_para_dict
@@ -1721,7 +1795,7 @@ def send_email_step2(email_list):
     msg = MIMEMultipart()
     msg['From'] = "tod.p.stuber@aphis.usda.gov"
     msg['To'] = email_list
-    msg['Subject'] = "Script 2 " + args_option['species']
+    msg['Subject'] = "Script 2 " + arg_options['species']
     with open(htmlfile_name) as fp:
         msg.attach(MIMEText(fp.read(), 'html'))
 
@@ -1740,15 +1814,15 @@ def send_email_step2(email_list):
     #smtp.sendmail("tod.p.stuber@aphis.usda.gov", email_list, msg.as_string())
     smtp.quit()
 
-    if args_option['email'] == "none":
+    if arg_options['email'] == "none":
         print ("\n\temail not sent")
-    elif args_option['email']:
+    elif arg_options['email']:
         send_email_step2(email_list)
         print ("\n\temail sent to: %s" % email_list)
     else:
         print ("\n\temail not sent")
 
-    if args_option['upload']:
+    if arg_options['upload']:
         print ("Uploading Samples...")
         def copytree(src, dst, symlinks=False, ignore=None): #required to ignore permissions
             try:
@@ -1814,7 +1888,7 @@ def test_duplicate():
     else:
         print ("\nno duplicate VCFs\n")
 
-def change_names():
+def change_names(args_option):
     global malformed
     code_dictionary = {}
     try:
@@ -1867,7 +1941,7 @@ def change_names():
                     names_not_changed.append(each_vcf)
     names_not_changed = set(names_not_changed) # remove duplicates
 
-    if args_option['elite']:
+    if arg_options['elite']:
         list_of_files = []
         list_of_files = glob.glob('*vcf')
         if not os.path.exists("temp_hold"):
@@ -1909,11 +1983,11 @@ def change_names():
     #fix files
     vcf_list = glob.glob('*vcf')
     print("Fixing files...\n")
-    if args_option['debug_call'] and not args_option['get']:
+    if arg_options['debug_call'] and not arg_options['get']:
         for each_vcf in vcf_list:
             print(each_vcf)
-            mal = fix_vcf(each_vcf)
-            malformed = malformed + list(mal)
+            mal = fix_vcf(each_vcf, args_option)
+            malformed = list(mal)
     else:
         with Pool(maxtasksperchild=4) as pool:
             mal = pool.map(fix_vcf, vcf_list, chunksize=8)
@@ -1953,53 +2027,6 @@ def get_filters(excelinfile, filter_files):
 def get_read_mean(rec):
     mean_q = int(mean(rec.letter_annotations['phred_quality']))
     return mean_q
-
-def fix_vcf(each_vcf):
-    mal = []
-    ###
-    # Fix common VCF errors
-    if args_option['debug_call'] and not args_option['get']:
-        print ("FIXING FILE: " + each_vcf)
-    temp_file = each_vcf + ".temp"
-    write_out=open(temp_file, 'w') #r+ used for reading and writing to the same file
-    ###
-    with open(each_vcf, 'r') as file:
-        try:
-            for line in file:
-                if line.rstrip(): # true if not empty line'^$'
-                    line = line.rstrip() #remove right white space
-                    line = re.sub('"AC=', 'AC=', line)
-                    line = re.sub('""', '"', line)
-                    line = re.sub('""', '"', line)
-                    line = re.sub('""', '"', line)
-                    line = re.sub('"$', '', line)
-                    line = re.sub('GQ:PL\t"', 'GQ:PL\t', line)
-                    line = re.sub('[0-9]+\tGT\t.\/.$', '999\tGT:AD:DP:GQ:PL\t1/1:0,80:80:99:2352,239,0', line)
-                    line = re.sub('^"', '', line)
-                    if line.startswith('##') and line.endswith('"'):
-                        line = re.sub('"$', '', line)
-                    if line.startswith('##'):
-                        line = line.split('\t')
-                        line = ''.join(line[0])
-                    if not line.startswith('##'):
-                        line = re.sub('"', '', line)
-                        line = line.split('\t')
-                        line = "\t".join(line[0:10])
-                        print(line, file=write_out)
-                    else:
-                        print(line, file=write_out)
-        except IndexError:
-            print ("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
-            mal.append("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
-            os.remove(each_vcf)
-        except UnicodeDecodeError:
-            print ("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
-            mal.append("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
-            os.remove(each_vcf)
-
-    write_out.close()
-    os.rename(temp_file, each_vcf)
-    return mal
 
 def find_filter_dict(each_vcf):
     dict_qual = {}
@@ -2093,7 +2120,7 @@ def group_files(each_vcf):
                 ### ADD AMBIGIOUS CALL TO LIST
                 group_calls.append("*" + directory + "-mix")
         # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
-        if args_option['all_vcf'] or args_option['elite']:
+        if arg_options['all_vcf'] or arg_options['elite']:
             if not os.path.exists("All_VCFs"):
                 os.makedirs("All_VCFs")
             shutil.move(each_vcf, "All_VCFs")
@@ -2260,7 +2287,7 @@ def get_snps(directory):
 
     files = glob.glob('*vcf')
     all_positions = {}
-    if args_option['debug_call'] and not args_option['get']:
+    if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
             found_positions = find_positions(i)
             all_positions.update(found_positions)
@@ -2293,7 +2320,7 @@ def get_snps(directory):
     print ("Possible positions filtered %s" % format(len(filter_list), ",d"))
     print ("Positions after filtering %s\n" % format(len(all_positions), ",d"))
 
-    if args_option['filter_finder']:
+    if arg_options['filter_finder']:
         #write to files
         positions_to_filter = "positions_to_filter.txt"
         positions_to_filter_details = "positions_to_filter_details.txt"
@@ -2307,7 +2334,7 @@ def get_snps(directory):
         #calculate mean/max qual and map at all possible positions
         dd_qual = {}
         dd_map = {}
-        if args_option['debug_call']:
+        if arg_options['debug_call']:
             for each_vcf in files:
                 print ("working on: %s" % each_vcf)
                 dict_qual, dict_map = find_filter_dict(each_vcf)
@@ -2646,7 +2673,7 @@ def get_snps(directory):
         mytable = mytable.transpose() #org
         mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
-        if mygbk and not args_option['no_annotation']:
+        if mygbk and not arg_options['no_annotation']:
             dict_annotation = get_annotations_table(parsimony_positions)
             write_out=open('annotations.txt', 'w+')
             print ('reference_pos\tannotations', file=write_out)
@@ -2842,7 +2869,6 @@ def sort_table(table_location, ordered, out_org):
     mytable = mytable[:-2]
     mytable.to_csv(out_org, sep='\t', index=False)
 
-def excelwriter(filename):
     orginal_name=filename
     filename = filename.replace(".txt",".xlsx")
     wb = xlsxwriter.Workbook(filename)
@@ -2980,41 +3006,3 @@ def excelwriter(filename):
     ws.set_row(i-1, 400, formatannotation)
 
     wb.close()
-
-def get_species():
-
-    #species = corresponding NCBI accession
-    species_cross_reference = {}
-    species_cross_reference["salmonella"] = ["016856, 016855"]
-    species_cross_reference["bovis"] = ["AF2122_NC002945", "00879"]
-    species_cross_reference["af"] = ["NC_002945.4"]
-    species_cross_reference["h37"] = ["000962", "002755", "009525", "018143"]
-    species_cross_reference["para"] = ["NC_002944"]
-    species_cross_reference["ab1"] = ["006932", "006933"]
-    species_cross_reference["ab3"] = ["007682", "007683"]
-    species_cross_reference["canis"] = ["010103", "010104"]
-    species_cross_reference["ceti1"] = ["Bceti1Cudo"]
-    species_cross_reference["ceti2"] = ["022905", "022906"]
-    species_cross_reference["mel1"] = ["003317", "003318"]
-    species_cross_reference["mel1b"] = ["CP018508", "CP018509"]
-    species_cross_reference["mel2"] = ["012441", "012442"]
-    species_cross_reference["mel3"] = ["007760", "007761"]
-    species_cross_reference["ovis"] = ["009504", "009505"]
-    species_cross_reference["neo"] = ["KN046827"]
-    species_cross_reference["suis1"] = ["017250", "017251"]
-    species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
-    species_cross_reference["suis3"] = ["007719", "007718"]
-    species_cross_reference["suis4"] = ["B-REF-BS4-40"]
-    
-    vcf_list = glob.glob('*vcf')
-    for each_vcf in vcf_list:
-        print(each_vcf)
-        mal = fix_vcf(each_vcf)
-        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
-        print("single_vcf %s" % each_vcf)
-        for record in vcf_reader:
-            header = record.CHROM
-            for k, vlist in species_cross_reference.items():
-                for l in vlist:
-                    if l in header:
-                        return(k)

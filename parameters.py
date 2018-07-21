@@ -403,13 +403,18 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 150,
                 "N_gatk_threshold": 150,
-                "genotypingcodes": self.upload_to + "/mycobacterium/genotyping_codes.xlsx",
+                "genotypingcodes": str(self.upload_to) + "/mycobacterium/genotyping_codes.xlsx",
                 "gbk_file": script_dependents + "/NC_002945v4.gbk",
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx", 
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                     "filter_file": script_dependents + "/Filtered_Regions.xlsx", # previous excelinfile
-                "step2_upload": self.upload_to + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
+                "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
             }
+
+        if self.upload_to is None:
+            parameters["genotypingcodes"] = None
+            parameters["step2_upload"] = None
+
             return(parameters)
 
 

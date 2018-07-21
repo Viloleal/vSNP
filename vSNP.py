@@ -129,6 +129,7 @@ if fastq_check:
 elif vcf_check:
     if not arg_options['species']:
         species = functions.get_species(arg_options)
+        arg_options['species'] = species
         print("species %s" % species)
     vcfs_count = len(glob.glob('*vcf'))
     if (all_file_types_count != vcfs_count):

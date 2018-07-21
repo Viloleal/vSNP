@@ -5,7 +5,8 @@ import vcf
 import time
 import sys
 import subprocess
-import smtplib,ssl
+import smtplib
+import ssl
 import shutil
 import regex
 import re
@@ -17,7 +18,6 @@ from multiprocessing import Pool
 from itertools import repeat as itertools_repeat
 import gzip
 import glob
-import git
 import csv
 import signal
 import json
@@ -643,32 +643,32 @@ def align_reads(arg_options):
         print(unmapped_reads)
 
         print("\n@@@  Realign indels")
-        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        os.system("gatk3 -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
         if not os.path.isfile(indel_realigner):
-            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+            os.system("gatk3 -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        os.system("gatk3 -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
         if not os.path.isfile(realignedbam):
-            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+            os.system("gatk3 -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
 
         print("\n@@@ Base recalibration")
-        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+        os.system("gatk3 -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
         if not os.path.isfile(realignedbam):
-            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+            os.system("gatk3 -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
 
         print("\n@@@ Make realigned BAM")
-        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
+        os.system("gatk3 -T PrintReads -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
         if not os.path.isfile(prebam):
-            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
+            os.system("gatk3 -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
 
         print("\n@@@ Clip reads")
-        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
+        os.system("gatk3 -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
         os.system("samtools index {}" .format(qualitybam))
 
         print("\n@@@ Depth of coverage using GATK")
-        os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+        os.system("gatk3 -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+        os.system("gatk3 -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
         try: 
             print("Getting Zero Coverage...\n")
@@ -804,7 +804,7 @@ def align_reads(arg_options):
                 conda list abyss | grep -v "^#"; \
                 conda list picard | grep -v "^#"; \
                 conda list samtools | grep -v "^#"; \
-                conda list gatk | grep -v "^#"; \
+                conda list gatk3 | grep -v "^#"; \
                 conda list biopython | grep -v "^#"').read(), file=verison_out)
             verison_out.close()
         except:
@@ -988,7 +988,7 @@ def mlst(arg_options):
 
     print("\n@@@ Calling SNPs with UnifiedGenotyper")
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
-    os.system("gatk -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
+    os.system("gatk3 -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
 
     # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
 
@@ -1510,9 +1510,10 @@ def run_script2(arg_options):
         raxml_cpu = 2
     else:
         raxml_cpu = int(arg_options['cpu_count']/10)
+ 
+    specie_para_dict = species_selection_step2(arg_options)
+    arg_options.update(specie_para_dict)
 
-    arg_options = species_selection_step2(arg_options)
-    
     print ("\nSET VARIABLES")
     print ("\tgenotypingcodes: %s " % arg_options['genotypingcodes'])
 
@@ -1549,14 +1550,14 @@ def run_script2(arg_options):
     except NameError:
         mygbk = False
         print ("There is not a gbk file available")
-    print ("\tdefiningSNPs: %s " % definingSNPs)
-    print ("\texcelinfile: %s " % excelinfile)
-    print ("\tremove_from_analysis: %s " % remove_from_analysis)
-    print ("\tfilter_files: %s " % filter_files)
-    print ("\tbioinfoVCF: %s \n" % bioinfoVCF)
+    print ("\tdefiningSNPs: %s " % arg_options['definingSNPs'])
+    print ("\texcelinfile: %s " % arg_options['excelinfile'])
+    print ("\tremove_from_analysis: %s " % arg_options['remove_from_analysis'])
+    print ("\tfilter_files: %s " % arg_options['filter_files'])
+    print ("\tbioinfoVCF: %s \n" % arg_options['bioinfoVCF'])
     ###
 
-    if os.path.isfile(genotypingcodes):
+    if os.path.isfile(arg_options['genotypingcodes']):
         print ("\nChanging the VCF names")
         names_not_changed = change_names(args_option) # check if genotypingcodes exist.  if not skip.
     else:
@@ -1565,7 +1566,7 @@ def run_script2(arg_options):
 
     files = glob.glob('*vcf')
     print ("REMOVING FROM ANALYSIS...")
-    wb = xlrd.open_workbook(remove_from_analysis)
+    wb = xlrd.open_workbook(arg_options['remove_from_analysis'])
     ws = wb.sheet_by_index(0)
     for each_sample in ws.col_values(0):
         each_sample = str(each_sample)
@@ -1596,11 +1597,9 @@ def run_script2(arg_options):
     file_number = len(all_starting_files)
 
     print ("SORTING FILES...")
-    global defining_snps
     defining_snps = {}
-    global inverted_position
     inverted_position = {}
-    wb = xlrd.open_workbook(definingSNPs)
+    wb = xlrd.open_workbook(darg_options['definingSNPs'])
     ws = wb.sheet_by_index(0)
 
     for rownum in range(ws.nrows):
@@ -1614,6 +1613,8 @@ def run_script2(arg_options):
         else:
             defining_snps.update({position:grouping})
     files = glob.glob('*vcf')
+
+    arg_options['inverted_position'] = inverted_position
 
     all_list_amb = {}
     group_calls_list = []
@@ -2082,10 +2083,10 @@ def group_files(each_vcf):
             except ZeroDivisionError:
                 print ("bad line in %s at %s" % (each_vcf, absolute_positon))
 
-        for key in inverted_position.keys():
+        for key in arg_options['inverted_position'].keys():
             if key not in list_pass:
                 print ("key %s not in list_pass" % key)
-                directory = inverted_position[key]
+                directory = arg_options['inverted_position'][key]
                 print("*** INVERTED POSITION FOUND *** PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
                 if not os.path.exists(directory):
                     try:

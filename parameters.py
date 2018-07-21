@@ -392,14 +392,14 @@ class Get_Specie_Parameters_Step2():
         real_path = real_path.split('/')
         root_path = '/'.join(real_path)
         self.dependents_dir = root_path + "/dependencies"
-        if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
+        if os.path.isdir("/bioinfo11/TStuber/Results"): # check bioinfo from server
             self.upload_to = "/bioinfo11/TStuber/Results"
         else:
             self.upload_to = None
 
     def choose(self, species_selection):
         if species_selection == "af":
-            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents/scripts"
+            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents/script2"
             parameters = {
                 "qual_gatk_threshold": 150,
                 "N_gatk_threshold": 150,
@@ -407,7 +407,7 @@ class Get_Specie_Parameters_Step2():
                 "gbk_file": script_dependents + "/NC_002945v4.gbk",
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx", 
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
-                    "filter_file": script_dependents + "/Filtered_Regions.xlsx", # previous excelinfile
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx", # previous excelinfile
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
             }
 

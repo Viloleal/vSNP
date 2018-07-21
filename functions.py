@@ -1550,18 +1550,17 @@ def run_script2(arg_options):
     except NameError:
         mygbk = False
         print ("There is not a gbk file available")
-    print ("\tdefiningSNPs: %s " % arg_options['definingSNPs'])
-    print ("\texcelinfile: %s " % arg_options['excelinfile'])
-    print ("\tremove_from_analysis: %s " % arg_options['remove_from_analysis'])
-    print ("\tfilter_files: %s " % arg_options['filter_files'])
-    print ("\tbioinfoVCF: %s \n" % arg_options['bioinfoVCF'])
+    print ("\ndefiningSNPs: %s " % arg_options['definingSNPs'])
+    print ("filter_file: %s " % arg_options['filter_file'])
+    print ("remove_from_analysis: %s " % arg_options['remove_from_analysis'])
+    print ("step2_upload: %s \n" % arg_options['step2_upload'])
     ###
 
-    if os.path.isfile(arg_options['genotypingcodes']):
+    if arg_options['genotypingcodes']:
         print ("\nChanging the VCF names")
         names_not_changed = change_names(args_option) # check if genotypingcodes exist.  if not skip.
     else:
-        print("No mapping file for VCF names")
+        print("Genotypingcode file unavailable.  VCF file names not updated")
         names_not_changed = glob.glob("*.vcf")
 
     files = glob.glob('*vcf')
@@ -1599,7 +1598,7 @@ def run_script2(arg_options):
     print ("SORTING FILES...")
     defining_snps = {}
     inverted_position = {}
-    wb = xlrd.open_workbook(darg_options['definingSNPs'])
+    wb = xlrd.open_workbook(arg_options['definingSNPs'])
     ws = wb.sheet_by_index(0)
 
     for rownum in range(ws.nrows):
@@ -1615,24 +1614,25 @@ def run_script2(arg_options):
     files = glob.glob('*vcf')
 
     arg_options['inverted_position'] = inverted_position
+    arg_options['defining_snps'] = defining_snps
 
     all_list_amb = {}
     group_calls_list = []
-
+    malformed = []
     print ("Grouping files...")
     if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
-            dict_amb, group_calls, mal = group_files(i)
+            dict_amb, group_calls, mal = group_files(i, arg_options)
             all_list_amb.update(dict_amb)
             group_calls_list.append(group_calls)
             malformed.append(mal)
     else:
         with Pool(maxtasksperchild=4) as pool:
-            for dict_amb, group_calls, mal in pool.map(group_files, files, chunksize=8):
+            for dict_amb, group_calls, mal in pool.map(group_files, files, itertools_repeat(arg_options)):
                 all_list_amb.update(dict_amb)
                 group_calls_list.append(group_calls) # make list of list
                 malformed.append(mal)
-    malformed = [x for x in malformed if x] # remove empty sets from list
+    malformed = [x for x in malformed if x] # remove empty sets from listn
 
     print ("Getting directory list\n")
     directory_list = next(os.walk('.'))[1] # get list of subdirectories
@@ -1642,11 +1642,11 @@ def run_script2(arg_options):
     print ("Getting SNPs in each directory")
     if arg_options['debug_call']:
         for i in directory_list:
-            samples_in_fasta = get_snps(i)
+            samples_in_fasta = get_snps(i, arg_options)
             samples_in_output.append(samples_in_fasta)
     else:
         with futures.ProcessPoolExecutor() as pool:
-            for samples_in_fasta in pool.map(get_snps, directory_list, chunksize=8):
+            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options)):
                 samples_in_output.append(samples_in_fasta)
 
     flattened_list = []
@@ -1667,10 +1667,10 @@ def run_script2(arg_options):
     difference_start_end_file.sort()
 
     # Zip dependency files
-    dependents_dir = root_dir + "/dependents"
+    dependents_dir = arg_options['root_dir'] + "/dependents"
     os.makedirs(dependents_dir)
     shutil.copy(definingSNPs, dependents_dir)
-    shutil.copy(excelinfile, dependents_dir)
+    shutil.copy(filter_file, dependents_dir)
     zip(dependents_dir, dependents_dir)
     shutil.rmtree(dependents_dir)
 
@@ -1771,11 +1771,138 @@ def run_script2(arg_options):
 
     print ("</body>\n</html>", file=htmlfile)
     #############################################
-    os.chdir(root_dir)
+    os.chdir(arg_options['root_dir'])
     zip("starting_files", "starting_files") # zip starting files directory
     shutil.rmtree("starting_files")
 
     htmlfile.close()
+
+def group_files(each_vcf, arg_options):
+    mal = ""
+    list_pass = []
+    list_amb = []
+    dict_amb = {}
+    group_calls = []
+    passing = True
+
+    try:
+        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
+        ### PUT VCF NAME INTO LIST, capturing for htmlfile
+        group_calls.append(each_vcf)
+            # for each single vcf getting passing position
+        for record in vcf_reader:
+            chrom = record.CHROM
+            position = record.POS
+            absolute_positon = str(chrom) + "-" + str(position)
+            # find quality SNPs and put absolute positions into list
+            try:
+                record_alt_length = len(record.ALT[0])
+            except TypeError:
+                record_alt_length = 0
+            try:
+                record_ref_length = len(record.REF)
+            except TypeError:
+                record_alt_length = 0
+            try:
+                if str(record.ALT[0]) != "None" and record_ref_length == 1 and record_alt_length == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['qual_gatk_threshold'] and record.INFO['MQ'] > 45:
+                    list_pass.append(absolute_positon)
+                # capture ambigous defining SNPs in htmlfile
+                elif str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 1:
+                    list_amb.append(absolute_positon)
+            except ZeroDivisionError:
+                print ("bad line in %s at %s" % (each_vcf, absolute_positon))
+
+        for key in arg_options['inverted_position'].keys():
+            if key not in list_pass:
+                print ("key %s not in list_pass" % key)
+                directory = arg_options['inverted_position'][key]
+                print("*** INVERTED POSITION FOUND *** PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
+                if not os.path.exists(directory):
+                    try:
+                        os.makedirs(directory)
+                    except FileExistsError:
+                        null = "null"
+                shutil.copy(each_vcf, directory)
+                ### ADD GROUP TO LIST
+                group_calls.append(directory)
+
+        #if passing:
+        # if a passing position is in the defining SNPs
+        defining_snps = arg_options['defining_snps']
+        for passing_position in list_pass:
+            # normal grouping
+            if passing_position in defining_snps:
+                directory = defining_snps[passing_position]
+                print("PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
+                if not os.path.exists(directory):
+                    try:
+                        os.makedirs(directory)
+                    except FileExistsError:
+                        null = "null"
+                shutil.copy(each_vcf, directory)
+                ### ADD GROUP TO LIST
+                group_calls.append(directory)
+                
+        # find mixed isolates if defining snp is ambigous
+        for amb_position in list_amb:
+            if amb_position in defining_snps:
+                directory = defining_snps[amb_position]
+                dict_amb.update({each_vcf + "\t" + directory:amb_position})
+                ### ADD AMBIGIOUS CALL TO LIST
+                group_calls.append("*" + directory + "-mix")
+        # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
+        if arg_options['all_vcf'] or arg_options['elite']:
+            if not os.path.exists("All_VCFs"):
+                os.makedirs("All_VCFs")
+            shutil.move(each_vcf, "All_VCFs")
+        else:
+            try:
+                os.remove(each_vcf)
+            except FileNotFoundError:
+                pass
+        #print (dict_amb, group_calls, malformed)
+
+    except ZeroDivisionError:
+        os.remove(each_vcf)
+        print ("ZeroDivisionError: corrupt VCF, removed %s " % each_vcf)
+        mal = "ZeroDivisionError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except ValueError:
+        os.remove(each_vcf)
+        print ("ValueError: corrupt VCF, removed %s " % each_vcf)
+        mal = "ValueError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except UnboundLocalError:
+        os.remove(each_vcf)
+        print ("UnboundLocalError: corrupt VCF, removed %s " % each_vcf)
+        mal = "UnboundLocalError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except TypeError:
+        os.remove(each_vcf)
+        print ("TypeError: corrupt VCF, removed %s " % each_vcf)
+        mal = "TypeError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except SyntaxError:
+        os.remove(each_vcf)
+        print ("SyntaxError: corrupt VCF, removed %s " % each_vcf)
+        mal = "SyntaxError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except KeyError:
+        os.remove(each_vcf)
+        print ("KeyError: corrupt VCF, removed %s " % each_vcf)
+        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except StopIteration:
+        print ("StopIteration: %s" % each_vcf)
+        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+
+    the_sample_name = group_calls[0:1]
+    list_of_groups = sorted(group_calls[1:]) # order the groups
+    for i in list_of_groups:
+        the_sample_name.append(i) # a is group_calls
+        group_calls = the_sample_name
+    return dict_amb, group_calls, mal
 
 def species_selection_step2(arg_options):
     all_parameters = Get_Specie_Parameters_Step2()
@@ -1841,8 +1968,8 @@ def send_email_step2(email_list):
                 print ("except FileNotFoundError: file not found")
 
         #upload to bioinfoVCF
-        src = root_dir
-        dst = bioinfoVCF + "/" + os.path.basename(os.path.normpath(root_dir))
+        src = arg_options['root_dir']
+        dst = arg_options['step2_upload'] + "/" + os.path.basename(os.path.normpath(arg_options['root_dir']))
         print ("\n\t%s is copying to %s" % (src, dst))
         os.makedirs(dst, exist_ok=True)
         copy_tree(src, dst, preserve_mode=0, preserve_times=0)
@@ -1977,7 +2104,7 @@ def change_names(args_option):
         list_of_files = glob.glob('starting_files/*vcf')
         file_number = len(list_of_files) # update the file_number to present on summary
         for each_vcf in list_of_files:
-            shutil.copy(each_vcf, root_dir)
+            shutil.copy(each_vcf, arg_options['root_dir'])
         all_starting_files = glob.glob('*vcf')
         print (file_number)
     
@@ -1997,11 +2124,11 @@ def change_names(args_option):
 
     return names_not_changed
 
-def get_filters(excelinfile, filter_files):
+def get_filters(arg_options, filter_files):
     for i in glob.glob(filter_files + "/*"):
         os.remove(i)
 
-    wb = xlrd.open_workbook(excelinfile)
+    wb = xlrd.open_workbook(arg_options['filter_file'])
     sheets = wb.sheet_names()
     for sheet in sheets:
         ws = wb.sheet_by_name(sheet)
@@ -2047,133 +2174,6 @@ def find_filter_dict(each_vcf):
             pass
     return dict_qual, dict_map
 
-def group_files(each_vcf):
-    mal = ""
-    list_pass = []
-    list_amb = []
-    dict_amb = {}
-    group_calls = []
-    passing = True
-    #print("qual_gatk_threshold: %s " % qual_gatk_threshold)
-
-    try:
-        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
-        ### PUT VCF NAME INTO LIST, capturing for htmlfile
-        group_calls.append(each_vcf)
-            # for each single vcf getting passing position
-        for record in vcf_reader:
-            chrom = record.CHROM
-            position = record.POS
-            absolute_positon = str(chrom) + "-" + str(position)
-            # find quality SNPs and put absolute positions into list
-            try:
-                record_alt_length = len(record.ALT[0])
-            except TypeError:
-                record_alt_length = 0
-            try:
-                record_ref_length = len(record.REF)
-            except TypeError:
-                record_alt_length = 0
-            try:
-                if str(record.ALT[0]) != "None" and record_ref_length == 1 and record_alt_length == 1 and record.INFO['AC'][0] == 2 and record.QUAL > qual_gatk_threshold and record.INFO['MQ'] > 45:
-                    list_pass.append(absolute_positon)
-                # capture ambigous defining SNPs in htmlfile
-                elif str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 1:
-                    list_amb.append(absolute_positon)
-            except ZeroDivisionError:
-                print ("bad line in %s at %s" % (each_vcf, absolute_positon))
-
-        for key in arg_options['inverted_position'].keys():
-            if key not in list_pass:
-                print ("key %s not in list_pass" % key)
-                directory = arg_options['inverted_position'][key]
-                print("*** INVERTED POSITION FOUND *** PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
-                if not os.path.exists(directory):
-                    try:
-                        os.makedirs(directory)
-                    except FileExistsError:
-                        null = "null"
-                shutil.copy(each_vcf, directory)
-                ### ADD GROUP TO LIST
-                group_calls.append(directory)
-
-        #if passing:
-        # if a passing position is in the defining SNPs
-        for passing_position in list_pass:
-            # normal grouping
-            if passing_position in defining_snps:
-                directory = defining_snps[passing_position]
-                print("PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
-                if not os.path.exists(directory):
-                    try:
-                        os.makedirs(directory)
-                    except FileExistsError:
-                        null = "null"
-                shutil.copy(each_vcf, directory)
-                ### ADD GROUP TO LIST
-                group_calls.append(directory)
-                
-        # find mixed isolates if defining snp is ambigous
-        for amb_position in list_amb:
-            if amb_position in defining_snps:
-                directory = defining_snps[amb_position]
-                dict_amb.update({each_vcf + "\t" + directory:amb_position})
-                ### ADD AMBIGIOUS CALL TO LIST
-                group_calls.append("*" + directory + "-mix")
-        # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
-        if arg_options['all_vcf'] or arg_options['elite']:
-            if not os.path.exists("All_VCFs"):
-                os.makedirs("All_VCFs")
-            shutil.move(each_vcf, "All_VCFs")
-        else:
-            try:
-                os.remove(each_vcf)
-            except FileNotFoundError:
-                pass
-        #print (dict_amb, group_calls, malformed)
-
-    except ZeroDivisionError:
-        os.remove(each_vcf)
-        print ("ZeroDivisionError: corrupt VCF, removed %s " % each_vcf)
-        mal = "ZeroDivisionError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except ValueError:
-        os.remove(each_vcf)
-        print ("ValueError: corrupt VCF, removed %s " % each_vcf)
-        mal = "ValueError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except UnboundLocalError:
-        os.remove(each_vcf)
-        print ("UnboundLocalError: corrupt VCF, removed %s " % each_vcf)
-        mal = "UnboundLocalError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except TypeError:
-        os.remove(each_vcf)
-        print ("TypeError: corrupt VCF, removed %s " % each_vcf)
-        mal = "TypeError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except SyntaxError:
-        os.remove(each_vcf)
-        print ("SyntaxError: corrupt VCF, removed %s " % each_vcf)
-        mal = "SyntaxError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except KeyError:
-        os.remove(each_vcf)
-        print ("KeyError: corrupt VCF, removed %s " % each_vcf)
-        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except StopIteration:
-        print ("StopIteration: %s" % each_vcf)
-        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-
-    the_sample_name = group_calls[0:1]
-    list_of_groups = sorted(group_calls[1:]) # order the groups
-    for i in list_of_groups:
-        the_sample_name.append(i) # a is group_calls
-        group_calls = the_sample_name
-    return dict_amb, group_calls, mal
-
 def find_positions(filename):
     found_positions = {}
     vcf_reader = vcf.Reader(open(filename, 'r'))
@@ -2197,7 +2197,7 @@ def find_positions(filename):
             # record.QUAL > 150 --> filter poor quality
             # record.INFO['MQ'] --> filter low map quality
             try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > qual_gatk_threshold:
+                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_gatk_threshold']:
                     found_positions.update({absolute_positon:record.REF})
             except KeyError:
                 pass
@@ -2264,11 +2264,11 @@ def bruc_private_codes(upload_to):
 
         wb_out.close()
 
-def get_snps(directory):
-    os.chdir(root_dir+ "/" + directory)
+def get_snps(directory, arg_options):
+    os.chdir(arg_options['root_dir']+ "/" + directory)
     print ("\n----------------------------")
     print ("\nworking on: %s " % directory)
-    outdir=str(os.getcwd()) + "/"
+    outdir = str(os.getcwd()) + "/"
     # FILTER position all list
     list_filter_files = glob.glob(filter_files + '/*')
 
@@ -2473,9 +2473,9 @@ def get_snps(directory):
                 
                 # check record.QUAL
                 # In GATK VCFs "!= None" not used.
-                if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > N_gatk_threshold:
+                if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['N_gatk_threshold']:
                     sample_dict.update({record_position:record.ALT[0]})
-                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > N_gatk_threshold:
+                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > arg_options['N_gatk_threshold']:
                     ref_alt = str(record.ALT[0]) + str(record.REF[0])
                     if ref_alt == "AG":
                         sample_dict.update({record_position:"R"})
@@ -2506,7 +2506,7 @@ def get_snps(directory):
                     # Poor calls
                 elif str(record.ALT[0]) != "None" and int(record.QUAL) <= 50:
                     sample_dict.update({record_position:record.REF[0]})
-                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= N_gatk_threshold:
+                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= arg_options['N_gatk_threshold']:
                     sample_dict.update({record_position:"N"})
                 elif str(record.ALT[0]) != "None": #Insurance -- Will still report on a possible SNP even if missed with above statement
                     sample_dict.update({record_position:str(record.REF[0])})

@@ -1519,6 +1519,7 @@ def run_script2(arg_options):
     print ("\tgenotypingcodes: %s " % arg_options['genotypingcodes'])
 
     htmlfile_name = arg_options['root_dir'] + "/summary_log.html"
+    arg_options['htmlfile_name'] = htmlfile_name
     htmlfile = open(htmlfile_name, 'at')
 
     startTime = datetime.now()
@@ -1674,9 +1675,6 @@ def run_script2(arg_options):
     zip(dependents_dir, dependents_dir)
     shutil.rmtree(dependents_dir)
 
-    runtime = (datetime.now() - startTime)
-    print ("\n\nruntime: %s:  \n" % runtime)
-
     #############################################
     #MAKE HTML FILE:
     print ("<html>\n<head><style> table { font-family: arial, sans-serif; border-collapse: collapse; width: 40%; } td, th { border: 1px solid #dddddd; padding: 4px; text-align: left; font-size: 11px; } </style></head>\n<body style=\"font-size:12px;\">", file=htmlfile)
@@ -1693,6 +1691,7 @@ def run_script2(arg_options):
     #TIME
     print ("\n<h4>Start time: %s <br>" % startTime, file=htmlfile)
     print ("End time: %s <br>" % datetime.now(), file=htmlfile)
+    runtime = (datetime.now() - startTime)
     print ("Total run time: %s: </h4>" % runtime, file=htmlfile)
 
     # ERROR LIST
@@ -1772,10 +1771,50 @@ def run_script2(arg_options):
     print ("</body>\n</html>", file=htmlfile)
     #############################################
     os.chdir(arg_options['root_dir'])
+    print("Zipping files...")
     zip("starting_files", "starting_files") # zip starting files directory
     shutil.rmtree("starting_files")
 
     htmlfile.close()
+
+    print ("\n\nruntime: %s:  \n" % runtime)
+
+    if arg_options['email_list'] is None:
+        print ("\n\tEmail not sent")
+    elif arg_options['email_list']:
+        send_email_step2(arg_options)
+        print ("\n\tEmail sent to: {}" .format(arg_options['email_list']))
+    else:
+        print ("\n\tEmail not sent")
+
+    if arg_options['upload']:
+        print ("Uploading Samples...")
+        def copytree(src, dst, symlinks=False, ignore=None): #required to ignore permissions
+            try:
+                for item in os.listdir(src):
+                    s = os.path.join(src, item)
+                    d = os.path.join(dst, item)
+                    try:
+                        if os.path.isdir(s):
+                            shutil.copytree(s, d, symlinks, ignore)
+                        else:
+                            shutil.copy2(s, d)
+                    except shutil.Error:
+                        pass
+            except FileNotFoundError:
+                print ("except FileNotFoundError: file not found")
+
+        #upload to bioinfoVCF
+        src = arg_options['root_dir']
+        dst = arg_options['step2_upload'] + "/" + os.path.basename(os.path.normpath(arg_options['root_dir']))
+        print ("\n\t%s is copying to %s" % (src, dst))
+        os.makedirs(dst, exist_ok=True)
+        copy_tree(src, dst, preserve_mode=0, preserve_times=0)
+        print ("Samples were uploaded to {}" .format(dst))
+    else:
+        print("\tSamples were not copied or uploaded to additional location")
+
+    print ("\n\tComparisons have been made with no obvious error.\n")
 
 def group_files(each_vcf, arg_options):
     mal = ""
@@ -1916,9 +1955,9 @@ def species_selection_step2(arg_options):
         print("### See species_selection_step2 function")
         sys.exit(0)
   
-def send_email_step2(email_list):
-    print ("Sending Email...")
-    print ("Sending to:")
+def send_email_step2(arg_options):
+    htmlfile_name = arg_options['htmlfile_name']
+    email_list = arg_options['email_list']
 
     msg = MIMEMultipart()
     msg['From'] = "tod.p.stuber@aphis.usda.gov"
@@ -1935,46 +1974,7 @@ def send_email_step2(email_list):
 
     smtp = smtplib.SMTP('10.10.8.12')
     smtp.send_message(msg)
-
-    #smtp.send_message(msg)
-    #smtp.send_message(msg.as_string())
-    #smtp.sendmail(email_list, msg.as_string())
-    #smtp.sendmail("tod.p.stuber@aphis.usda.gov", email_list, msg.as_string())
     smtp.quit()
-
-    if arg_options['email'] == "none":
-        print ("\n\temail not sent")
-    elif arg_options['email']:
-        send_email_step2(email_list)
-        print ("\n\temail sent to: %s" % email_list)
-    else:
-        print ("\n\temail not sent")
-
-    if arg_options['upload']:
-        print ("Uploading Samples...")
-        def copytree(src, dst, symlinks=False, ignore=None): #required to ignore permissions
-            try:
-                for item in os.listdir(src):
-                    s = os.path.join(src, item)
-                    d = os.path.join(dst, item)
-                    try:
-                        if os.path.isdir(s):
-                            shutil.copytree(s, d, symlinks, ignore)
-                        else:
-                            shutil.copy2(s, d)
-                    except shutil.Error:
-                        pass
-            except FileNotFoundError:
-                print ("except FileNotFoundError: file not found")
-
-        #upload to bioinfoVCF
-        src = arg_options['root_dir']
-        dst = arg_options['step2_upload'] + "/" + os.path.basename(os.path.normpath(arg_options['root_dir']))
-        print ("\n\t%s is copying to %s" % (src, dst))
-        os.makedirs(dst, exist_ok=True)
-        copy_tree(src, dst, preserve_mode=0, preserve_times=0)
-
-    print ("\n\tDONE\n")
 
 def get_pretext_list(in_list):
     outlist = []
@@ -1991,7 +1991,6 @@ def flatten(l):
             yield el
 
 def zip(src, dst):
-    print ("\nZipping files...\n")
     zf = zipfile.ZipFile("%s.zip" % (dst), "w", zipfile.ZIP_DEFLATED)
     abs_src = os.path.abspath(src)
     for dirname, subdirs, files in os.walk(src):

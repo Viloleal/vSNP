@@ -79,7 +79,7 @@ elif args.email == "chris-":
 elif args.email == "doris":
     email_list = "tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, doris.m.bravo@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov, kristina.lantz@aphis.usda.gov"
 else:
-    email_list = "tod.p.stuber@aphis.usda.gov"
+    email_list = None
 
 arg_options['email_list'] = email_list
 ################################################################################################################################################

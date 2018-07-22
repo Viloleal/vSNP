@@ -1504,13 +1504,14 @@ def run_script2(arg_options):
                     print ("#####RAxML is not in you PATH")
                     print ("#####See help page for support")
                     sys.exit(0)
-
-    print ("\n\n----> RAxML found in $PATH as: %s <-----" % sys_raxml)
+    arg_options['sys_raxml'] = sys_raxml
+    print ("\n\n----> RAxML found in $PATH as: %s <-----" % arg_options['sys_raxml'])
     if arg_options['cpu_count'] < 20:
         raxml_cpu = 2
     else:
         raxml_cpu = int(arg_options['cpu_count']/10)
- 
+    arg_options['raxml_cpu'] = raxml_cpu
+
     specie_para_dict = species_selection_step2(arg_options)
     arg_options.update(specie_para_dict)
 
@@ -1542,14 +1543,7 @@ def run_script2(arg_options):
     # FUNCTIONS
     ##################
     test_duplicate() #***FUNCTION CALL
-    
-    global mygbk
-    try:
-        mygbk = True
-        print ("\tgbk_file: %s " % gbk_file)
-    except NameError:
-        mygbk = False
-        print ("There is not a gbk file available")
+
     print ("\ndefiningSNPs: %s " % arg_options['definingSNPs'])
     print ("filter_file: %s " % arg_options['filter_file'])
     print ("remove_from_analysis: %s " % arg_options['remove_from_analysis'])
@@ -1638,6 +1632,10 @@ def run_script2(arg_options):
     directory_list = next(os.walk('.'))[1] # get list of subdirectories
     directory_list.remove('starting_files')
 
+    print("Placing positions to filter into dictionary...")
+    filter_dictionary = get_filters(arg_options)
+    arg_options['filter_dictionary'] = filter_dictionary
+
     samples_in_output = []
     print ("Getting SNPs in each directory")
     if arg_options['debug_call']:
@@ -1648,6 +1646,8 @@ def run_script2(arg_options):
         with futures.ProcessPoolExecutor() as pool:
             for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options)):
                 samples_in_output.append(samples_in_fasta)
+
+    arg_options.pop('filter_dictionary', None) # filters no longer need, get rid of them to make arg_option more managable.
 
     flattened_list = []
     for i in flatten(samples_in_output):
@@ -1669,8 +1669,8 @@ def run_script2(arg_options):
     # Zip dependency files
     dependents_dir = arg_options['root_dir'] + "/dependents"
     os.makedirs(dependents_dir)
-    shutil.copy(definingSNPs, dependents_dir)
-    shutil.copy(filter_file, dependents_dir)
+    shutil.copy(arg_options['definingSNPs'], dependents_dir)
+    shutil.copy(arg_options['filter_file'], dependents_dir)
     zip(dependents_dir, dependents_dir)
     shutil.rmtree(dependents_dir)
 
@@ -1684,7 +1684,7 @@ def run_script2(arg_options):
     print ("<h4>There are %s VCFs in this run</h4>" % file_number, file=htmlfile)
 
     #OPTIONS
-    print ("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (arg_options['email'], arg_options['filter_finder'], arg_options['all_vcf'], arg_options['elite'], arg_options['no_annotation'], arg_options['debug_call'], arg_options['get'], arg_options['upload']), file=htmlfile)
+    print ("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (arg_options['email_list'], arg_options['filter_finder'], arg_options['all_vcf'], arg_options['elite'], arg_options['no_annotation'], arg_options['debug_call'], arg_options['get'], arg_options['upload']), file=htmlfile)
     if arg_options['all_vcf']:
         print ("\n<h4>All_VCFs is available</h4>", file=htmlfile)
     elif arg_options['elite']:
@@ -2124,20 +2124,19 @@ def change_names(args_option):
 
     return names_not_changed
 
-def get_filters(arg_options, filter_files):
-    for i in glob.glob(filter_files + "/*"):
-        os.remove(i)
-
+def get_filters(arg_options):
+    #get first header to apply all filters to vcf
+    worksheet = pd.read_excel(arg_options['filter_file'])
+    arg_options["first_column_header"] = worksheet.dtypes.index[0]
+    filter_dictionary = {} # key: group_name, values: expanded list
     wb = xlrd.open_workbook(arg_options['filter_file'])
     sheets = wb.sheet_names()
     for sheet in sheets:
+        expanded_list = []
         ws = wb.sheet_by_name(sheet)
-
         myrange = lambda start, end: range(start, end+1)
-
         for colnum in range(ws.ncols): # for each column in worksheet
-            file_out = filter_files + "/" + ws.col_values(colnum)[0] + ".txt" # column header naming file
-            write_out = open (file_out, 'at')
+            group_name = ws.col_values(colnum)[0] # column header naming file
             mylist = ws.col_values(colnum)[1:] # list of each field in column, minus the header
             mylist = [x for x in mylist if x] # remove blank cells
             for value in mylist:
@@ -2145,12 +2144,13 @@ def get_filters(arg_options, filter_files):
                 value = value.replace(sheet + "-", '')
                 if "-" not in value:
                     value=int(float(value)) # change str to float to int
-                    print (sheet + "-" + str(value), file=write_out)
+                    expanded_list.append(str(sheet) + "-" + str(value))
                 elif "-" in value:
                     value = value.split("-")
-                    for i in range(int(value[0]), int(value[1]) + 1 ):
-                        print (sheet + "-" + str(i), file=write_out)
-    write_out.close()
+                    for position in range(int(value[0]), int(value[1]) + 1):
+                        expanded_list.append(str(sheet) + "-" + str(position))
+            filter_dictionary[group_name] = expanded_list
+    return(filter_dictionary)
 
 def get_read_mean(rec):
     mean_q = int(mean(rec.letter_annotations['phred_quality']))
@@ -2174,7 +2174,7 @@ def find_filter_dict(each_vcf):
             pass
     return dict_qual, dict_map
 
-def find_positions(filename):
+def find_positions(filename, arg_options):
     found_positions = {}
     vcf_reader = vcf.Reader(open(filename, 'r'))
     try:
@@ -2269,57 +2269,36 @@ def get_snps(directory, arg_options):
     print ("\n----------------------------")
     print ("\nworking on: %s " % directory)
     outdir = str(os.getcwd()) + "/"
-    # FILTER position all list
-    list_filter_files = glob.glob(filter_files + '/*')
 
-    filter_file = "empty" # if filter an all_vcf file not found mark as empty
-    filter_group = "empty" # if a group specific filter file is not found mark as empty
-    for i in list_filter_files:
-        if "-All.txt" in i:
-            filter_file = i
-
-    for i in list_filter_files:
-        if directory  + ".txt" in i:
-            filter_group = i
-
-    print ("%s --> filter_file %s " % (directory, filter_file))
-    print ("%s --> filter_group %s " % (directory, filter_group))
-    print ("%s --> outdir %s " % (directory, outdir))
+    filter_dictionary = arg_options['filter_dictionary']
+    first_column_header = arg_options["first_column_header"]
 
     files = glob.glob('*vcf')
     all_positions = {}
     if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
-            found_positions = find_positions(i)
+            found_positions = find_positions(i, arg_options)
             all_positions.update(found_positions)
     else:
         with Pool(maxtasksperchild=4) as pool:
-            for found_positions in pool.map(find_positions, files, chunksize=8):
+            for found_positions in pool.map(find_positions, files, itertools_repeat(arg_options)):
                 all_positions.update(found_positions)
 
     print ("Directory %s found positions %s" % (directory, len(all_positions)))
-    presize=len(all_positions)
+    presize = len(all_positions)
 
     # Filter applied to all positions
-    if not filter_file is "empty":
-        with open(filter_file, 'rt') as f:
-            filter_list = f.read().splitlines() #removes \n
-        for pos in filter_list:
-            all_positions.pop(pos, None)
-        f.close()
+    for pos in filter_dictionary[first_column_header]: #filter_list
+        all_positions.pop(pos, None)
 
     # Filter applied to group
-    if not filter_group is "empty":
-        with open(filter_group, 'rt') as f:
-            filter_list = f.read().splitlines() #removes \n
-        for pos in filter_list:
-            all_positions.pop(pos, None)
-        f.close()
+    for pos in filter_dictionary[directory]: #filter_list
+        all_positions.pop(pos, None)
 
-    print ("\nDirectory: ", directory)
-    print ("Total positions found: %s" % format(presize, ",d"))
-    print ("Possible positions filtered %s" % format(len(filter_list), ",d"))
-    print ("Positions after filtering %s\n" % format(len(all_positions), ",d"))
+    print ("\nDirectory: {}" .format(directory))
+    print ("Total positions found: {}" .format(presize))
+    print ("Possible positions filtered {}" .format(len(filter_dictionary)))
+    print ("Positions after filtering {}\n" .format(len(all_positions)))
 
     if arg_options['filter_finder']:
         #write to files
@@ -2592,7 +2571,7 @@ def get_snps(directory, arg_options):
     print ("%s RAxML running..." % directory)
     rooted_tree = outdir + directory + "-rooted.tre"
     try:
-        os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(sys_raxml, alignment_file, raxml_cpu))
+        os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
     except:
         write_out=open('RAXML_FAILED', 'w+')
         write_out.close()
@@ -2674,8 +2653,8 @@ def get_snps(directory, arg_options):
         mytable = mytable.transpose() #org
         mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
-        if mygbk and not arg_options['no_annotation']:
-            dict_annotation = get_annotations_table(parsimony_positions)
+        if arg_options['gbk_file'] and not arg_options['no_annotation']:
+            dict_annotation = get_annotations_table(parsimony_positions, arg_options)
             write_out=open('annotations.txt', 'w+')
             print ('reference_pos\tannotations', file=write_out)
             for k, v in dict_annotation.items():
@@ -2749,7 +2728,7 @@ def get_snps(directory, arg_options):
     try:
         os.remove(ordered_list_from_tree)
         os.remove('map_quality.txt')
-        if mygbk:
+        if arg_options['gbk_file']:
             os.remove("annotations.txt")
         os.remove("outfile.txt")
         os.remove(out_sort)
@@ -2778,10 +2757,10 @@ def get_snps(directory, arg_options):
 
     return(samples_in_fasta)
 
-def get_annotations_table(parsimony_positions):
+def get_annotations_table(parsimony_positions, arg_options):
     print ("Getting annotations...")
     dict_annotation = {}
-    gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk_file, "genbank"))
+    gbk_dict = SeqIO.to_dict(SeqIO.parse(arg_options['gbk_file'], "genbank"))
     for each_absolute_pos in parsimony_positions:
         each_absolute_pos = each_absolute_pos.split("-")
         chrom = each_absolute_pos[0]
@@ -2870,7 +2849,9 @@ def sort_table(table_location, ordered, out_org):
     mytable = mytable[:-2]
     mytable.to_csv(out_org, sep='\t', index=False)
 
+def excelwriter(filename):
     orginal_name=filename
+    orginal_name = filename
     filename = filename.replace(".txt",".xlsx")
     wb = xlsxwriter.Workbook(filename)
     ws = wb.add_worksheet("Sheet1")

@@ -1621,7 +1621,7 @@ def run_script2(arg_options):
             group_calls_list.append(group_calls)
             malformed.append(mal)
     else:
-        with Pool(maxtasksperchild=4) as pool:
+        with futures.ProcessPoolExecutor(max_workers=4) as pool:
             for dict_amb, group_calls, mal in pool.map(group_files, files, itertools_repeat(arg_options)):
                 all_list_amb.update(dict_amb)
                 group_calls_list.append(group_calls) # make list of list
@@ -2280,7 +2280,7 @@ def get_snps(directory, arg_options):
             found_positions = find_positions(i, arg_options)
             all_positions.update(found_positions)
     else:
-        with Pool(maxtasksperchild=4) as pool:
+        with futures.ProcessPoolExecutor(max_workers=4) as pool:
             for found_positions in pool.map(find_positions, files, itertools_repeat(arg_options)):
                 all_positions.update(found_positions)
 

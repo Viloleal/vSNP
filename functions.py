@@ -2366,32 +2366,19 @@ def get_snps(directory, arg_options):
             # remove duplicates
             all_maybe_filter = list(set(all_maybe_filter))
 
-        #remove those in filter list
-        #Filter applied to all positions
-        if not filter_file is "empty":
-            with open(filter_file, 'rt') as f:
-                filter_list = f.read().splitlines() #removes \n
+        # Removing those already from all positions to filter
+        if arg_options['filter_file']:
+            for pos in filter_dictionary[first_column_header]: #filter_list
                 try:
-                    for pos in filter_list:
-                        all_maybe_filter.pop(pos)
-                except TypeError:
-                    pass
-                except KeyError:
-                    pass
-            f.close()
-
-        # Filter applied to group
-        if not filter_group is "empty":
-            with open(filter_group, 'rt') as f:
-                filter_list = f.read().splitlines() #removes \n
+                    all_maybe_filter.remove(pos)
+                except ValueError:
+                    pass 
+            # Removing those already being filtered for specific group
+            for pos in filter_dictionary[directory]: #filter_list
                 try:
-                    for pos in filter_list:
-                        all_maybe_filter.pop(pos)
-                except TypeError:
-                    pass
-                except KeyError:
-                    pass
-            f.close()
+                    all_maybe_filter.remove(pos)
+                except ValueError:
+                    pass 
 
         # for each possible posible position check if to filter.
         for absolute_positon in all_maybe_filter:

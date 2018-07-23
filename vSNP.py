@@ -36,7 +36,7 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
 #universal
 parser.add_argument('-s', '--species', action='store', dest='species', help='OPTIONAL: Used to FORCE species type <see options above>')
-parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', help='debug, run without loop.map for loops')
+parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', help='debug, run without pool.map')
 parser.add_argument('-g', '--get', action='store_true', dest='get', help='get, get to the core functions for debugging')
 parser.add_argument('-n', '--no_annotation', action='store_true', dest='no_annotation', help='no_annotation, run without annotation')
 parser.add_argument('-a', '--all_vcf', action='store_true', dest='all_vcf', help='make tree using all VCFs')
@@ -137,7 +137,7 @@ elif vcf_check:
         sys.exit(0)
     else:
         if arg_options['quiet']:
-            print("#####Incorrect use of options when running script 2")
+            print("#####Incorrect use of options when running script 2, when running step 2 -q cannot be used")
             sys.exit(0)
         else:
             if arg_options['species']:

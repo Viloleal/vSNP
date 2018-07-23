@@ -49,6 +49,7 @@ def run_loop(arg_options): #calls read_aligner
     limited_cpu_count = arg_options['limited_cpu_count']
     email_list = arg_options['email_list']
 
+
     startTime = datetime.now()
     ts = time.time()
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
@@ -314,8 +315,8 @@ def species_selection_step1(arg_options):
         specie_para_dict = all_parameters.choose(best_ref_found)
 
     if specie_para_dict:
-        shutil.copy2(specie_para_dict["reference"], arg_options['sample_name'])
-        shutil.copy2(specie_para_dict["hqs"], arg_options['sample_name'])
+        shutil.copy2(specie_para_dict["reference"], arg_options['root_dir'])
+        shutil.copy2(specie_para_dict["hqs"], arg_options['root_dir'])
         arg_options.update(specie_para_dict)
         return arg_options
     elif specie_para_dict is None:

@@ -44,7 +44,7 @@ Setup Bioconda channels.  Add them in the order shown below.  Order is important
     
 Install programs.
     
-    ~$ conda install pyvcf biopython bwa samtools picard abyss gatk raxml newick_utils xlrd xlsxwriter gitpython regex pandas
+    ~$ conda install pyvcf biopython bwa samtools picard abyss gatk=3.8 raxml newick_utils xlrd xlsxwriter gitpython regex pandas
 
 Install cairosvg.  At the time of writing this (2018-02-22) cairosvg via conda was not compatiable with Python 3.6.
 

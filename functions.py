@@ -75,7 +75,7 @@ def run_loop(arg_options): #calls read_aligner
     worksheet = workbook.add_worksheet()
     row = 0
     col = 0
-    top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+    top_row_header = ["time_stamp", "sample_name", "species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
     for header in top_row_header:
         worksheet.write(row, col, header)
         col += 1
@@ -138,10 +138,9 @@ def run_loop(arg_options): #calls read_aligner
 
                 df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
                 frames.append(df_stat_summary) #frames to concatenate
-
                 worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
                 worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
-                worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                worksheet.write(row, 2, stat_summary.get('species', 'n/a'))
                 worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
                 worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
                 worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
@@ -162,24 +161,21 @@ def run_loop(arg_options): #calls read_aligner
                 worksheet.write(row, 20, stat_summary.get('hexadecimal_code', 'n/a'))
                 worksheet.write(row, 21, stat_summary.get('binarycode', 'n/a'))
                 row += 1
-
-                os.chdir(root_dir)
-        else: # run all in run_list in parallel
-
+        else:  # run all in run_list in parallel
             print("SAMPLES RAN IN PARALLEL")
             # itertools allows additional arguments to pass
             # Need to speed test which why is faster
             with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
                 for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(arg_options)):
-            # with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
-            #     for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
+            #  with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
+            #  for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
 
-                    df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index') #convert stat_summary to df
-                    frames.append(df_stat_summary) #frames to concatenate
+                    df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index')  #convert stat_summary to df
+                    frames.append(df_stat_summary)  #frames to concatenate
 
                     worksheet.write(row, 0, stat_summary.get('time_stamp', 'n/a'))
                     worksheet.write(row, 1, stat_summary.get('sample_name', 'n/a'))
-                    worksheet.write(row, 2, stat_summary.get('self.species', 'n/a'))
+                    worksheet.write(row, 2, stat_summary.get('species', 'n/a'))
                     worksheet.write(row, 3, stat_summary.get('reference_sequence_name', 'n/a'))
                     worksheet.write(row, 4, stat_summary.get('R1size', 'n/a'))
                     worksheet.write(row, 5, stat_summary.get('R2size', 'n/a'))
@@ -273,25 +269,25 @@ def read_aligner(sample_name, arg_options):
 
     read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
 
     print("Getting mean for {}" .format(arg_options['R2']))
     handle = gzip.open(arg_options['R2'], "rt")
-    mean_quality_list=[]
+    mean_quality_list = []
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
         mean_quality_list.append(mean_q)
 
     read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count/len(mean_quality_list))
+    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
     arg_options['read_quality_stats'] = read_quality_stats 
     ###
 
     arg_options['sample_name'] = sample_name
     arg_options = species_selection_step1(arg_options)
-    if arg_options is None:
-        return None
+    if arg_options['species'] is None:
+        return arg_options
     try:
         stat_summary = align_reads(arg_options)
         for k, v in stat_summary.items():
@@ -299,32 +295,37 @@ def read_aligner(sample_name, arg_options):
         return(stat_summary)
     except:
         print("### Unable to return stat_summary")
-        return #(stat_summary)
-        pass
+        return arg_options
 
 def species_selection_step1(arg_options):
     all_parameters = Get_Specie_Parameters_Step1()
 
     if arg_options['species']:
         species_selection = arg_options['species']
-        print("Sample will be ran as {}" .format(species_selection))
+        print("Sample will be ran as:  {}" .format(species_selection))
         specie_para_dict = all_parameters.choose(species_selection)
     else:
         best_ref_found = best_reference([arg_options['R1'], arg_options['R2']])
+        arg_options['species'] = best_ref_found
         print("Sample will be ran as {}" .format(best_ref_found))
         specie_para_dict = all_parameters.choose(best_ref_found)
 
-    if specie_para_dict:
+    if specie_para_dict['species'] is None:
+        print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(arg_options['R1'], arg_options['R2']))
+        arg_options['reference_sequence_name'] = best_ref_found
+        arg_options.update(specie_para_dict)
+        return arg_options
+    elif specie_para_dict:
         shutil.copy2(specie_para_dict["reference"], arg_options['root_dir'])
         shutil.copy2(specie_para_dict["hqs"], arg_options['root_dir'])
         arg_options.update(specie_para_dict)
         return arg_options
-    elif specie_para_dict is None:
-        print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(arg_options['R1'], arg_options['R2']))
-        return None
     else:
         print("### See species_selection_step1 function")
-        return None
+        arg_options['species'] = None
+        arg_options['reference_sequence_name'] = best_ref_found
+        arg_options.update(specie_para_dict)
+        return arg_options
 
 def best_reference(fastq_list):
 
@@ -464,6 +465,7 @@ def best_reference(fastq_list):
         else:
             print("Brucella group, but no match")
             print("\n\nBrucella group, but no match", file=write_out)
+            return("Brucella group, but no match")
     elif bovis_sum > 3:
         if bovis_string in bovis_identifications:
             print("TB group, species %s" % bovis_identifications[bovis_string])
@@ -472,14 +474,20 @@ def best_reference(fastq_list):
         else:
             print("TB group, but no match")
             print("\n\nTB group, but no match", file=write_out)
+            return("TB group, but no match")
     elif para_sum >= 1:
         if para_string in para_identifications:
             print("Para group")
             print("\n\nPara group", file=write_out)
             return("para") # return to set parameters
         else:
-            print("No match")
+            print("M. paratuberculosis group, but no match")
             print("\n\nNo match", file=write_out)
+            return("M. paratuberculosis group, but no match")
+    else:
+        print("Unable to find a best reference species or group")
+        return("Unable to find a best reference species or group")
+
 
     write_out.close()
 
@@ -506,7 +514,7 @@ def align_reads(arg_options):
         stat_summary = {}
         stat_summary["time_stamp"] = st
         stat_summary["sample_name"] = arg_options["sample_name"]
-        stat_summary["self.species"] = "NOT_FOUND"
+        stat_summary["species"] = "NOT_FOUND"
         stat_summary["reference_sequence_name"] = "N/A"
         stat_summary["R1size"] = R1size
         stat_summary["R2size"] = R2size
@@ -829,7 +837,7 @@ def align_reads(arg_options):
 
         stat_summary["time_stamp"] = st
         stat_summary["sample_name"] = sample_name
-        stat_summary["self.species"] = arg_options["species"]
+        stat_summary["species"] = arg_options["species"]
         stat_summary["reference_sequence_name"] = reference_sequence_name
         stat_summary["R1size"] = R1size
         stat_summary["R2size"] = R2size
@@ -854,7 +862,7 @@ def align_reads(arg_options):
         row = 0
         col = 0
 
-        top_row_header = ["time_stamp", "sample_name", "self.species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+        top_row_header = ["time_stamp", "sample_name", "species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
         for header in top_row_header:
             worksheet.write(row, col, header)
             col += 1
@@ -863,7 +871,7 @@ def align_reads(arg_options):
         stat_summary.update(arg_options['read_quality_stats'])
         worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
         worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
-        worksheet.write(1, 2, stat_summary.get('self.species', 'n/a'))
+        worksheet.write(1, 2, stat_summary.get('species', 'n/a'))
         worksheet.write(1, 3, stat_summary.get('reference_sequence_name', 'n/a'))
         worksheet.write(1, 4, stat_summary.get('R1size', 'n/a'))
         worksheet.write(1, 5, stat_summary.get('R2size', 'n/a'))

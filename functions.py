@@ -47,8 +47,6 @@ def run_loop(arg_options): #calls read_aligner
 
     root_dir = arg_options['root_dir']
     limited_cpu_count = arg_options['limited_cpu_count']
-    email_list = arg_options['email_list']
-
 
     startTime = datetime.now()
     ts = time.time()
@@ -412,7 +410,7 @@ def best_reference(fastq_list):
 
     count_summary={}
 
-    with futures.ProcessPoolExecutor(max_workers=4) as pool:
+    with futures.ProcessPoolExecutor() as pool:
         for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), itertools_repeat(fastq_list)):
             for k, value in oligo_dictionary.items():
                 if v == value:
@@ -1540,8 +1538,6 @@ def run_script2(arg_options):
     elif __file__:
         script_used = os.path.realpath(__file__)
 
-    print ("\nScript used: %s \n" % script_used)
-
     # make backup
     os.makedirs('starting_files')
     all_starting_files = glob.glob('*vcf')
@@ -1560,11 +1556,14 @@ def run_script2(arg_options):
     ###
 
     if arg_options['genotypingcodes']:
-        print ("\nChanging the VCF names")
-        names_not_changed = change_names(arg_options) # check if genotypingcodes exist.  if not skip.
+        print ("\nUpdating VCF file names")
+        arg_options = change_names(arg_options) # check if genotypingcodes exist.  if not skip.
     else:
         print("Genotypingcode file unavailable.  VCF file names not updated")
         names_not_changed = glob.glob("*.vcf")
+
+    malformed = arg_options['malformed']
+    names_not_changed = arg_options['names_not_changed']
 
     files = glob.glob('*vcf')
     print ("REMOVING FROM ANALYSIS...")
@@ -1621,7 +1620,6 @@ def run_script2(arg_options):
 
     all_list_amb = {}
     group_calls_list = []
-    malformed = []
     print ("Grouping files...")
     if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
@@ -1630,7 +1628,7 @@ def run_script2(arg_options):
             group_calls_list.append(group_calls)
             malformed.append(mal)
     else:
-        with futures.ProcessPoolExecutor(max_workers=4) as pool:
+        with futures.ProcessPoolExecutor() as pool:
             for dict_amb, group_calls, mal in pool.map(group_files, files, itertools_repeat(arg_options)):
                 all_list_amb.update(dict_amb)
                 group_calls_list.append(group_calls) # make list of list
@@ -1705,7 +1703,6 @@ def run_script2(arg_options):
     # ERROR LIST
     if len(malformed) < 1:
         print ("<h2>No corrupt VCF removed</h2>", file=htmlfile)
-
     else:
         print ("\n<h2>Corrupt VCF removed</h2>", file=htmlfile)
         for i in malformed:
@@ -2021,10 +2018,10 @@ def test_duplicate():
         print ("\n***Error:  Duplicate VCFs")
         sys.exit(0)
     else:
-        print ("\nno duplicate VCFs\n")
+        pass
 
 def change_names(arg_options):
-    global malformed
+    malformed = []
     code_dictionary = {}
     try:
         wb = xlrd.open_workbook(arg_options['genotypingcodes'])
@@ -2124,12 +2121,13 @@ def change_names(arg_options):
             mal = fix_vcf(each_vcf, arg_options)
             malformed = list(mal)
     else:
-        with Pool(maxtasksperchild=4) as pool:
-            mal = pool.map(fix_vcf, vcf_list, chunksize=8)
+        with futures.ProcessPoolExecutor() as pool:
+            mal = pool.map(fix_vcf, vcf_list, itertools_repeat(arg_options))
             malformed = malformed + list(mal)
     print("done fixing")
-
-    return names_not_changed
+    arg_options['malformed'] = malformed
+    arg_options['names_not_changed'] = names_not_changed
+    return arg_options
 
 def get_filters(arg_options):
     #get first header to apply all filters to vcf
@@ -2287,7 +2285,7 @@ def get_snps(directory, arg_options):
             found_positions = find_positions(i, arg_options)
             all_positions.update(found_positions)
     else:
-        with futures.ProcessPoolExecutor(max_workers=4) as pool:
+        with futures.ProcessPoolExecutor() as pool:
             for found_positions in pool.map(find_positions, files, itertools_repeat(arg_options)):
                 all_positions.update(found_positions)
 
@@ -2305,7 +2303,7 @@ def get_snps(directory, arg_options):
     print ("\nDirectory: {}" .format(directory))
     print ("Total positions found: {}" .format(presize))
     print ("Possible positions filtered {}" .format(len(filter_dictionary)))
-    print ("Positions after filtering {}\n" .format(len(all_positions)))
+    print ("Positions after filtering {}" .format(len(all_positions)))
 
     if arg_options['filter_finder']:
         #write to files
@@ -2655,7 +2653,7 @@ def get_snps(directory, arg_options):
                 print ('%s\t%s' % (k, v), file=write_out)
             write_out.close()
         
-            print ("%s gbk is present, getting annotation...\n" % directory)
+            print ("%s gbk is present, getting annotation..." % directory)
             annotations = pd.read_csv('annotations.txt', sep='\t') #sort
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
             mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort

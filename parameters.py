@@ -415,7 +415,7 @@ class Get_Specie_Parameters_Step2():
             parameters["genotypingcodes"] = None
             parameters["step2_upload"] = None
 
-            return(parameters)
+        return(parameters)
 
 
 

@@ -1532,7 +1532,6 @@ def run_script2(arg_options):
     htmlfile = open(htmlfile_name, 'at')
 
     startTime = datetime.now()
-    print ("\n\n*** START ***\n")
     print ("Start time: %s" % startTime)
 
     # DIRECTORY TEST AND BACKUP
@@ -1562,7 +1561,7 @@ def run_script2(arg_options):
 
     if arg_options['genotypingcodes']:
         print ("\nChanging the VCF names")
-        names_not_changed = change_names(args_option) # check if genotypingcodes exist.  if not skip.
+        names_not_changed = change_names(arg_options) # check if genotypingcodes exist.  if not skip.
     else:
         print("Genotypingcode file unavailable.  VCF file names not updated")
         names_not_changed = glob.glob("*.vcf")
@@ -2024,11 +2023,11 @@ def test_duplicate():
     else:
         print ("\nno duplicate VCFs\n")
 
-def change_names(args_option):
+def change_names(arg_options):
     global malformed
     code_dictionary = {}
     try:
-        wb = xlrd.open_workbook(genotypingcodes)
+        wb = xlrd.open_workbook(arg_options['genotypingcodes'])
         ws = wb.sheet_by_index(0)
         for rownum in range(ws.nrows):
             new_name = str(ws.row_values(rownum)[0])
@@ -2122,7 +2121,7 @@ def change_names(args_option):
     if arg_options['debug_call'] and not arg_options['get']:
         for each_vcf in vcf_list:
             print(each_vcf)
-            mal = fix_vcf(each_vcf, args_option)
+            mal = fix_vcf(each_vcf, arg_options)
             malformed = list(mal)
     else:
         with Pool(maxtasksperchild=4) as pool:

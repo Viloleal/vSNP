@@ -1651,7 +1651,7 @@ def run_script2(arg_options):
             samples_in_output.append(samples_in_fasta)
     else:
         with futures.ProcessPoolExecutor() as pool:
-            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options)):
+            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=128):
                 samples_in_output.append(samples_in_fasta)
 
     arg_options.pop('filter_dictionary', None) # filters no longer need, get rid of them to make arg_option more managable.

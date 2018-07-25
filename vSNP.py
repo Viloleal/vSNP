@@ -365,6 +365,22 @@ class script1():
                 option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
                 return option_list, found
         
+            if give_option == "typhimurium":
+                found=True
+                #Remove network path at and left of "Results"
+                dependents_dir="/gen-bact/salmonella/typhimurium/script_dependents/script1"
+                upload_to, remote, script_dependents = script1.update_directory(dependents_dir) #***FUNCTION CALL
+                
+                spoligo_db = script_dependents + "/nospoligo.txt"
+                reference = script_dependents + "/AE006468.fasta"
+                print("Reference being used: %s" % reference)
+                hqs = script_dependents + "/highqualitysnps.vcf"
+                gbk_file = script_dependents + "/AE006468.gbk"
+                email_list = "tod.p.stuber@aphis.usda.gov"
+                
+                option_list=[dependents_dir, reference, hqs, gbk_file, email_list, upload_to, remote, script_dependents, spoligo_db]
+                return option_list, found
+
             if give_option == "ab1":
                 found=True
                 #Remove network path at and left of "Results"
@@ -1871,7 +1887,6 @@ class script2():
             
             upload_to, remote, script_dependents = update_directory(dependents_dir) # returned upload_to, remote, local (aka: script_dependents) --> local is where working dependencies are located
             
-            upload_to, remote, script_dependents = update_directory(dependents_dir) #***FUNCTION CALL
             try:
                 shutil.copy(upload_to + "/gen-bact/salmonella/snp_pipeline/genotyping_codes.xlsx", script_dependents)
             except FileNotFoundError:
@@ -1883,6 +1898,38 @@ class script2():
             definingSNPs = script_dependents + "/DefiningSNPsGroupDesignations.xlsx"
             remove_from_analysis = script_dependents + "/RemoveFromAnalysis.xlsx"
             bioinfoVCF = upload_to + "/gen-bact/salmonella/snp_pipeline/script2"
+            excelinfile = script_dependents + "/Filtered_Regions.xlsx"
+            print(excelinfile)
+            filter_files = script_dependents + "/filter_files"
+            if os.path.isdir(filter_files):
+                shutil.rmtree(filter_files)
+                os.mkdir(filter_files)
+            else:        os.mkdir(filter_files)
+            get_filters(excelinfile, filter_files) #***FUNCTION CALL
+            if args.email == "s":
+                email_list = "tod.p.stuber@aphis.usda.gov"
+
+        if args.species == "typhimurium":
+
+            qual_gatk_threshold = 300
+            N_gatk_threshold = 350
+            
+            #Remove network path at and left of "Results"
+            dependents_dir="/gen-bact/salmonella/typhimurium/script_dependents/script2"
+            
+            upload_to, remote, script_dependents = update_directory(dependents_dir) # returned upload_to, remote, local (aka: script_dependents) --> local is where working dependencies are located
+            
+            try:
+                shutil.copy(upload_to + "/no_file.xlsx", script_dependents)
+            except FileNotFoundError:
+                print ("will use previously used genotyping_codes.xlsx file")
+
+            genotypingcodes = script_dependents + "/genotyping_codes.xlsx" # this may not be available if there is no access to f drive.  f drive record will not get cp to cut bioinfo list and then cp locally.  Can also manually put something in ~/dependencies on github.
+            gbk_file = script_dependents + "/AE006468.gbk"
+            # This file tells the script how to cluster VCFs
+            definingSNPs = script_dependents + "/DefiningSNPsGroupDesignations.xlsx"
+            remove_from_analysis = script_dependents + "/RemoveFromAnalysis.xlsx"
+            bioinfoVCF = upload_to + "/gen-bact/salmonella/typhimurium/script2"
             excelinfile = script_dependents + "/Filtered_Regions.xlsx"
             print(excelinfile)
             filter_files = script_dependents + "/filter_files"
@@ -4357,7 +4404,7 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
         Step 2: VCFs --> Tables & Trees
 
--s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, salmonella
+-s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, salmonella, typhimurium
 
 '''), epilog='''---------------------------------------------------------''')
 

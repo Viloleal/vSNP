@@ -1399,13 +1399,9 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
 
 def fix_vcf(each_vcf, arg_options):
     mal = []
-    ###
     # Fix common VCF errors
-    if arg_options['debug_call'] and not arg_options['get']:
-        print ("FIXING FILE: " + each_vcf)
     temp_file = each_vcf + ".temp"
     write_out=open(temp_file, 'w') #r+ used for reading and writing to the same file
-    ###
     with open(each_vcf, 'r') as file:
         try:
             for line in file:
@@ -1558,12 +1554,12 @@ def run_script2(arg_options):
     if arg_options['genotypingcodes']:
         print ("\nUpdating VCF file names")
         arg_options = change_names(arg_options) # check if genotypingcodes exist.  if not skip.
+        malformed = arg_options['malformed']
+        names_not_changed = arg_options['names_not_changed']
     else:
+        arg_options['malformed'] = []
         print("Genotypingcode file unavailable.  VCF file names not updated")
-        names_not_changed = glob.glob("*.vcf")
-
-    malformed = arg_options['malformed']
-    names_not_changed = arg_options['names_not_changed']
+        names_not_changed = None
 
     files = glob.glob('*vcf')
     print ("REMOVING FROM ANALYSIS...")
@@ -1588,11 +1584,11 @@ def run_script2(arg_options):
 
     print ("CHECKING FOR EMPTY FILES...")
     files = glob.glob('*vcf')
-    for i in files:
-        if os.stat(i).st_size == 0:
-            print ("### %s is an empty file and has been deleted" % i)
-            malformed.append("File was empty %s" % i)
-            os.remove(i)
+    for filename in files:
+        if os.stat(filename).st_size == 0:
+            print ("### %s is an empty file and has been deleted" % filename)
+            malformed.append("File was empty %s" % filename)
+            os.remove(filename)
 
     all_starting_files = glob.glob('*vcf')
     file_number = len(all_starting_files)
@@ -1701,11 +1697,11 @@ def run_script2(arg_options):
     print ("Total run time: %s: </h4>" % runtime, file=htmlfile)
 
     # ERROR LIST
-    if len(malformed) < 1:
+    if len(arg_options['malformed']) < 1:
         print ("<h2>No corrupt VCF removed</h2>", file=htmlfile)
     else:
         print ("\n<h2>Corrupt VCF removed</h2>", file=htmlfile)
-        for i in malformed:
+        for i in arg_options['malformed']:
             print ("%s <br>" % i, file=htmlfile)
         print ("<br>", file=htmlfile)
 
@@ -1768,7 +1764,7 @@ def run_script2(arg_options):
         pass
 
     #FILES NOT RENAMED
-    if names_not_changed:
+    if names_not_changed is None:
         print ("\n<h2>File names did not get changed:</h2>", file=htmlfile)
         for i in sorted(names_not_changed):
             print ("%s<br>" % i, file=htmlfile)
@@ -2054,23 +2050,22 @@ def change_names(arg_options):
 
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
-    for each_vcf in list_of_files:
-        vcf_found = False
+    for filename in list_of_files:
+        each_vcf = filename.replace("‐", "-")
         vcf_pretext = re.sub(r'(.*?)[._].*', r'\1', each_vcf) # ? was needed to make greedy, in my view the regex was searching right to left without it.
         vcf_pretext = vcf_pretext.rstrip()
         #Added '^' because h37 18-2397 was finding bovis 18-011018-2397, 2018-06-19
         myregex = re.compile('^' + vcf_pretext + '_.*') #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
-        for k, v in code_dictionary.items():
-            try:
-                if myregex.search(k):
-                    k= k.strip('_')
-                    #print("myregex %s, matches %s" % (myregex, k))
-                    os.rename(each_vcf, k + ".vcf")
-                    vcf_found = True
-            except FileNotFoundError:
-                print ("except FileNotFoundError %s" % each_vcf)
-        if vcf_found == False:
-                    names_not_changed.append(each_vcf)
+        for key, value in code_dictionary.items():
+            if myregex.search(key):
+                name_found = True
+                foundname = key.strip('_')
+        if name_found:
+            os.rename(filename, foundname + ".vcf")
+        else:
+            os.rename(filename, each_vcf)
+            print ("Genotype code not found:  {}, name not changed" .format(each_vcf))
+            names_not_changed.append(each_vcf)
     names_not_changed = set(names_not_changed) # remove duplicates
 
     if arg_options['elite']:
@@ -2124,6 +2119,7 @@ def change_names(arg_options):
         with futures.ProcessPoolExecutor() as pool:
             mal = pool.map(fix_vcf, vcf_list, itertools_repeat(arg_options))
             malformed = malformed + list(mal)
+    malformed = [x for x in malformed if x] # remove blanks
     print("done fixing")
     arg_options['malformed'] = malformed
     arg_options['names_not_changed'] = names_not_changed
@@ -2652,8 +2648,10 @@ def get_snps(directory, arg_options):
             for k, v in dict_annotation.items():
                 print ('%s\t%s' % (k, v), file=write_out)
             write_out.close()
-        
-            print ("%s gbk is present, getting annotation..." % directory)
+
+            time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+
+            print ("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
             annotations = pd.read_csv('annotations.txt', sep='\t') #sort
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
             mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
@@ -2744,13 +2742,12 @@ def get_snps(directory, arg_options):
     # strip off the bottom row: mytable[:-1]
     # get the bottom row: mytable[-1:]
 
-    with open(directory + "samples_in_fasta.json", 'w') as outfile:
+    with open(directory + "-samples_in_fasta.json", 'w') as outfile:
         json.dump(samples_in_fasta, outfile)
 
     return(samples_in_fasta)
 
 def get_annotations_table(parsimony_positions, arg_options):
-    print ("Getting annotations...")
     dict_annotation = {}
     gbk_dict = SeqIO.to_dict(SeqIO.parse(arg_options['gbk_file'], "genbank"))
     for each_absolute_pos in parsimony_positions:

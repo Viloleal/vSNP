@@ -1587,8 +1587,7 @@ def run_script2(arg_options):
     vcf_starting_list = glob.glob("*.vcf")
 
     print ("CHECKING FOR EMPTY FILES...")
-    files = glob.glob('*vcf')
-    for filename in files:
+    for filename in vcf_starting_list:
         if os.stat(filename).st_size == 0:
             print ("### %s is an empty file and has been deleted" % filename)
             malformed.append("File was empty %s" % filename)

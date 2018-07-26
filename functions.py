@@ -1650,8 +1650,9 @@ def run_script2(arg_options):
             samples_in_fasta = get_snps(i, arg_options)
             samples_in_output.append(samples_in_fasta)
     else:
-        with futures.ProcessPoolExecutor(max_workers=arg_options['limited_cpu_count']) as pool:
-            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=128):
+        cpu_restriction = int(arg_options['cpu_count'] / 2)
+        with futures.ProcessPoolExecutor(max_workers=cpu_restriction) as pool:
+            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=5):
                 samples_in_output.append(samples_in_fasta)
 
     arg_options.pop('filter_dictionary', None) # filters no longer need, get rid of them to make arg_option more managable.

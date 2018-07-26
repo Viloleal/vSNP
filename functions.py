@@ -2536,7 +2536,7 @@ def get_snps(directory, arg_options):
 
     samples_in_fasta = []
     #Print out fasta alignment file from table
-    alignment_file= outdir + directory + unique_number + ".fasta"
+    alignment_file= outdir + directory + "-" + unique_number + ".fasta"
     write_out=open(alignment_file, 'wt')
     with open(table_location, 'rt') as f:
         count=0
@@ -2600,7 +2600,7 @@ def get_snps(directory, arg_options):
         except:
             pass
         
-        out_org = outdir + directory + unique_number + "-" + "-organized-table.txt"
+        out_org = outdir + directory + "-" + unique_number + "-" + "-organized-table.txt"
 
         sort_table(table_location, ordered_list_from_tree, out_org) #function
 

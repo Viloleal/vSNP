@@ -1682,6 +1682,9 @@ def run_script2(arg_options):
     zip(dependents_dir, dependents_dir)
     shutil.rmtree(dependents_dir)
 
+    # remove empty list elements
+    arg_options['malformed'] = [x for x in arg_options['malformed'] if x]
+    arg_options['names_not_changed'] = [x for x in arg_options['names_not_changed'] if x]
     #############################################
     #MAKE HTML FILE:
     print ("<html>\n<head><style> table { font-family: arial, sans-serif; border-collapse: collapse; width: 40%; } td, th { border: 1px solid #dddddd; padding: 4px; text-align: left; font-size: 11px; } </style></head>\n<body style=\"font-size:12px;\">", file=htmlfile)

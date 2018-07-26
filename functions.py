@@ -1561,6 +1561,8 @@ def run_script2(arg_options):
     else:
         print("Genotypingcode file unavailable.  VCF file names not updated")
         names_not_changed = glob.glob("*.vcf")
+        arg_options['malformed'] = []
+        arg_options['names_not_changed'] = []
 
     malformed = arg_options['malformed']
     names_not_changed = arg_options['names_not_changed']
@@ -1650,7 +1652,7 @@ def run_script2(arg_options):
             samples_in_fasta = get_snps(i, arg_options)
             samples_in_output.append(samples_in_fasta)
     else:
-        with futures.ProcessPoolExecutor() as pool:
+        with futures.ProcessPoolExecutor(max_workers=arg_options['limited_cpu_count']) as pool:
             for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=128):
                 samples_in_output.append(samples_in_fasta)
 

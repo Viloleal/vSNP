@@ -1557,9 +1557,13 @@ def run_script2(arg_options):
         malformed = arg_options['malformed']
         names_not_changed = arg_options['names_not_changed']
     else:
-        arg_options['malformed'] = []
         print("Genotypingcode file unavailable.  VCF file names not updated")
-        names_not_changed = None
+        names_not_changed = glob.glob("*.vcf")
+        arg_options['malformed'] = []
+        arg_options['names_not_changed'] = []
+
+    malformed = arg_options['malformed']
+    names_not_changed = arg_options['names_not_changed']
 
     files = glob.glob('*vcf')
     print ("REMOVING FROM ANALYSIS...")
@@ -1646,8 +1650,8 @@ def run_script2(arg_options):
             samples_in_fasta = get_snps(i, arg_options)
             samples_in_output.append(samples_in_fasta)
     else:
-        with futures.ProcessPoolExecutor() as pool:
-            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options)):
+        with futures.ProcessPoolExecutor(max_workers=arg_options['limited_cpu_count']) as pool:
+            for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=128):
                 samples_in_output.append(samples_in_fasta)
 
     arg_options.pop('filter_dictionary', None) # filters no longer need, get rid of them to make arg_option more managable.

@@ -1912,7 +1912,7 @@ class script2():
         if args.species == "typhimurium":
 
             qual_gatk_threshold = 300
-            N_gatk_threshold = 350
+            N_gatk_threshold = 0
             
             #Remove network path at and left of "Results"
             dependents_dir="/gen-bact/salmonella/typhimurium/script_dependents/script2"

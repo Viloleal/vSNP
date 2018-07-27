@@ -14,7 +14,7 @@ root_dir = str(os.getcwd())
 
 #set cpu usage
 cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count/4)
+limited_cpu_count = int(cpu_count / 4)
 if limited_cpu_count == 0:
     limited_cpu_count = 1
 
@@ -47,8 +47,8 @@ parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', help='[*
 parser.add_argument('-m', '--email', action='store', dest='email', help='[**APHIS only**, specify own SMTP address for functionality] email options: all, s, tod, jess, suelee, chris, email_address')
 parser.add_argument('-u', '--upload', action='store_true', dest='upload', help='[**APHIS only**, specify own storage for functionality] upload files to the bioinfo drive')
 args = parser.parse_args()
-print ("\nSET ARGUMENTS: ")
-print (args)
+print("\nSET ARGUMENTS: ")
+print(args)
 arg_options = {
     "species": args.species,
     "debug_call": args.debug_call,
@@ -151,5 +151,5 @@ elif vcf_check:
                 print("#####Based on VCF CHROM id (reference used to build VCF) a matching species cannot be found neither was there a -s option given")
                 sys.exit(0)
 else:
-    print ("#####Error determining file type.")
+    print("#####Error determining file type.")
     sys.exit(0)

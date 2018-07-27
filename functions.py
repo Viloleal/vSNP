@@ -19,13 +19,11 @@ from itertools import repeat as itertools_repeat
 import gzip
 import glob
 import csv
-import signal
 import json
 from collections import defaultdict
 from collections import Iterable
 from cairosvg import svg2pdf
 from numpy import mean
-from functools import partial
 from email.utils import formatdate
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -51,7 +49,7 @@ def run_loop(arg_options): #calls read_aligner
     startTime = datetime.now()
     ts = time.time()
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
-    print ("Start time: %s" % st)
+    print("Start time: %s" % st)
 
     list_of_files = glob.glob('*gz')
     list_len = len(list_of_files)
@@ -60,7 +58,7 @@ def run_loop(arg_options): #calls read_aligner
         sys.exit(0)
 
     for afile in list_of_files:
-        prefix_name=re.sub('_.*', '', afile)
+        prefix_name = re.sub('_.*', '', afile)
         print(prefix_name)
         if not os.path.exists(prefix_name):
             os.makedirs(prefix_name)
@@ -110,8 +108,8 @@ def run_loop(arg_options): #calls read_aligner
             smtp.quit()
     ###
 
-    directory_list=[]
-    for f in  os.listdir('.'):
+    directory_list = []
+    for f in os.listdir('.'):
         if not f.startswith('.'):
             directory_list.append(f)
 
@@ -165,9 +163,6 @@ def run_loop(arg_options): #calls read_aligner
             # Need to speed test which why is faster
             with futures.ProcessPoolExecutor(max_workers=limited_cpu_count) as pool:
                 for stat_summary in pool.map(read_aligner, run_list, itertools_repeat(arg_options)):
-            #  with cf.ProcessPoolExecutor(max_workers=limited_cpu_count) as executor:
-            #  for stat_summary in executor.map(read_aligner, run_list, itertools.repeat(args)):
-
                     df_stat_summary = pd.DataFrame.from_dict(stat_summary, orient='index')  #convert stat_summary to df
                     frames.append(df_stat_summary)  #frames to concatenate
 
@@ -199,23 +194,23 @@ def run_loop(arg_options): #calls read_aligner
                 try:
                     open_check = open(summary_cumulative_file, 'a') #'a' is very important, 'w' will leave you with an empty file
                     open_check.close()
-                    df_all=pd.read_excel(summary_cumulative_file)
+                    df_all = pd.read_excel(summary_cumulative_file)
                     df_all_trans = df_all.T #indexed on column headers
                     # save back the old and remake the working stats file
                     shutil.move(summary_cumulative_file, '{}' .format(temp_folder + '/stat_backup' + st + '.xlsx'))
                     sorter = list(df_all_trans.index) #list of original column order
                     frames.insert(0, df_all_trans) #put as first item in list
-                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     df_sorted.T.to_excel(summary_cumulative_file, index=False) #transpose before writing to excel, numerical index not needed
                 except BlockingIOError:
                     sorter = list(df_stat_summary.index) #list of original column order
-                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
                 except OSError:
                     sorter = list(df_stat_summary.index) #list of original column order
-                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     try:
                         df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
@@ -228,7 +223,7 @@ def run_loop(arg_options): #calls read_aligner
     workbook.close()
 
     runtime = (datetime.now() - startTime)
-    print ("\n\nruntime: %s:  \n" % runtime)
+    print("\n\nruntime: %s:  \n" % runtime)
 
     if arg_options['email_list']:
         try:

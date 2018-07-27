@@ -234,7 +234,6 @@ def read_aligner(sample_name, arg_options):
 
     sample_directory = str(os.getcwd())
     os.chdir(sample_name)
-    
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
 
@@ -245,11 +244,9 @@ def read_aligner(sample_name, arg_options):
     os.makedirs("zips")
     shutil.move(R1[0], "zips")
     shutil.move(R2[0], "zips")
-    
     arg_options['R1'] = sample_directory + "/" + sample_name + "/zips/" + R1[0]
     arg_options['R2'] = sample_directory + "/" + sample_name + "/zips/" + R2[0]
 
-    ###
     read_quality_stats = {}
     print("Getting mean for {}" .format(arg_options['R1']))
     handle = gzip.open(arg_options['R1'], "rt")
@@ -272,7 +269,7 @@ def read_aligner(sample_name, arg_options):
     read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
-    arg_options['read_quality_stats'] = read_quality_stats 
+    arg_options['read_quality_stats'] = read_quality_stats
     ###
 
     arg_options['sample_name'] = sample_name
@@ -324,9 +321,7 @@ def best_reference(fastq_list):
 
     '''Use oligos to determine species.  Most often if the absents of a single oligo from a set specific for either brucella or bovis will confer species type.  Some species will the absents of more than one oligo.  Oligo findings are translated to binary patterns.'''
     print("\nFinding the best reference\n")
-    
     write_out = open("best_reference.txt", 'w')
-    
     '''get the species'''
     oligo_dictionary = {}
     oligo_dictionary["01_ab1"] = "AATTGTCGGATAGCCTGGCGATAACGACGC"
@@ -397,7 +392,6 @@ def best_reference(fastq_list):
     bovis_identifications["11001110"] = "af" #bovis
     bovis_identifications["11011110"] = "af" #bovis
     bovis_identifications["11001100"] = "af" #bovis
-    
     para_identifications = {}
     para_identifications["1"] = "para"
     para_identifications["01"] = "para"
@@ -418,11 +412,9 @@ def best_reference(fastq_list):
     brucella_sum = sum(count_list[:16])
     bovis_sum = sum(count_list[16:24])
     para_sum = sum(count_list[24:])
-    
     print("Best reference Brucella counts:", file=write_out)
     for i in count_list[:16]:
         print(i, end=',', file=write_out)
-        
     print("\nBest reference TB counts:", file=write_out)
     for i in count_list[16:24]:
         print(i, end=',', file=write_out)
@@ -501,7 +493,6 @@ def align_reads(arg_options):
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
     R1 = arg_options['R1']
     R2 = arg_options['R2']
-   
     if arg_options["species"] is None:
         R1size = sizeof_fmt(os.path.getsize(R1))
         R2size = sizeof_fmt(os.path.getsize(R2))
@@ -520,7 +511,6 @@ def align_reads(arg_options):
         print("\n\n*** START ***\n")
         print("Start time: %s" % startTime)
         sample_name = arg_options["sample_name"]
-        
         print("species: %s" % arg_options["species"])
         if arg_options["species"] in ["ab1", "ab3", "suis1", "suis2", "suis3", "suis4", "mel1", "mel1b", "mel2", "mel3", "canis", "ceti1", "ceti2"]:
             print("Brucella")
@@ -528,7 +518,6 @@ def align_reads(arg_options):
         elif arg_options["species"] in ["h37", "af"]: #removed bovis
             print("TB")
             spoligo(arg_options)
-        
         os.chdir(working_directory)
         shutil.copy(arg_options["reference"], working_directory)
         shutil.copy(arg_options["hqs"], working_directory)
@@ -545,7 +534,6 @@ def align_reads(arg_options):
             sys.exit(0)
         sample_reference = sample_reference[0]
         hqs = hqs[0]
-        
         print("--")
         print("sample name: %s" % sample_name)
         print("sample reference: %s" % sample_reference)
@@ -555,7 +543,6 @@ def align_reads(arg_options):
         print("--")
 
         loc_sam = working_directory + "/" + sample_name
-        
         os.system("samtools faidx {}" .format(sample_reference))
         os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
         os.system("bwa index {}" .format(sample_reference))
@@ -578,7 +565,6 @@ def align_reads(arg_options):
         coverage_file = loc_sam + "-coverage.txt"
         hapall = loc_sam + "-hapall.vcf"
         bamout = loc_sam + "-bamout.bam"
-        
         print("\n@@@ BWA mem")
         os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
 
@@ -591,7 +577,6 @@ def align_reads(arg_options):
 
         print("\n@@@ Unmapped to FASTQ")
         os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
-        
         print("\n@@@ Abyss")
         abyss_contig_count = 0
 
@@ -606,7 +591,6 @@ def align_reads(arg_options):
         print("\n@@@ Sort BAM")
         os.system("samtools sort {} -o {}" .format(allbam, sortedbam))
         os.system("samtools index {}" .format(sortedbam))
-        
         print("\n@@@ Write stats to file")
         stat_file = "stat_align.txt"
         stat_out = open(stat_file, 'w')
@@ -625,7 +609,6 @@ def align_reads(arg_options):
         print("\n@@@ Find duplicate reads")
         os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
         os.system("samtools index {}" .format(nodupbam))
-        
         duplicate_stat_file = "duplicate_stat_align.txt"
         duplicate_stat_out = open(duplicate_stat_file, 'w')
         #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
@@ -641,7 +624,6 @@ def align_reads(arg_options):
             unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
         except:
             unmapped_reads = "none_found"
-        
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
         print(unmapped_reads)
 
@@ -673,7 +655,7 @@ def align_reads(arg_options):
         print("\n@@@ Calling SNPs with HaplotypeCaller")
         os.system("gatk3 -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
-        try: 
+        try:
             print("Getting Zero Coverage...\n")
             zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
         except FileNotFoundError:
@@ -689,16 +671,11 @@ def align_reads(arg_options):
             smtp.send_message(msg)
             smtp.quit()
 
-            # process_id = os.getpid()
-            # os.kill(process_id, signal.SIGKILL)
-
-        ###
         if arg_options["gbk_file"] is not "None" and not arg_options['no_annotation']:
             try:
                 in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(arg_options["gbk_file"], "genbank"))
                 annotated_vcf = loc_sam + "-annotated.vcf"
                 write_out = open(annotated_vcf, 'w')
-                
                 with open(zero_coverage_vcf) as vfile:
                     print("finding annotations...\n")
                     for line in vfile:
@@ -744,14 +721,12 @@ def align_reads(arg_options):
         newZip.close()
         os.remove(unmapped_read1)
         os.remove(unmapped_read2)
-        
         try:
             shutil.move(unmapped_read1gz, unmapped)
             shutil.move(unmapped_read2gz, unmapped)
             shutil.move(abyss_out, unmapped)
         except FileNotFoundError:
             pass
-        
         alignment = working_directory + "/alignment"
         os.makedirs(alignment)
         movefiles = glob.glob('*-*')
@@ -799,7 +774,6 @@ def align_reads(arg_options):
             sbcode = "N/A"
             hexcode = "N/A"
             binarycode = "N/A"
-            
         #Capture program versions for step 1
         try:
             verison_out = open("version_capture.txt", 'w')
@@ -826,9 +800,6 @@ def align_reads(arg_options):
         st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
 
         stat_summary = {}
-
-        #
-
         stat_summary["time_stamp"] = st
         stat_summary["sample_name"] = sample_name
         stat_summary["species"] = arg_options["species"]
@@ -847,7 +818,6 @@ def align_reads(arg_options):
         stat_summary["sbcode"] = sbcode
         stat_summary["hexadecimal_code"] = hexcode
         stat_summary["binarycode"] = binarycode
-        
         ###
         # Create a sample stats file in the sample's script1 directory
         summary_file = loc_sam + "_" + st + '.xlsx'
@@ -861,7 +831,6 @@ def align_reads(arg_options):
             worksheet.write(row, col, header)
             col += 1
             # worksheet.write(row, col, v)
-        
         stat_summary.update(arg_options['read_quality_stats'])
         worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
         worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
@@ -886,7 +855,6 @@ def align_reads(arg_options):
         worksheet.write(1, 20, stat_summary.get('hexadecimal_code', 'n/a'))
         worksheet.write(1, 21, stat_summary.get('binarycode', 'n/a'))
         workbook.close()
-        
         return(stat_summary)
 
 
@@ -972,11 +940,9 @@ def mlst(arg_options):
     os.system("samtools faidx {}" .format(sample_reference_mlst_location))
     os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference_mlst_location, directory + "/" + ref + ".dict"))
     os.system("bwa index {}" .format(sample_reference_mlst_location))
-    
     print("\n@@@ BWA mem")
     samfile_mlst = loc_sam_mlst + ".sam"
     os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference_mlst_location, R1, R2, samfile_mlst))
-    
     print("\nAdd read group and out all BAM")
     all_bam_mlst = loc_sam_mlst + "-all.bam"
     os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile_mlst, all_bam_mlst, sample_name_mlst))
@@ -1057,7 +1023,6 @@ def mlst(arg_options):
         os.remove(i)
 
     write_out = open("mlst.txt", 'w')
-    
     if mlst_join in mlst_dictionary:
         mlst_type = mlst_dictionary[mlst_join]
         print(mlst_type)
@@ -1065,7 +1030,6 @@ def mlst(arg_options):
     else:
         print("NO MLST MATCH FOUND\n")
         print("NO MLST MATCH FOUND", file=write_out)
-    
     write_out.close()
 
     os.makedirs("mlst")
@@ -1133,12 +1097,10 @@ def binary_to_hex(binary):
 
 
 def spoligo(arg_options):
-    
     sample_directory = str(os.getcwd())
     R1 = arg_options['R1']
     R2 = arg_options['R2']
     print("\nFinding spoligotype pattern...\n")
-    
     '''spoligo spacers'''
     spoligo_dictionary = {}
     spoligo_dictionary["spacer01"] = ["TGATCCAGAGCCGGCGACCCTCTAT", "ATAGAGGGTCGCCGGCTCTGGATCA"]
@@ -1219,15 +1181,12 @@ def spoligo(arg_options):
         else:
             spoligo_binary_dictionary.update({k: 0})
     spoligo_binary_dictionary = OrderedDict(sorted(spoligo_binary_dictionary.items()))
-    
     spoligo_binary_list = []
     for v in spoligo_binary_dictionary.values():
         spoligo_binary_list.append(v)
     bovis_string = ''.join(str(e) for e in spoligo_binary_list) #bovis_string correct
     hexadecimal = binary_to_hex(bovis_string)
-    
     write_out = open("spoligo.txt", 'w')
-    
     found = False
     with open(arg_options["spoligo_db"]) as f: # put into dictionary or list
         for line in f:
@@ -1270,15 +1229,12 @@ def spoligo(arg_options):
                 print(k, v, file=write_out)
 
         write_out.close()
-    
     os.chdir(sample_directory)
 
 
 def add_zero_coverage(coverage_in, vcf_file, loc_sam):
-    
     temp_vcf = loc_sam + "-temp.vcf"
     zero_coverage_vcf = loc_sam + "_zc.vcf"
-    
     zero_position = []
     total_length = 0
     total_zero_coverage = 0
@@ -1295,7 +1251,6 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
                 zero_position.append(abs_pos) #positions with zero coverage in coverage file
                 total_zero_coverage = total_zero_coverage + 1
         print(len(zero_position))
-    
     genome_coverage = 0
     total_coverage = total_length - total_zero_coverage
 
@@ -1350,7 +1305,6 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
     os.system("picard SortVcf INPUT={} OUTPUT={}" .format(temp_vcf, zero_coverage_vcf))
     #os.system("vcf-sort {} > {}" .format(temp_vcf, zero_coverage_vcf))
     os.remove(temp_vcf)
-    
     vcf_reader = vcf.Reader(open(zero_coverage_vcf, 'r'))
     good_snp_count = 0
     for record in vcf_reader:
@@ -1470,7 +1424,6 @@ def get_species(arg_options):
     species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
     species_cross_reference["suis3"] = ["007719", "007718"]
     species_cross_reference["suis4"] = ["B-REF-BS4-40"]
-    
     vcf_list = glob.glob('*vcf')
     for each_vcf in vcf_list:
         print(each_vcf)
@@ -1487,7 +1440,6 @@ def get_species(arg_options):
 def run_script2(arg_options):
 
     # IF AVX2 IS AVAILABE (CHECK WITH `cat /proc/cpuinfo | grep -i "avx"`). CREATE A LINK TO: `ln -s path_to_raxmlHPC-PTHREADS-AVX2 raxml.  Place "raxml" in your path.  This will allow "raxml" to be found first which will call AVX2 version of RAxML
-    
     try:
         subprocess.call("raxml", stdout=open(os.devnull, 'wb'))
         sys_raxml = "raxml"
@@ -1762,7 +1714,6 @@ def run_script2(arg_options):
             print("<tr><td>{}</td></tr>" .format(i), file=htmlfile)
         print("</table>", file=htmlfile)
         print("<br>", file=htmlfile)
-    
     #Capture program versions for step 2
     try:
         print("\n<h2>Program versions:</h2>", file=htmlfile)
@@ -1896,7 +1847,6 @@ def group_files(each_vcf, arg_options):
                 shutil.copy(each_vcf, directory)
                 # ADD GROUP TO LIST
                 group_calls.append(directory)
-                
         # find mixed isolates if defining snp is ambigous
         for amb_position in list_amb:
             if amb_position in defining_snps:
@@ -2129,7 +2079,6 @@ def change_names(arg_options):
         for each_vcf in list_of_files:
             shutil.copy(each_vcf, arg_options['root_dir'])
         print(file_number)
-    
     #fix files
     vcf_list = glob.glob('*vcf')
     print("Fixing files...\n")
@@ -2209,7 +2158,6 @@ def find_positions(filename, arg_options):
             chrom = record.CHROM
             position = record.POS
             absolute_positon = str(chrom) + "-" + str(position)
-            
             # Usable positins are those that:
             # ADD PARAMETERS HERE TO CHANGE WHAT'S SNP WILL BE USED
             # IF NOT FOUND HERE THE SNP WILL BE IGNORED.  WILL NOT BE REPRESENTED.  HARD REMOVAL
@@ -2381,7 +2329,7 @@ def get_snps(directory, arg_options):
         for k, v in dd_map.items():
             if len(v) > 3:
                 ave_map[k] = np.mean(v)
-                max_map[k] = np.max(v)		
+                max_map[k] = np.max(v)
 
         # get all possible used positions
         all_maybe_filter = []
@@ -2402,14 +2350,13 @@ def get_snps(directory, arg_options):
                 try:
                     all_maybe_filter.remove(pos)
                 except ValueError:
-                    pass 
+                    pass
             # Removing those already being filtered for specific group
             for pos in filter_dictionary[directory]: #filter_list
                 try:
                     all_maybe_filter.remove(pos)
                 except ValueError:
-                    pass 
-
+                    pass
         # for each possible posible position check if to filter.
         for absolute_positon in all_maybe_filter:
             ave_qual_value = ave_qual[absolute_positon]
@@ -2433,7 +2380,6 @@ def get_snps(directory, arg_options):
     # order before adding to file to match with ordering of individual samples below
     # all_positions is abs_pos:REF
     all_positions = OrderedDict(sorted(all_positions.items()))
-    
     # Add the positions to the table
     print("reference_pos", end="\t", file=table)
     for k, v in all_positions.items():
@@ -2465,7 +2411,6 @@ def get_snps(directory, arg_options):
                 # SNP IS REPRESENTED IN TABLE, NOW HOW WILL THE VCF REPRESENT THE CALLED POSITION
                 # str(record.ALT[0]) != "None", which means a deletion as ALT
                 # not record.FILTER, or rather PASSED.
-                
                 # check record.QUAL
                 # In GATK VCFs "!= None" not used.
                 if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['N_gatk_threshold']:
@@ -2533,7 +2478,6 @@ def get_snps(directory, arg_options):
     parsimony_positions = list(parsimony)
     #write over table (table_location) containing all snps
     parsimony.to_csv(table_location, sep="\t", index=False)
-    
     table = open(table_location, 'a')
     # The reference calls are added after the parsimony positions are selected.
     # added corresponding reference to parsimony table
@@ -2607,13 +2551,11 @@ def get_snps(directory, arg_options):
             best_raxml_tre = directory + "-RAxML-bestTree.tre"
             os.rename("RAxML_bestTree.raxml", best_raxml_tre)
             write_out.close()
-    
-        best_raxml_svg = directory + "-RAxML-bestTree.svg"        
+        best_raxml_svg = directory + "-RAxML-bestTree.svg"
         try:
             os.system("cat {} | nw_display -s -S -w 1300 -t -v 30 -i 'opacity:0' -b 'opacity:0' -l 'font-size:14;font-family:serif;font-style:italic' -d 'stroke-width:1;stroke:blue' - > {}" .format(best_raxml_tre, best_raxml_svg)) #-s produces svg, -S suppress scale bar, -w to set the number of columns available for display, -t tab format, -v vertical spacing, -i inner node label, -b branch style
         except:
             pass
-        
         out_org = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-organized-table.txt"
         out_sort = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-sorted-table.txt"
 
@@ -2633,7 +2575,6 @@ def get_snps(directory, arg_options):
             for line in f:
                 write_out.write(line)
         write_out.close()
-        
         #seemed pooling did not like a function with no parameters given
         quality = pd.read_csv('map_quality.txt', sep='\t')
 
@@ -2794,7 +2735,7 @@ def get_annotations_table(parsimony_positions, arg_options):
                         pos_found = True
             if not pos_found:
                 myout = "No annotated product"
-            dict_annotation.update({chrom + "-" + str(pos):myout})
+            dict_annotation.update({chrom + "-" + str(pos): myout})
     return (dict_annotation)
 
 
@@ -2826,7 +2767,7 @@ def sort_table(table_location, ordered, out_org):
                 count = count + 1
         snp_per_column.append(count)
         #print("the count is: %s" % count)
-    row1 = pd.Series (snp_per_column, mytable.columns, name="snp_per_column")
+    row1 = pd.Series(snp_per_column, mytable.columns, name="snp_per_column")
     #row1 = row1.drop('reference_pos')
 
     # get the snp count per column
@@ -2843,12 +2784,11 @@ def sort_table(table_location, ordered, out_org):
             else:
                 break
         snp_from_top.append(count)
-    row2 = pd.Series (snp_from_top, mytable.columns, name="snp_from_top")
+    row2 = pd.Series(snp_from_top, mytable.columns, name="snp_from_top")
     #row2 = row2.drop('reference_pos')
 
     mytable = mytable.append([row1])
     mytable = mytable.append([row2])
-    
     #In pandas=0.18.1 even this does not work:
     #    abc = row1.to_frame()
     #    abc = abc.T --> mytable.shape (5, 18), abc.shape (1, 18)

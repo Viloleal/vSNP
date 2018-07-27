@@ -2556,7 +2556,7 @@ def get_snps(directory, arg_options):
     myref = mytable[-1:]
     myother = mytable[:-1]
     frames = [myref, myother]
-    mytable = pd.concat(frames, sort=True)
+    mytable = pd.concat(frames)
     mytable.to_csv(table_location, sep="\t", index=False)
 
     print ("\n%s table dimensions: %s" % (directory, str(mytable.shape)))

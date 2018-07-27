@@ -2274,7 +2274,7 @@ def bruc_private_codes(upload_to):
 
 def get_snps(directory, arg_options):
 
-    unique_number = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(3))
+    unique_number = arg_options['unique_number']
 
     os.chdir(arg_options['root_dir']+ "/" + directory)
     print ("\n----------------------------")
@@ -2600,7 +2600,8 @@ def get_snps(directory, arg_options):
         except:
             pass
         
-        out_org = outdir + directory + "-" + unique_number + "-" + "-organized-table.txt"
+        out_org = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-organized-table.txt"
+        out_sort = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-sorted-table.txt"
 
         sort_table(table_location, ordered_list_from_tree, out_org) #function
 
@@ -2639,13 +2640,11 @@ def get_snps(directory, arg_options):
         mytable = mytable.reindex(ordered_list)
         mytable.to_csv(table_location, sep='\t')
 
-        out_sort=str(os.getcwd()) + "/" + directory + "-" + unique_number + "-sorted-table.txt" #sorted
         mytable_sort = pd.read_csv(table_location, sep='\t') #sorted
         mytable_sort = mytable_sort.set_index('reference_pos') #sorted
         mytable_sort = mytable_sort.transpose() #sort
         mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
 
-        out_org=str(os.getcwd()) + "/" + directory + "-" + unique_number + "-organized-table.txt" #org
         mytable = pd.read_csv(out_org, sep='\t') #org
         mytable = mytable.set_index('reference_pos') #org
         mytable = mytable.transpose() #org

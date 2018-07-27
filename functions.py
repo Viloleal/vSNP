@@ -2020,7 +2020,7 @@ def test_duplicate():
 
 def change_names(arg_options):
     malformed = []
-    code_dictionary = {}
+    code_dictionary = {} # dictionary of new names and whether considered an elite isolate
     try:
         wb = xlrd.open_workbook(arg_options['genotypingcodes'])
         ws = wb.sheet_by_index(0)
@@ -2064,10 +2064,13 @@ def change_names(arg_options):
                 foundname = key.strip('_')
         if name_found:
             os.rename(filename, foundname + ".vcf")
+            print("Name Changed {} --> {}" .format(filename, foundname))
+            name_found = False
         else:
             os.rename(filename, each_vcf)
             print ("Genotype code not found:  {}, name not changed" .format(each_vcf))
             names_not_changed.append(each_vcf)
+            print("File Not Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
 
     if arg_options['elite']:

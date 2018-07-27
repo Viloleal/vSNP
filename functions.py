@@ -1,28 +1,24 @@
-import zipfile
-import xlsxwriter
-import xlrd
-import vcf
-import time
-import sys
-import subprocess
-import smtplib
-import ssl
-import shutil
-import regex
-import re
-import numpy as np
-import pandas as pd
 import os
-import multiprocessing
-from multiprocessing import Pool
-from itertools import repeat as itertools_repeat
+import sys
+import shutil
+import subprocess
 import gzip
 import glob
 import csv
 import json
-from collections import defaultdict
+import time
+import regex
+import re
+import numpy as np
+import pandas as pd
+import zipfile
+import xlsxwriter
+import xlrd
+import vcf
+import smtplib
+from multiprocessing import Pool
+from itertools import repeat as itertools_repeat
 from collections import Iterable
-from cairosvg import svg2pdf
 from numpy import mean
 from email.utils import formatdate
 from email.mime.text import MIMEText
@@ -41,7 +37,8 @@ from parameters import Get_Specie_Parameters_Step1
 from parameters import Get_Specie_Parameters_Step2
 # import concurrent.futures as cf
 
-def run_loop(arg_options): #calls read_aligner
+
+def run_loop(arg_options):  #calls read_aligner
 
     root_dir = arg_options['root_dir']
     limited_cpu_count = arg_options['limited_cpu_count']
@@ -64,14 +61,14 @@ def run_loop(arg_options): #calls read_aligner
             os.makedirs(prefix_name)
         shutil.move(afile, prefix_name)
 
-    #placed at root
-    #get file opened and give a header
+    # placed at root
+    # get file opened and give a header
     summary_file = root_dir + '/stat_alignment_summary_' + st + '.xlsx'
     workbook = xlsxwriter.Workbook(summary_file)
     worksheet = workbook.add_worksheet()
     row = 0
     col = 0
-    top_row_header = ["time_stamp", "sample_name", "species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+    top_row_header = ["time_stamp", "sample_name", "species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2", "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
     for header in top_row_header:
         worksheet.write(row, col, header)
         col += 1
@@ -100,7 +97,7 @@ def run_loop(arg_options): #calls read_aligner
             msg = MIMEMultipart()
             msg['From'] = "tod.p.stuber@aphis.usda.gov"
             msg['To'] = "tod.p.stuber@aphis.usda.gov"
-            msg['Date'] = formatdate(localtime = True)
+            msg['Date'] = formatdate(localtime=True)
             msg['Subject'] = "### No coverage file"
             msg.attach(MIMEText(text))
             smtp = smtplib.SMTP('10.10.8.12')
@@ -202,7 +199,7 @@ def run_loop(arg_options): #calls read_aligner
                     frames.insert(0, df_all_trans) #put as first item in list
                     df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
-                    df_sorted.T.to_excel(summary_cumulative_file, index=False) #transpose before writing to excel, numerical index not needed
+                    df_sorted.T.to_excel(summary_cumulative_file, index=False) # transpose before writing to excel, numerical index not needed
                 except BlockingIOError:
                     sorter = list(df_stat_summary.index) #list of original column order
                     df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
@@ -232,6 +229,7 @@ def run_loop(arg_options): #calls read_aligner
             print("Unable to send email with current smtp setting\n")
             pass
 
+
 def read_aligner(sample_name, arg_options):
 
     sample_directory = str(os.getcwd())
@@ -255,7 +253,7 @@ def read_aligner(sample_name, arg_options):
     read_quality_stats = {}
     print("Getting mean for {}" .format(arg_options['R1']))
     handle = gzip.open(arg_options['R1'], "rt")
-    mean_quality_list=[]
+    mean_quality_list = []
     for rec in SeqIO.parse(handle, "fastq"):
         mean_q = get_read_mean(rec)
         mean_quality_list.append(mean_q)
@@ -290,6 +288,7 @@ def read_aligner(sample_name, arg_options):
         print("### Unable to return stat_summary")
         return arg_options
 
+
 def species_selection_step1(arg_options):
     all_parameters = Get_Specie_Parameters_Step1()
 
@@ -319,6 +318,7 @@ def species_selection_step1(arg_options):
         arg_options['reference_sequence_name'] = best_ref_found
         arg_options.update(specie_para_dict)
         return arg_options
+
 
 def best_reference(fastq_list):
 
@@ -403,52 +403,52 @@ def best_reference(fastq_list):
     para_identifications["01"] = "para"
     para_identifications["11"] = "para"
 
-    count_summary={}
+    count_summary = {}
 
     with futures.ProcessPoolExecutor() as pool:
         for v, count in pool.map(finding_best_ref, oligo_dictionary.values(), itertools_repeat(fastq_list)):
             for k, value in oligo_dictionary.items():
                 if v == value:
-                    count_summary.update({k:count})
-                    count_summary=OrderedDict(sorted(count_summary.items()))
+                    count_summary.update({k: count})
+                    count_summary = OrderedDict(sorted(count_summary.items()))
 
-    count_list=[]
+    count_list = []
     for v in count_summary.values():
         count_list.append(v)
-    brucella_sum=sum(count_list[:16])
-    bovis_sum=sum(count_list[16:24])
-    para_sum=sum(count_list[24:])
+    brucella_sum = sum(count_list[:16])
+    bovis_sum = sum(count_list[16:24])
+    para_sum = sum(count_list[24:])
     
     print("Best reference Brucella counts:", file=write_out)
     for i in count_list[:16]:
-        print(i,  end=',', file=write_out)
+        print(i, end=',', file=write_out)
         
     print("\nBest reference TB counts:", file=write_out)
     for i in count_list[16:24]:
-        print(i,  end=',', file=write_out)
+        print(i, end=',', file=write_out)
 
     print("\nBest reference Para counts:", file=write_out)
     for i in count_list[24:]:
-        print(i,  end=',', file=write_out)
+        print(i, end=',', file=write_out)
 
     #Binary dictionary
-    binary_dictionary={}
+    binary_dictionary = {}
     for k, v in count_summary.items():
         if v > 1:
-            binary_dictionary.update({k:1})
+            binary_dictionary.update({k: 1})
         else:
-            binary_dictionary.update({k:0})
-    binary_dictionary=OrderedDict(sorted(binary_dictionary.items()))
+            binary_dictionary.update({k: 0})
+    binary_dictionary = OrderedDict(sorted(binary_dictionary.items()))
 
-    binary_list=[]
+    binary_list = []
     for v in binary_dictionary.values():
         binary_list.append(v)
-    brucella_binary=binary_list[:16]
-    brucella_string=''.join(str(e) for e in brucella_binary)
-    bovis_binary=binary_list[16:24]
-    bovis_string=''.join(str(e) for e in bovis_binary)
-    para_binary=binary_list[24:]
-    para_string=''.join(str(e) for e in para_binary)
+    brucella_binary = binary_list[:16]
+    brucella_string = ''.join(str(e) for e in brucella_binary)
+    bovis_binary = binary_list[16:24]
+    bovis_string = ''.join(str(e) for e in bovis_binary)
+    para_binary = binary_list[24:]
+    para_string = ''.join(str(e) for e in para_binary)
 
     if brucella_sum > 3:
         if brucella_string in brucella_identifications:
@@ -481,17 +481,18 @@ def best_reference(fastq_list):
         print("Unable to find a best reference species or group")
         return("Unable to find a best reference species or group")
 
-
     write_out.close()
 
+
 def finding_best_ref(v, fastq_list):
-    count=0
+    count = 0
     for fastq in fastq_list:
         with gzip.open(fastq, 'rt') as in_handle:
             # all 3, title and seq and qual, were needed
             for title, seq, qual in FastqGeneralIterator(in_handle):
                 count += seq.count(v)
     return(v, count)
+
 
 def align_reads(arg_options):
     working_directory = os.getcwd()
@@ -516,8 +517,8 @@ def align_reads(arg_options):
         return(stat_summary)
     else:
         startTime = datetime.now()
-        print ("\n\n*** START ***\n")
-        print ("Start time: %s" % startTime)
+        print("\n\n*** START ***\n")
+        print("Start time: %s" % startTime)
         sample_name = arg_options["sample_name"]
         
         print("species: %s" % arg_options["species"])
@@ -534,8 +535,8 @@ def align_reads(arg_options):
         sample_reference = glob.glob(working_directory + '/*fasta')
         hqs = glob.glob(working_directory + '/*vcf')
 
-        print ("reference: %s" % sample_reference)
-        ref=re.sub('\.fasta', '', os.path.basename(sample_reference[0]))
+        print("reference: %s" % sample_reference)
+        ref = re.sub('\.fasta', '', os.path.basename(sample_reference[0]))
         if len(sample_reference) != 1:
             print("### ERROR reference not available or too many")
             sys.exit(0)
@@ -545,13 +546,13 @@ def align_reads(arg_options):
         sample_reference = sample_reference[0]
         hqs = hqs[0]
         
-        print ("--")
+        print("--")
         print("sample name: %s" % sample_name)
         print("sample reference: %s" % sample_reference)
         print("Read 1: %s" % R1)
         print("Read 2: %s\n" % R2)
         print("working_directory: %s" % working_directory)
-        print ("--")
+        print("--")
 
         loc_sam = working_directory + "/" + sample_name
         
@@ -572,9 +573,9 @@ def align_reads(arg_options):
         indel_realigner = loc_sam + ".intervals"
         realignedbam = loc_sam + "-realigned.bam"
         recal_group = loc_sam + "-recal_group"
-        prebam=loc_sam + "-pre.bam"
+        prebam = loc_sam + "-pre.bam"
         qualitybam = loc_sam + "-quality.bam"
-        coverage_file=loc_sam + "-coverage.txt"
+        coverage_file = loc_sam + "-coverage.txt"
         hapall = loc_sam + "-hapall.vcf"
         bamout = loc_sam + "-bamout.bam"
         
@@ -592,7 +593,7 @@ def align_reads(arg_options):
         os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
         
         print("\n@@@ Abyss")
-        abyss_contig_count=0
+        abyss_contig_count = 0
 
         os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
         try:
@@ -615,11 +616,11 @@ def align_reads(arg_options):
         with open(stat_file) as f:
             first_line = f.readline()
             first_line = first_line.rstrip()
-            first_line=re.split(':|\t', first_line)
+            first_line = re.split(':|\t', first_line)
             reference_sequence_name = str(first_line[0])
-            sequence_length = "{:,}".format(int(first_line[1]))
+            #sequence_length = "{:,}".format(int(first_line[1]))
             allbam_mapped_reads = int(first_line[2])
-            allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
+            #allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
 
         print("\n@@@ Find duplicate reads")
         os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
@@ -633,9 +634,9 @@ def align_reads(arg_options):
         with open(duplicate_stat_file) as f:
             dup_first_line = f.readline()
             dup_first_line = dup_first_line.rstrip()
-            dup_first_line=re.split(':|\t', dup_first_line)
+            dup_first_line = re.split(':|\t', dup_first_line)
             nodupbam_mapped_reads = int(dup_first_line[2])
-            nodupbam_unmapped_reads = int(dup_first_line[3])
+            #nodupbam_unmapped_reads = int(dup_first_line[3])
         try:
             unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
         except:
@@ -658,9 +659,9 @@ def align_reads(arg_options):
             os.system("gatk3 -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
 
         print("\n@@@ Make realigned BAM")
-        os.system("gatk3 -T PrintReads -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
+        os.system("gatk3 -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
         if not os.path.isfile(prebam):
-            os.system("gatk3 -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format (sample_reference, realignedbam, recal_group, prebam))
+            os.system("gatk3 -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
 
         print("\n@@@ Clip reads")
         os.system("gatk3 -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
@@ -681,7 +682,7 @@ def align_reads(arg_options):
             msg = MIMEMultipart()
             msg['From'] = "tod.p.stuber@aphis.usda.gov"
             msg['To'] = "tod.p.stuber@aphis.usda.gov"
-            msg['Date'] = formatdate(localtime = True)
+            msg['Date'] = formatdate(localtime=True)
             msg['Subject'] = "### No coverage file"
             msg.attach(MIMEText(text))
             smtp = smtplib.SMTP('10.10.8.12')
@@ -696,7 +697,7 @@ def align_reads(arg_options):
             try:
                 in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(arg_options["gbk_file"], "genbank"))
                 annotated_vcf = loc_sam + "-annotated.vcf"
-                write_out=open(annotated_vcf, 'w')
+                write_out = open(annotated_vcf, 'w')
                 
                 with open(zero_coverage_vcf) as vfile:
                     print("finding annotations...\n")
@@ -767,7 +768,7 @@ def align_reads(arg_options):
             pass
 
         runtime = (datetime.now() - startTime)
-        print ("\n\nruntime: %s:  \n" % runtime)
+        print("\n\nruntime: %s:  \n" % runtime)
         ave_coverage = "{:0.1f}".format(float(ave_coverage))
         print("average_coverage: %s" % ave_coverage)
 
@@ -818,13 +819,13 @@ def align_reads(arg_options):
             for r in SeqIO.parse(handle, "fastq"):
                 total_length = total_length + len(r.seq)
                 sequence_count = sequence_count + 1
-        ave_read_length = total_length/sequence_count
+        ave_read_length = total_length / sequence_count
         ave_read_length = "{:0.1f}".format(float(ave_read_length))
 
         ts = time.time()
         st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
 
-        stat_summary={}
+        stat_summary = {}
 
         #
 
@@ -855,7 +856,7 @@ def align_reads(arg_options):
         row = 0
         col = 0
 
-        top_row_header = ["time_stamp", "sample_name", "species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2",  "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
+        top_row_header = ["time_stamp", "sample_name", "species", "reference_sequence_name", "R1size", "R2size", "Q_ave_R1", "Q_ave_R2", "Q30_R1", "Q30_R2", "allbam_mapped_reads", "genome_coverage", "ave_coverage", "ave_read_length", "unmapped_reads", "unmapped_assembled_contigs", "good_snp_count", "mlst_type", "octalcode", "sbcode", "hexadecimal_code", "binarycode"]
         for header in top_row_header:
             worksheet.write(row, col, header)
             col += 1
@@ -888,16 +889,18 @@ def align_reads(arg_options):
         
         return(stat_summary)
 
+
 def sizeof_fmt(num, suffix='B'):
-    for unit in ['','K','M','G','T','P','E','Z']:
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
+
 def get_annotations(line, in_annotation_as_dict):
     #pos_found = False
-    line=line.rstrip()
+    line = line.rstrip()
     if line.startswith("#"): # save headers to file
         return(line)
     elif not line.startswith("#"): # position rows
@@ -905,7 +908,7 @@ def get_annotations(line, in_annotation_as_dict):
         split_line = line.split('\t')
         chrom = split_line[0]
         position = split_line[1] # get position
-    #print ("Getting annotations")
+    #print("Getting annotations")
         for each_key, each_value in in_annotation_as_dict.items():
             pos_found = False
             if chrom == each_key:
@@ -926,12 +929,13 @@ def get_annotations(line, in_annotation_as_dict):
                                 mygene = g
                         annotation_found = myproduct + ", gene: " + mygene + ", locus_tag: " + mylocus
                         pos_found = True
-            if pos_found == False:
+            if not pos_found:
                 annotation_found = "No annotated product"
             #print(annotation_found)
             split_line[2] = annotation_found
             annotated_line = "\t".join(split_line)
             return(annotated_line)
+
 
 def mlst(arg_options):
 
@@ -950,12 +954,12 @@ def mlst(arg_options):
     print(directory)
     sample_reference_mlst_location = directory + "/ST1-MLST.fasta"
     sample_name_mlst = sample_name + "-mlst"
-    print ("mlst reference: %s" % sample_reference_mlst_location)
-    ref=re.sub('\.fasta', '', os.path.basename(sample_reference_mlst_location))
+    print("mlst reference: %s" % sample_reference_mlst_location)
+    ref = re.sub('\.fasta', '', os.path.basename(sample_reference_mlst_location))
     print(ref)
 
-    loc_sam_mlst=directory + "/" + sample_name_mlst
-    print ("\n--")
+    loc_sam_mlst = directory + "/" + sample_name_mlst
+    print("\n--")
     print("sample name mlst: %s" % sample_name_mlst)
     print("sample reference mlst: %s" % sample_reference_mlst_location)
     print("ref, no ext: %s " % ref)
@@ -963,7 +967,7 @@ def mlst(arg_options):
     print("Read 2: %s\n" % R2)
     print("directory: %s" % directory)
     print("loc_sam_mlst: %s" % loc_sam_mlst)
-    print ("--\n")
+    print("--\n")
 
     os.system("samtools faidx {}" .format(sample_reference_mlst_location))
     os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference_mlst_location, directory + "/" + ref + ".dict"))
@@ -996,22 +1000,22 @@ def mlst(arg_options):
 
     target_vcf_positions = [231, 297, 363, 398, 429, 523, 631, 730, 1247, 1296, 1342, 1381, 1648, 1685, 1741, 1754, 2165, 2224, 2227, 2297, 2300, 2344, 2352, 2403, 2530, 2557, 2578, 2629, 3045, 3054, 3118, 3295, 3328, 3388, 3966, 3969, 4167, 4271, 4296, 4893, 4996, 4998, 5058, 5248, 5672, 5737, 5928, 5963, 5984, 5987, 6025, 6045, 6498, 6499, 6572, 6627, 6715, 6735, 6745, 6785, 6810, 6828, 6845, 6864, 6875, 7382, 7432, 7464, 7594, 7660, 7756]
 
-    pos_call_dict={}
+    pos_call_dict = {}
     vcf_reader = vcf.Reader(open(vcf_mlst, 'r'))
     for record in vcf_reader:
         if record.ALT[0]:
-            pos_call_dict.update({record.POS:record.ALT[0]})
+            pos_call_dict.update({record.POS: record.ALT[0]})
         else:
-            pos_call_dict.update({record.POS:record.REF})
+            pos_call_dict.update({record.POS: record.REF})
 
-    mlst_string=[]
+    mlst_string = []
     for i in target_vcf_positions:
         if i in pos_call_dict:
             mlst_string.append(pos_call_dict[i]) #if number in list then get value
-    mlst_join =  ''.join(map(str, mlst_string))
+    mlst_join = ''.join(map(str, mlst_string))
     print(mlst_join)
 
-    mlst_dictionary={}
+    mlst_dictionary = {}
     mlst_dictionary["CTCCCGGGGCGACCCGATCGAAGCGGGAAGGCCACGGCGCGTGAGCAGCCGGGCATCTGTCCCGCGGGGTA"] = "MLST type 01"
     mlst_dictionary["CTCCCGGGGCGACCCGAGCGAAGCGGGAAGGCCACGGCGCGTGAGCAGCCGGGCATCTGTCCCGCGGGGTA"] = "MLST type 02"
     mlst_dictionary["CTCCCGTGGCGACCCGAGCGAAGCGGGAAGGCCACGGCGCGTGAGCAGCCGGGCATCTGTCCCGCGGGGTA"] = "MLST type 03"
@@ -1069,9 +1073,10 @@ def mlst(arg_options):
     shutil.move("mlst.txt", "mlst")
     os.chdir(sample_directory)
 
+
 def finding_sp(v):
-    total=0
-    total_finds=0
+    total = 0
+    total_finds = 0
     #if total < 6: # doesn't make a big different.  Might as well get full counts
     #total += sum(seq.count(x) for x in (v)) #v=list of for and rev spacer
     total_finds = [len(regex.findall("(" + spacer + "){s<=1}", seq_string)) for spacer in v]
@@ -1079,8 +1084,9 @@ def finding_sp(v):
         total += number
     return(v, total)
 
+
 def binary_to_octal(binary):
-    binary_len = len(binary)
+    #binary_len = len(binary)
     i = 0
     ie = 1
     octal = ""
@@ -1107,6 +1113,7 @@ def binary_to_octal(binary):
         octal = octal + str(oct)
     return(octal)
 
+
 def binary_to_hex(binary):
     section1 = binary[0:7]
     section2 = binary[7:14]
@@ -1123,6 +1130,7 @@ def binary_to_hex(binary):
     hex_section6 = hex(int(section6, 2))
 
     return(hex_section1.replace('0x', '').upper() + "-" + hex_section2.replace('0x', '').upper() + "-" + hex_section3.replace('0x', '').upper() + "-" + hex_section4.replace('0x', '').upper() + "-" + hex_section5.replace('0x', '').upper() + "-" + hex_section6.replace('0x', '').upper())
+
 
 def spoligo(arg_options):
     
@@ -1177,7 +1185,7 @@ def spoligo(arg_options):
     spoligo_dictionary["spacer42"] = ["ATGGTGGGACATGGACGAGCGCGAC", "GTCGCGCTCGTCCATGTCCCACCAT"]
     spoligo_dictionary["spacer43"] = ["CGCAGAATCGCACCGGGTGCGGGAG", "CTCCCGCACCCGGTGCGATTCTGCG"]
 
-    count_summary={}
+    count_summary = {}
 
     global seq_string
     sequence_list = []
@@ -1200,19 +1208,19 @@ def spoligo(arg_options):
         for v, count in pool.map(finding_sp, spoligo_dictionary.values(), chunksize=8):
             for k, value in spoligo_dictionary.items():
                 if v == value:
-                    count_summary.update({k:count})
+                    count_summary.update({k: count})
                     count_summary = OrderedDict(sorted(count_summary.items()))
     seq_string = ""
 
     spoligo_binary_dictionary = {}
     for k, v in count_summary.items():
         if v > 4:
-            spoligo_binary_dictionary.update({k:1})
+            spoligo_binary_dictionary.update({k: 1})
         else:
-            spoligo_binary_dictionary.update({k:0})
+            spoligo_binary_dictionary.update({k: 0})
     spoligo_binary_dictionary = OrderedDict(sorted(spoligo_binary_dictionary.items()))
     
-    spoligo_binary_list=[]
+    spoligo_binary_list = []
     for v in spoligo_binary_dictionary.values():
         spoligo_binary_list.append(v)
     bovis_string = ''.join(str(e) for e in spoligo_binary_list) #bovis_string correct
@@ -1223,12 +1231,12 @@ def spoligo(arg_options):
     found = False
     with open(arg_options["spoligo_db"]) as f: # put into dictionary or list
         for line in f:
-            line=line.rstrip()
+            line = line.rstrip()
             octalcode = line.split()[0] #no arg splits on whitespace
             sbcode = line.split()[1]
             binarycode = line.split()[2]
             if bovis_string == '0000000000000000000000000000000000000000000':
-                found=True
+                found = True
                 octalcode = "spoligo not found"
                 sbcode = "spoligo not found"
                 hexadecimal = "SB2277 ???"
@@ -1239,7 +1247,7 @@ def spoligo(arg_options):
                 for k, v in count_summary.items():
                     print(k, v, file=write_out)
             elif bovis_string == binarycode:
-                found=True
+                found = True
                 print("Pattern found:")
                 print("%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode))
                 print("%s %s %s %s" % (octalcode, sbcode, hexadecimal, binarycode), file=write_out)
@@ -1265,23 +1273,24 @@ def spoligo(arg_options):
     
     os.chdir(sample_directory)
 
+
 def add_zero_coverage(coverage_in, vcf_file, loc_sam):
     
     temp_vcf = loc_sam + "-temp.vcf"
     zero_coverage_vcf = loc_sam + "_zc.vcf"
     
-    zero_position=[]
+    zero_position = []
     total_length = 0
     total_zero_coverage = 0
     with open(coverage_in) as f:
         for line in f:
             total_length = total_length + 1
             line.rstrip()
-            line=re.split(':|\t', line)
-            chromosome=line[0]
-            position=line[1]
+            line = re.split(':|\t', line)
+            chromosome = line[0]
+            position = line[1]
             abs_pos = chromosome + "-" + position
-            depth=line[2]
+            depth = line[2]
             if depth == "0":
                 zero_position.append(abs_pos) #positions with zero coverage in coverage file
                 total_zero_coverage = total_zero_coverage + 1
@@ -1290,35 +1299,35 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
     genome_coverage = 0
     total_coverage = total_length - total_zero_coverage
 
-    genome_coverage =  "{:.2%}".format(total_coverage/total_length)
+    genome_coverage = "{:.2%}".format(total_coverage / total_length)
 
     average_list = []
     with open(coverage_in) as f:
         for line in f:
             line.rstrip()
-            line=re.split(':|\t', line)
-            depth=str(line[2])
+            line = re.split(':|\t', line)
+            depth = str(line[2])
             if depth.isdigit():
                 depth = int(depth)
                 average_list.append(depth)
         ave_coverage = mean(average_list)
 
-    zero_position_found=[]
-    write_out=open(temp_vcf, 'w')
+    zero_position_found = []
+    write_out = open(temp_vcf, 'w')
     with open(vcf_file) as f:
         for line in f:
-            line=line.rstrip()
+            line = line.rstrip()
             if line.startswith("#"): # save headers to file
                 print(line, file=write_out)
             elif not line.startswith("#"): # position rows
                 split_line = line.split('\t')
-                chromosome=split_line[0] # get chromosome
-                position=split_line[1] # get position
+                chromosome = split_line[0] # get chromosome
+                position = split_line[1] # get position
                 abs_pos = chromosome + "-" + position
-                ref=split_line[3] # REF
-                alt=split_line[4] # ALT
-                ref_len=len(ref)
-                alt_len=len(alt)
+                ref = split_line[3] # REF
+                alt = split_line[4] # ALT
+                ref_len = len(ref)
+                alt_len = len(alt)
                 if abs_pos in zero_position: # if a position has zero coverage
                     print("%s is in zeropostions" % position)
                     zero_position_found.append(position)
@@ -1330,11 +1339,11 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
         #zero_position_found = list(map(int, zero_position_found))
 
         print("using list comprehension")
-        zero_not_added = [x for x in zero_position if x not in  zero_position_found] # use list comprehension to subtract one list from the other
+        zero_not_added = [x for x in zero_position if x not in zero_position_found] # use list comprehension to subtract one list from the other
         for abs_position in zero_not_added:
             split_line = abs_position.rsplit('-', 1)
-            chromosome=split_line[0]
-            position=split_line[1]
+            chromosome = split_line[0]
+            position = split_line[1]
             print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line
     write_out.close()
 
@@ -1346,7 +1355,6 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
     good_snp_count = 0
     for record in vcf_reader:
         try:
-            chrom = record.CHROM
             position = record.POS
             try:
                 if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > 150:
@@ -1354,15 +1362,16 @@ def add_zero_coverage(coverage_in, vcf_file, loc_sam):
             except KeyError:
                 pass
         except ZeroDivisionError:
-            print ("ZeroDivisionError error found")
+            print("ZeroDivisionError error found")
         except ValueError:
-            print ("ValueError error found")
+            print("ValueError error found")
         except UnboundLocalError:
-            print ("UnboundLocalError error found")
+            print("UnboundLocalError error found")
         except TypeError:
-            print ("TypeError error found")
+            print("TypeError error found")
 
     return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
+
 
 def send_email_step1(email_list, runtime, path_found, summary_file):
     text = "See attached:  "
@@ -1371,7 +1380,7 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
     msg = MIMEMultipart()
     msg['From'] = send_from
     msg['To'] = send_to
-    msg['Date'] = formatdate(localtime = True)
+    msg['Date'] = formatdate(localtime=True)
     if not path_found:
         msg['Subject'] = "###CUMULATIVE STATS NOT UPDATED - Script1 stats summary"
     else:
@@ -1392,11 +1401,12 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
     #smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.quit()
 
+
 def fix_vcf(each_vcf, arg_options):
     mal = []
     # Fix common VCF errors
     temp_file = each_vcf + ".temp"
-    write_out=open(temp_file, 'w') #r+ used for reading and writing to the same file
+    write_out = open(temp_file, 'w') #r+ used for reading and writing to the same file
     with open(each_vcf, 'r') as file:
         try:
             for line in file:
@@ -1423,17 +1433,18 @@ def fix_vcf(each_vcf, arg_options):
                     else:
                         print(line, file=write_out)
         except IndexError:
-            print ("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
+            print("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
             mal.append("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
             os.remove(each_vcf)
         except UnicodeDecodeError:
-            print ("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
+            print("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
             mal.append("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
             os.remove(each_vcf)
 
     write_out.close()
     os.rename(temp_file, each_vcf)
     return mal
+
 
 def get_species(arg_options):
 
@@ -1463,7 +1474,6 @@ def get_species(arg_options):
     vcf_list = glob.glob('*vcf')
     for each_vcf in vcf_list:
         print(each_vcf)
-        mal = fix_vcf(each_vcf, arg_options) # mal isn't getting picked up
         vcf_reader = vcf.Reader(open(each_vcf, 'r'))
         print("single_vcf %s" % each_vcf)
         for record in vcf_reader:
@@ -1473,6 +1483,7 @@ def get_species(arg_options):
                     if l in header:
                         return(k)
 
+
 def run_script2(arg_options):
 
     # IF AVX2 IS AVAILABE (CHECK WITH `cat /proc/cpuinfo | grep -i "avx"`). CREATE A LINK TO: `ln -s path_to_raxmlHPC-PTHREADS-AVX2 raxml.  Place "raxml" in your path.  This will allow "raxml" to be found first which will call AVX2 version of RAxML
@@ -1480,48 +1491,48 @@ def run_script2(arg_options):
     try:
         subprocess.call("raxml", stdout=open(os.devnull, 'wb'))
         sys_raxml = "raxml"
-        #print ("%s found" % sys_raxml)
+        #print("%s found" % sys_raxml)
     except OSError:
-        print ("looking for RAxML")
+        print("looking for RAxML")
         try:
             subprocess.call("raxmlHPC-PTHREADS")
             sys_raxml = "raxmlHPC-PTHREADS"
-            print ("%s found" % sys_raxml)
+            print("%s found" % sys_raxml)
         except OSError:
             try:
                 subprocess.call("raxmlHPC-SSE3")
                 sys_raxml = "raxmlHPC-SSE3"
-                print ("%s found" % sys_raxml)
+                print("%s found" % sys_raxml)
             except OSError:
-                print ("looking for RAxML")
+                print("looking for RAxML")
                 try:
                     subprocess.call("raxmlHPC")
                     sys_raxml = "raxmlHPC"
-                    print ("RAxML found")
+                    print("RAxML found")
                 except OSError:
-                    print ("#####RAxML is not in you PATH")
-                    print ("#####See help page for support")
+                    print("#####RAxML is not in you PATH")
+                    print("#####See help page for support")
                     sys.exit(0)
     arg_options['sys_raxml'] = sys_raxml
-    print ("\n\n----> RAxML found in $PATH as: %s <-----" % arg_options['sys_raxml'])
+    print("\n\n----> RAxML found in $PATH as: %s <-----" % arg_options['sys_raxml'])
     if arg_options['cpu_count'] < 20:
         raxml_cpu = 2
     else:
-        raxml_cpu = int(arg_options['cpu_count']/10)
+        raxml_cpu = int(arg_options['cpu_count'] / 10)
     arg_options['raxml_cpu'] = raxml_cpu
 
     specie_para_dict = species_selection_step2(arg_options)
     arg_options.update(specie_para_dict)
 
-    print ("\nSET VARIABLES")
-    print ("\tgenotypingcodes: %s " % arg_options['genotypingcodes'])
+    print("\nSET VARIABLES")
+    print("\tgenotypingcodes: %s " % arg_options['genotypingcodes'])
 
     htmlfile_name = arg_options['root_dir'] + "/summary_log.html"
     arg_options['htmlfile_name'] = htmlfile_name
     htmlfile = open(htmlfile_name, 'at')
 
     startTime = datetime.now()
-    print ("Start time: %s" % startTime)
+    print("Start time: %s" % startTime)
 
     # DIRECTORY TEST AND BACKUP
     if getattr(sys, 'frozen', False):
@@ -1540,14 +1551,14 @@ def run_script2(arg_options):
     ##################
     test_duplicate() #***FUNCTION CALL
 
-    print ("\ndefiningSNPs: %s " % arg_options['definingSNPs'])
-    print ("filter_file: %s " % arg_options['filter_file'])
-    print ("remove_from_analysis: %s " % arg_options['remove_from_analysis'])
-    print ("step2_upload: %s \n" % arg_options['step2_upload'])
+    print("\ndefiningSNPs: %s " % arg_options['definingSNPs'])
+    print("filter_file: %s " % arg_options['filter_file'])
+    print("remove_from_analysis: %s " % arg_options['remove_from_analysis'])
+    print("step2_upload: %s \n" % arg_options['step2_upload'])
     ###
 
     if arg_options['genotypingcodes']:
-        print ("\nUpdating VCF file names")
+        print("\nUpdating VCF file names")
         arg_options = change_names(arg_options) # check if genotypingcodes exist.  if not skip.
         malformed = arg_options['malformed']
         names_not_changed = arg_options['names_not_changed']
@@ -1561,7 +1572,7 @@ def run_script2(arg_options):
     names_not_changed = arg_options['names_not_changed']
 
     files = glob.glob('*vcf')
-    print ("REMOVING FROM ANALYSIS...")
+    print("REMOVING FROM ANALYSIS...")
     wb = xlrd.open_workbook(arg_options['remove_from_analysis'])
     ws = wb.sheet_by_index(0)
     for each_sample in ws.col_values(0):
@@ -1572,26 +1583,26 @@ def run_script2(arg_options):
         #print("myregex %s" % myregex)
         for i in files:
             if myregex.search(i):
-                print ("### --> %s removed from the analysis" % i)
-                #print (files)
-                #print ("\n<h4>### --> %s removed from the analysis</h4>" % i, file=htmlfile)
+                print("### --> %s removed from the analysis" % i)
+                #print(files)
+                #print("\n<h4>### --> %s removed from the analysis</h4>" % i, file=htmlfile)
                 try:
                     os.remove(i)
                 except FileNotFoundError:
-                    print ("FileNotFoundError:")
+                    print("FileNotFoundError:")
     vcf_starting_list = glob.glob("*.vcf")
 
-    print ("CHECKING FOR EMPTY FILES...")
+    print("CHECKING FOR EMPTY FILES...")
     for filename in vcf_starting_list:
         if os.stat(filename).st_size == 0:
-            print ("### %s is an empty file and has been deleted" % filename)
+            print("### %s is an empty file and has been deleted" % filename)
             malformed.append("File was empty %s" % filename)
             os.remove(filename)
 
     all_starting_files = glob.glob('*vcf')
     file_number = len(all_starting_files)
 
-    print ("SORTING FILES...")
+    print("SORTING FILES...")
     defining_snps = {}
     inverted_position = {}
     wb = xlrd.open_workbook(arg_options['definingSNPs'])
@@ -1604,9 +1615,9 @@ def run_script2(arg_options):
         # inverted positions are indicated in Defining SNPs by ending with "!"
         if position.endswith('!'):
             position = re.sub('!', '', position)
-            inverted_position.update({position:grouping})
+            inverted_position.update({position: grouping})
         else:
-            defining_snps.update({position:grouping})
+            defining_snps.update({position: grouping})
     files = glob.glob('*vcf')
 
     arg_options['inverted_position'] = inverted_position
@@ -1614,7 +1625,7 @@ def run_script2(arg_options):
 
     all_list_amb = {}
     group_calls_list = []
-    print ("Grouping files...")
+    print("Grouping files...")
     if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
             dict_amb, group_calls, mal = group_files(i, arg_options)
@@ -1629,7 +1640,7 @@ def run_script2(arg_options):
                 malformed.append(mal)
     malformed = [x for x in malformed if x] # remove empty sets from listn
 
-    print ("Getting directory list\n")
+    print("Getting directory list\n")
     directory_list = next(os.walk('.'))[1] # get list of subdirectories
     directory_list.remove('starting_files')
 
@@ -1638,7 +1649,7 @@ def run_script2(arg_options):
     arg_options['filter_dictionary'] = filter_dictionary
 
     samples_in_output = []
-    print ("Getting SNPs in each directory")
+    print("Getting SNPs in each directory")
     if arg_options['debug_call']:
         for i in directory_list:
             samples_in_fasta = get_snps(i, arg_options)
@@ -1681,50 +1692,50 @@ def run_script2(arg_options):
     arg_options['names_not_changed'] = [x for x in arg_options['names_not_changed'] if x]
     #############################################
     #MAKE HTML FILE:
-    print ("<html>\n<head><style> table { font-family: arial, sans-serif; border-collapse: collapse; width: 40%; } td, th { border: 1px solid #dddddd; padding: 4px; text-align: left; font-size: 11px; } </style></head>\n<body style=\"font-size:12px;\">", file=htmlfile)
-    print ("<h2>Script ran using <u>%s</u> variables</h2>" % arg_options['species'].upper(), file=htmlfile)
-    print ("<h4>There are %s VCFs in this run</h4>" % file_number, file=htmlfile)
+    print("<html>\n<head><style> table { font-family: arial, sans-serif; border-collapse: collapse; width: 40%; } td, th { border: 1px solid #dddddd; padding: 4px; text-align: left; font-size: 11px; } </style></head>\n<body style=\"font-size:12px;\">", file=htmlfile)
+    print("<h2>Script ran using <u>%s</u> variables</h2>" % arg_options['species'].upper(), file=htmlfile)
+    print("<h4>There are %s VCFs in this run</h4>" % file_number, file=htmlfile)
 
     #OPTIONS
-    print ("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (arg_options['email_list'], arg_options['filter_finder'], arg_options['all_vcf'], arg_options['elite'], arg_options['no_annotation'], arg_options['debug_call'], arg_options['get'], arg_options['upload']), file=htmlfile)
+    print("Additional options ran: email: %s, filter: %s, all_vcf: %s, elite: %s, no annotation: %s, debug: %s, get: %s, uploaded: %s" % (arg_options['email_list'], arg_options['filter_finder'], arg_options['all_vcf'], arg_options['elite'], arg_options['no_annotation'], arg_options['debug_call'], arg_options['get'], arg_options['upload']), file=htmlfile)
     if arg_options['all_vcf']:
-        print ("\n<h4>All_VCFs is available</h4>", file=htmlfile)
+        print("\n<h4>All_VCFs is available</h4>", file=htmlfile)
     elif arg_options['elite']:
-        print ("\n<h4>Elite VCF comparison available</h4>", file=htmlfile)
+        print("\n<h4>Elite VCF comparison available</h4>", file=htmlfile)
 
     #TIME
-    print ("\n<h4>Start time: %s <br>" % startTime, file=htmlfile)
-    print ("End time: %s <br>" % datetime.now(), file=htmlfile)
+    print("\n<h4>Start time: %s <br>" % startTime, file=htmlfile)
+    print("End time: %s <br>" % datetime.now(), file=htmlfile)
     runtime = (datetime.now() - startTime)
-    print ("Total run time: %s: </h4>" % runtime, file=htmlfile)
+    print("Total run time: %s: </h4>" % runtime, file=htmlfile)
 
     # ERROR LIST
     if len(arg_options['malformed']) < 1:
-        print ("<h2>No corrupt VCF removed</h2>", file=htmlfile)
+        print("<h2>No corrupt VCF removed</h2>", file=htmlfile)
     else:
-        print ("\n<h2>Corrupt VCF removed</h2>", file=htmlfile)
+        print("\n<h2>Corrupt VCF removed</h2>", file=htmlfile)
         for i in arg_options['malformed']:
-            print ("%s <br>" % i, file=htmlfile)
-        print ("<br>", file=htmlfile)
+            print("%s <br>" % i, file=htmlfile)
+        print("<br>", file=htmlfile)
 
     # AMBIGIOUS DEFINING SNPS
     if len(all_list_amb) < 1:
-        print ("\n<h2>No ambiguous defining SNPs</h2>", file=htmlfile)
+        print("\n<h2>No ambiguous defining SNPs</h2>", file=htmlfile)
     else:
-        print ("\n<h2>Defining SNPs are ambiguous.  They may be mixed isolates.</h2>", file=htmlfile)
-        print ("<table>", file=htmlfile)
-        print ("<tr align=\"left\"><th>Sample Name</th><th>Division</th><th>Absolute Position</th><tr>", file=htmlfile)
+        print("\n<h2>Defining SNPs are ambiguous.  They may be mixed isolates.</h2>", file=htmlfile)
+        print("<table>", file=htmlfile)
+        print("<tr align=\"left\"><th>Sample Name</th><th>Division</th><th>Absolute Position</th><tr>", file=htmlfile)
         ordered_all_list_amb = OrderedDict(sorted(all_list_amb.items()))
         for k, v in ordered_all_list_amb.items():
             k_split = k.split('\t')
-            print ("<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (k_split[0], k_split[1], v), file=htmlfile)
-        print ("</table>", file=htmlfile)
-        print ("<br>", file=htmlfile)
+            print("<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (k_split[0], k_split[1], v), file=htmlfile)
+        print("</table>", file=htmlfile)
+        print("<br>", file=htmlfile)
 
     #GROUPING TABLE
-    print ("<h2>Groupings</h2>", file=htmlfile)
-    print ("<table>", file=htmlfile)
-    print ("<tr align=\"left\"><th>Sample Name</th><tr>", file=htmlfile)
+    print("<h2>Groupings</h2>", file=htmlfile)
+    print("<table>", file=htmlfile)
+    print("<tr align=\"left\"><th>Sample Name</th><tr>", file=htmlfile)
 
     group_calls_list = list(filter(None, group_calls_list))
     try:
@@ -1734,44 +1745,44 @@ def run_script2(arg_options):
         pass
 
     for i in group_calls_list:
-        print ("<tr>", file=htmlfile)
+        print("<tr>", file=htmlfile)
         for x in i:
-            print ("<td>%s</td>" % x, end='\t', file=htmlfile)
-        print ("</tr>", file=htmlfile)
-    print ("</table>", file=htmlfile)
+            print("<td>%s</td>" % x, end='\t', file=htmlfile)
+        print("</tr>", file=htmlfile)
+    print("</table>", file=htmlfile)
 
     # REPORT DIFFERENCES BETWEEN STARTING FILES AND ENDING FILES REPRESENTED IN ALIGNMENTS AND TABLES
     if start_end_file_diff_count < 1:
-        print ("\n<h2>No files dropped from the analysis.  Input files are equal to those represented in output.</h2>", file=htmlfile)
+        print("\n<h2>No files dropped from the analysis.  Input files are equal to those represented in output.</h2>", file=htmlfile)
     else:
-        print ("\n<h2>{} files have been dropped.  They either need a group, mixed and not finding a group or an error occured.</h2>" .format(start_end_file_diff_count), file=htmlfile)
-        print ("<table>", file=htmlfile)
-        print ("<tr align=\"left\"><th>Sample Name</th><tr>", file=htmlfile)
+        print("\n<h2>{} files have been dropped.  They either need a group, mixed and not finding a group or an error occured.</h2>" .format(start_end_file_diff_count), file=htmlfile)
+        print("<table>", file=htmlfile)
+        print("<tr align=\"left\"><th>Sample Name</th><tr>", file=htmlfile)
         for i in difference_start_end_file:
-            print ("<tr><td>{}</td></tr>" .format(i), file=htmlfile)
-        print ("</table>", file=htmlfile)
-        print ("<br>", file=htmlfile)
+            print("<tr><td>{}</td></tr>" .format(i), file=htmlfile)
+        print("</table>", file=htmlfile)
+        print("<br>", file=htmlfile)
     
     #Capture program versions for step 2
     try:
-        print ("\n<h2>Program versions:</h2>", file=htmlfile)
+        print("\n<h2>Program versions:</h2>", file=htmlfile)
         versions = os.popen('conda list biopython | grep -v "^#"; \
         conda list numpy | egrep -v "^#|numpydoc"; \
         conda list pandas | grep -v "^#"; \
         conda list raxml | grep -v "^#"').read()
         versions = versions.split('\n')
         for i in versions:
-            print ("%s<br>" % i, file=htmlfile)
+            print("%s<br>" % i, file=htmlfile)
     except:
         pass
 
     #FILES NOT RENAMED
     if names_not_changed is None:
-        print ("\n<h2>File names did not get changed:</h2>", file=htmlfile)
+        print("\n<h2>File names did not get changed:</h2>", file=htmlfile)
         for i in sorted(names_not_changed):
-            print ("%s<br>" % i, file=htmlfile)
+            print("%s<br>" % i, file=htmlfile)
 
-    print ("</body>\n</html>", file=htmlfile)
+    print("</body>\n</html>", file=htmlfile)
     #############################################
     os.chdir(arg_options['root_dir'])
     print("Zipping files...")
@@ -1780,18 +1791,19 @@ def run_script2(arg_options):
 
     htmlfile.close()
 
-    print ("\n\nruntime: %s:  \n" % runtime)
+    print("\n\nruntime: %s:  \n" % runtime)
 
     if arg_options['email_list'] is None:
-        print ("\n\tEmail not sent")
+        print("\n\tEmail not sent")
     elif arg_options['email_list']:
         send_email_step2(arg_options)
-        print ("\n\tEmail sent to: {}" .format(arg_options['email_list']))
+        print("\n\tEmail sent to: {}" .format(arg_options['email_list']))
     else:
-        print ("\n\tEmail not sent")
+        print("\n\tEmail not sent")
 
     if arg_options['upload']:
-        print ("Uploading Samples...")
+        print("Uploading Samples...")
+
         def copytree(src, dst, symlinks=False, ignore=None): #required to ignore permissions
             try:
                 for item in os.listdir(src):
@@ -1805,19 +1817,20 @@ def run_script2(arg_options):
                     except shutil.Error:
                         pass
             except FileNotFoundError:
-                print ("except FileNotFoundError: file not found")
+                print("except FileNotFoundError: file not found")
 
         #upload to bioinfoVCF
         src = arg_options['root_dir']
         dst = arg_options['step2_upload'] + "/" + os.path.basename(os.path.normpath(arg_options['root_dir']))
-        print ("\n\t%s is copying to %s" % (src, dst))
+        print("\n\t%s is copying to %s" % (src, dst))
         os.makedirs(dst, exist_ok=True)
         copy_tree(src, dst, preserve_mode=0, preserve_times=0)
-        print ("Samples were uploaded to {}" .format(dst))
+        print("Samples were uploaded to {}" .format(dst))
     else:
         print("\tSamples were not copied or uploaded to additional location")
 
-    print ("\n\tComparisons have been made with no obvious error.\n")
+    print("\n\tComparisons have been made with no obvious error.\n")
+
 
 def group_files(each_vcf, arg_options):
     mal = ""
@@ -1825,13 +1838,12 @@ def group_files(each_vcf, arg_options):
     list_amb = []
     dict_amb = {}
     group_calls = []
-    passing = True
 
     try:
         vcf_reader = vcf.Reader(open(each_vcf, 'r'))
-        ### PUT VCF NAME INTO LIST, capturing for htmlfile
+        # PUT VCF NAME INTO LIST, capturing for htmlfile
         group_calls.append(each_vcf)
-            # for each single vcf getting passing position
+        # for each single vcf getting passing position
         for record in vcf_reader:
             chrom = record.CHROM
             position = record.POS
@@ -1852,20 +1864,20 @@ def group_files(each_vcf, arg_options):
                 elif str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 1:
                     list_amb.append(absolute_positon)
             except ZeroDivisionError:
-                print ("bad line in %s at %s" % (each_vcf, absolute_positon))
+                print("bad line in %s at %s" % (each_vcf, absolute_positon))
 
         for key in arg_options['inverted_position'].keys():
             if key not in list_pass:
-                print ("key %s not in list_pass" % key)
+                print("key %s not in list_pass" % key)
                 directory = arg_options['inverted_position'][key]
                 print("*** INVERTED POSITION FOUND *** PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
                 if not os.path.exists(directory):
                     try:
                         os.makedirs(directory)
                     except FileExistsError:
-                        null = "null"
+                        pass
                 shutil.copy(each_vcf, directory)
-                ### ADD GROUP TO LIST
+                # ADD GROUP TO LIST
                 group_calls.append(directory)
 
         #if passing:
@@ -1880,17 +1892,17 @@ def group_files(each_vcf, arg_options):
                     try:
                         os.makedirs(directory)
                     except FileExistsError:
-                        null = "null"
+                        pass
                 shutil.copy(each_vcf, directory)
-                ### ADD GROUP TO LIST
+                # ADD GROUP TO LIST
                 group_calls.append(directory)
                 
         # find mixed isolates if defining snp is ambigous
         for amb_position in list_amb:
             if amb_position in defining_snps:
                 directory = defining_snps[amb_position]
-                dict_amb.update({each_vcf + "\t" + directory:amb_position})
-                ### ADD AMBIGIOUS CALL TO LIST
+                dict_amb.update({each_vcf + "\t" + directory: amb_position})
+                # ADD AMBIGIOUS CALL TO LIST
                 group_calls.append("*" + directory + "-mix")
         # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
         if arg_options['all_vcf'] or arg_options['elite']:
@@ -1902,40 +1914,40 @@ def group_files(each_vcf, arg_options):
                 os.remove(each_vcf)
             except FileNotFoundError:
                 pass
-        #print (dict_amb, group_calls, malformed)
+        #print(dict_amb, group_calls, malformed)
 
     except ZeroDivisionError:
         os.remove(each_vcf)
-        print ("ZeroDivisionError: corrupt VCF, removed %s " % each_vcf)
+        print("ZeroDivisionError: corrupt VCF, removed %s " % each_vcf)
         mal = "ZeroDivisionError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
     except ValueError:
         os.remove(each_vcf)
-        print ("ValueError: corrupt VCF, removed %s " % each_vcf)
+        print("ValueError: corrupt VCF, removed %s " % each_vcf)
         mal = "ValueError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
     except UnboundLocalError:
         os.remove(each_vcf)
-        print ("UnboundLocalError: corrupt VCF, removed %s " % each_vcf)
+        print("UnboundLocalError: corrupt VCF, removed %s " % each_vcf)
         mal = "UnboundLocalError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
     except TypeError:
         os.remove(each_vcf)
-        print ("TypeError: corrupt VCF, removed %s " % each_vcf)
+        print("TypeError: corrupt VCF, removed %s " % each_vcf)
         mal = "TypeError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
     except SyntaxError:
         os.remove(each_vcf)
-        print ("SyntaxError: corrupt VCF, removed %s " % each_vcf)
+        print("SyntaxError: corrupt VCF, removed %s " % each_vcf)
         mal = "SyntaxError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
     except KeyError:
         os.remove(each_vcf)
-        print ("KeyError: corrupt VCF, removed %s " % each_vcf)
+        print("KeyError: corrupt VCF, removed %s " % each_vcf)
         mal = "KeyError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
     except StopIteration:
-        print ("StopIteration: %s" % each_vcf)
+        print("StopIteration: %s" % each_vcf)
         mal = "KeyError: corrupt VCF, removed %s " % each_vcf
         group_calls.append("error")
 
@@ -1945,6 +1957,7 @@ def group_files(each_vcf, arg_options):
         the_sample_name.append(i) # a is group_calls
         group_calls = the_sample_name
     return dict_amb, group_calls, mal
+
 
 def species_selection_step2(arg_options):
     all_parameters = Get_Specie_Parameters_Step2()
@@ -1957,7 +1970,8 @@ def species_selection_step2(arg_options):
     else:
         print("### See species_selection_step2 function")
         sys.exit(0)
-  
+
+
 def send_email_step2(arg_options):
     htmlfile_name = arg_options['htmlfile_name']
     email_list = arg_options['email_list']
@@ -1979,12 +1993,14 @@ def send_email_step2(arg_options):
     smtp.send_message(msg)
     smtp.quit()
 
+
 def get_pretext_list(in_list):
     outlist = []
     for i in in_list:
-        pretext  = re.sub('[_.].*', '', i)
+        pretext = re.sub('[_.].*', '', i)
         outlist.append(pretext)
     return outlist
+
 
 def flatten(l):
     for el in l:
@@ -1992,6 +2008,7 @@ def flatten(l):
             yield from flatten(el)
         else:
             yield el
+
 
 def zip(src, dst):
     zf = zipfile.ZipFile("%s.zip" % (dst), "w", zipfile.ZIP_DEFLATED)
@@ -2003,20 +2020,22 @@ def zip(src, dst):
             zf.write(absname, arcname)
     zf.close()
 
+
 def test_duplicate():
     dup_list = []
     list_of_files = glob.glob('*vcf')
     for line in list_of_files:
-        line=re.sub(r'(.*)[_.].*', r'\1', line)
+        line = re.sub(r'(.*)[_.].*', r'\1', line)
         dup_list.append(line)
     # find duplicates in list
-    duplicates = [k for k,v in Counter(dup_list).items() if v>1]
+    duplicates = [k for k, v in Counter(dup_list).items() if v > 1]
     if len(duplicates) > 0:
-        print ("Duplicates Found: %s " % duplicates)
-        print ("\n***Error:  Duplicate VCFs")
+        print("Duplicates Found: %s " % duplicates)
+        print("\n***Error:  Duplicate VCFs")
         sys.exit(0)
     else:
         pass
+
 
 def change_names(arg_options):
     malformed = []
@@ -2038,7 +2057,7 @@ def change_names(arg_options):
             try:
                 elite_test = ws.row_values(rownum)[1]
             except IndexError:
-                #print ("except IndexError: when changing names")
+                #print("except IndexError: when changing names")
                 elite_test = ""
             #print("newname %s" % new_name)
             try:
@@ -2046,9 +2065,9 @@ def change_names(arg_options):
                     new_name = new_name + "_"
             except IndexError:
                 pass
-            code_dictionary.update({new_name:elite_test})
+            code_dictionary.update({new_name: elite_test})
     except FileNotFoundError:
-        print ("\n#### except: FileNotFoundError, there was not a \"genotypingcodes\" file given to change names\n")
+        print("\n#### except: FileNotFoundError, there was not a \"genotypingcodes\" file given to change names\n")
 
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
@@ -2068,7 +2087,7 @@ def change_names(arg_options):
             name_found = False
         else:
             os.rename(filename, each_vcf)
-            print ("Genotype code not found:  {}, name not changed" .format(each_vcf))
+            print("Genotype code not found:  {}, name not changed" .format(each_vcf))
             names_not_changed.append(each_vcf)
             print("File Not Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
@@ -2077,30 +2096,30 @@ def change_names(arg_options):
         list_of_files = []
         list_of_files = glob.glob('*vcf')
         if not os.path.exists("temp_hold"):
-            print ("making temp_hold directory")
+            print("making temp_hold directory")
             os.makedirs("temp_hold") # make all_vcfs if none exists
         for each_vcf in list_of_files:
             # Default 1 * 24 * 60 *60
-            time_test = time.time() - os.path.getmtime(each_vcf) < (1 * 24 * 60 *60) # 1day * (24*60*60)sec in day
-            print ("%s each_vcf" % each_vcf)
+            time_test = time.time() - os.path.getmtime(each_vcf) < (1 * 24 * 60 * 60) # 1day * (24*60*60)sec in day
+            print("%s each_vcf" % each_vcf)
             vcf_pretext = re.sub(r'(.*?)[._].*', r'\1', each_vcf) # ? was needed to make greedy, in my view the regex was searching right to left without it.
             vcf_pretext = vcf_pretext.rstrip()
             myregex = re.compile(vcf_pretext + '.*')
             if time_test:
-                print ("time_test true %s" % each_vcf)
+                print("time_test true %s" % each_vcf)
                 shutil.copy(each_vcf, "temp_hold")
             else:
                 for k, v in code_dictionary.items():
                     if myregex.search(k):
                         try:
-                            print ("##### %s" % time_test)
+                            print("##### %s" % time_test)
                             if v == "Yes": # if marked yes in column 2 of genotyping codes
-                                print ("marked yes %s" % each_vcf)
+                                print("marked yes %s" % each_vcf)
                                 shutil.copy(each_vcf, "temp_hold") # if "Yes" then moved to temp_hold
                             else:
-                                print ("file will be discarded %s" % each_vcf)
+                                print("file will be discarded %s" % each_vcf)
                         except FileNotFoundError:
-                            print ("except FileNotFoundError %s" % each_vcf)
+                            print("except FileNotFoundError %s" % each_vcf)
                 os.remove(each_vcf)
         shutil.rmtree('starting_files')
         os.makedirs('starting_files')
@@ -2109,8 +2128,7 @@ def change_names(arg_options):
         file_number = len(list_of_files) # update the file_number to present on summary
         for each_vcf in list_of_files:
             shutil.copy(each_vcf, arg_options['root_dir'])
-        all_starting_files = glob.glob('*vcf')
-        print (file_number)
+        print(file_number)
     
     #fix files
     vcf_list = glob.glob('*vcf')
@@ -2130,6 +2148,7 @@ def change_names(arg_options):
     arg_options['names_not_changed'] = names_not_changed
     return arg_options
 
+
 def get_filters(arg_options):
     #get first header to apply all filters to vcf
     worksheet = pd.read_excel(arg_options['filter_file'])
@@ -2140,7 +2159,6 @@ def get_filters(arg_options):
     for sheet in sheets:
         expanded_list = []
         ws = wb.sheet_by_name(sheet)
-        myrange = lambda start, end: range(start, end+1)
         for colnum in range(ws.ncols): # for each column in worksheet
             group_name = ws.col_values(colnum)[0] # column header naming file
             mylist = ws.col_values(colnum)[1:] # list of each field in column, minus the header
@@ -2149,7 +2167,7 @@ def get_filters(arg_options):
                 value = str(value)
                 value = value.replace(sheet + "-", '')
                 if "-" not in value:
-                    value=int(float(value)) # change str to float to int
+                    value = int(float(value)) # change str to float to int
                     expanded_list.append(str(sheet) + "-" + str(value))
                 elif "-" in value:
                     value = value.split("-")
@@ -2158,9 +2176,11 @@ def get_filters(arg_options):
             filter_dictionary[group_name] = expanded_list
     return(filter_dictionary)
 
+
 def get_read_mean(rec):
     mean_q = int(mean(rec.letter_annotations['phred_quality']))
     return mean_q
+
 
 def find_filter_dict(each_vcf):
     dict_qual = {}
@@ -2180,6 +2200,7 @@ def find_filter_dict(each_vcf):
             pass
     return dict_qual, dict_map
 
+
 def find_positions(filename, arg_options):
     found_positions = {}
     vcf_reader = vcf.Reader(open(filename, 'r'))
@@ -2188,14 +2209,11 @@ def find_positions(filename, arg_options):
             chrom = record.CHROM
             position = record.POS
             absolute_positon = str(chrom) + "-" + str(position)
-            filter=record.FILTER
             
             # Usable positins are those that:
-
             # ADD PARAMETERS HERE TO CHANGE WHAT'S SNP WILL BE USED
             # IF NOT FOUND HERE THE SNP WILL BE IGNORED.  WILL NOT BE REPRESENTED.  HARD REMOVAL
-            
-            ## GATK parameters
+            # GATK parameters
             # str(record.ALT[0]) != "None" --> filter deletions
             # len(record.REF) == 1 --> filter bad ref call with 2 nt present
             # len(record.ALT[0]) == 1 --> filter bad alt call with 2 nt present
@@ -2204,18 +2222,19 @@ def find_positions(filename, arg_options):
             # record.INFO['MQ'] --> filter low map quality
             try:
                 if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_gatk_threshold']:
-                    found_positions.update({absolute_positon:record.REF})
+                    found_positions.update({absolute_positon: record.REF})
             except KeyError:
                 pass
     except ZeroDivisionError:
-        print ("ZeroDivisionError error found")
+        print("ZeroDivisionError error found")
     except ValueError:
-        print ("ValueError error found")
+        print("ValueError error found")
     except UnboundLocalError:
-        print ("UnboundLocalError error found")
+        print("UnboundLocalError error found")
     except TypeError:
-        print ("TypeError error found")
+        print("TypeError error found")
     return found_positions
+
 
 def bruc_private_codes(upload_to):
 
@@ -2270,13 +2289,14 @@ def bruc_private_codes(upload_to):
 
         wb_out.close()
 
+
 def get_snps(directory, arg_options):
 
     unique_number = arg_options['unique_number']
 
-    os.chdir(arg_options['root_dir']+ "/" + directory)
-    print ("\n----------------------------")
-    print ("\nworking on: %s " % directory)
+    os.chdir(arg_options['root_dir'] + "/" + directory)
+    print("\n----------------------------")
+    print("\nworking on: %s " % directory)
     outdir = str(os.getcwd()) + "/"
 
     filter_dictionary = arg_options['filter_dictionary']
@@ -2293,7 +2313,7 @@ def get_snps(directory, arg_options):
             for found_positions in pool.map(find_positions, files, itertools_repeat(arg_options)):
                 all_positions.update(found_positions)
 
-    print ("Directory %s found positions %s" % (directory, len(all_positions)))
+    print("Directory %s found positions %s" % (directory, len(all_positions)))
     presize = len(all_positions)
 
     # Filter applied to all positions
@@ -2304,19 +2324,19 @@ def get_snps(directory, arg_options):
     for pos in filter_dictionary[directory]: #filter_list
         all_positions.pop(pos, None)
 
-    print ("\nDirectory: {}" .format(directory))
-    print ("Total positions found: {}" .format(presize))
-    print ("Possible positions filtered {}" .format(len(filter_dictionary)))
-    print ("Positions after filtering {}" .format(len(all_positions)))
+    print("\nDirectory: {}" .format(directory))
+    print("Total positions found: {}" .format(presize))
+    print("Possible positions filtered {}" .format(len(filter_dictionary)))
+    print("Positions after filtering {}" .format(len(all_positions)))
 
     if arg_options['filter_finder']:
         #write to files
         positions_to_filter = "positions_to_filter.txt"
         positions_to_filter_details = "positions_to_filter_details.txt"
         good_snps = "good_snps_details.txt"
-        write_out_positions=open(positions_to_filter, 'w')
-        write_out_details=open(positions_to_filter_details, 'w')
-        write_out_good_snps=open(good_snps, 'w')
+        write_out_positions = open(positions_to_filter, 'w')
+        write_out_details = open(positions_to_filter_details, 'w')
+        write_out_good_snps = open(good_snps, 'w')
 
         files = glob.glob('*vcf')
 
@@ -2325,7 +2345,7 @@ def get_snps(directory, arg_options):
         dd_map = {}
         if arg_options['debug_call']:
             for each_vcf in files:
-                print ("working on: %s" % each_vcf)
+                print("working on: %s" % each_vcf)
                 dict_qual, dict_map = find_filter_dict(each_vcf)
                 keys = set(dd_qual).union(dict_qual)
                 no = []
@@ -2352,16 +2372,16 @@ def get_snps(directory, arg_options):
         for k, v in dd_qual.items():
             #only use if > 3 positions have been called
             if len(v) > 3:
-                ave_qual[k]=np.mean(v)
-                max_qual[k]=np.max(v)
+                ave_qual[k] = np.mean(v)
+                max_qual[k] = np.max(v)
 
         #provides dictionary as key -> absolute poisiton, value -> average qual/map
         ave_map = {}
         max_map = {}
         for k, v in dd_map.items():
             if len(v) > 3:
-                ave_map[k]=np.mean(v)
-                max_map[k]=np.max(v)		
+                ave_map[k] = np.mean(v)
+                max_map[k] = np.max(v)		
 
         # get all possible used positions
         all_maybe_filter = []
@@ -2396,36 +2416,36 @@ def get_snps(directory, arg_options):
             max_qual_value = max_qual[absolute_positon]
             ave_map_value = ave_map[absolute_positon]
             max_map_value = max_map[absolute_positon]
-            print ("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value))
+            print("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value))
             if max_qual_value < 1300 and ave_qual_value < 800 or ave_map_value < 56:
-                print ("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value), file=write_out_details)
-                print (absolute_positon, file=write_out_positions)
+                print("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value), file=write_out_details)
+                print(absolute_positon, file=write_out_positions)
             else:
-                print ("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value), file=write_out_good_snps)
+                print("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value), file=write_out_good_snps)
         write_out_positions.close()
         write_out_details.close()
         write_out_good_snps.close()
 
     table_location = outdir + directory + "-table.txt"
-    table=open(table_location, 'wt')
+    table = open(table_location, 'wt')
 
     # write absolute positions to table
     # order before adding to file to match with ordering of individual samples below
     # all_positions is abs_pos:REF
-    all_positions=OrderedDict(sorted(all_positions.items()))
+    all_positions = OrderedDict(sorted(all_positions.items()))
     
     # Add the positions to the table
-    print ("reference_pos", end="\t", file=table)
+    print("reference_pos", end="\t", file=table)
     for k, v in all_positions.items():
         print(k, end="\t", file=table)
-    print ("", file=table)
+    print("", file=table)
 
     list_of_files = glob.glob('*vcf')
 
     # for each vcf
-    all_map_qualities={}
+    all_map_qualities = {}
     for file_name in list_of_files:
-        sample_map_qualities={}
+        sample_map_qualities = {}
         just_name = file_name.replace('.vcf', '')
         just_name = re.sub('\..*', '*', just_name) # if after the .vcf is removed there is stilll a "." in the name it is assumed the name did not get changed
         print(just_name, end="\t", file=table)
@@ -2435,12 +2455,12 @@ def get_snps(directory, arg_options):
         for record in vcf_reader:
             record_position = str(record.CHROM) + "-" + str(record.POS)
             if record_position in all_positions:
-                #print ("############, %s, %s" % (file_name, record_position))
+                #print("############, %s, %s" % (file_name, record_position))
                 # NOT SURE THIS IS THE BEST PLACE TO CAPTURE MQ AVERAGE
                 # MAY BE FASTER AFTER PARSIMONY SNPS ARE DECIDED, BUT THEN IT WILL REQUIRE OPENING THE FILES AGAIN.
                 if str(record.ALT[0]) != "None" and str(record.INFO['MQ']) != "nan": #on rare occassions MQ gets called "NaN" thus passing a string when a number is expected when calculating average.
-                    #print ("getting map quality:    %s          %s      %s" % (record.INFO['MQ'], file_name, str(record.POS)))
-                    sample_map_qualities.update({record_position:record.INFO['MQ']})
+                    #print("getting map quality:    %s          %s      %s" % (record.INFO['MQ'], file_name, str(record.POS)))
+                    sample_map_qualities.update({record_position: record.INFO['MQ']})
                 # ADD PARAMETERS HERE TO CHANGE WHAT'S EACH VCF REPRESENTS.
                 # SNP IS REPRESENTED IN TABLE, NOW HOW WILL THE VCF REPRESENT THE CALLED POSITION
                 # str(record.ALT[0]) != "None", which means a deletion as ALT
@@ -2449,75 +2469,75 @@ def get_snps(directory, arg_options):
                 # check record.QUAL
                 # In GATK VCFs "!= None" not used.
                 if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['N_gatk_threshold']:
-                    sample_dict.update({record_position:record.ALT[0]})
+                    sample_dict.update({record_position: record.ALT[0]})
                 elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > arg_options['N_gatk_threshold']:
                     ref_alt = str(record.ALT[0]) + str(record.REF[0])
                     if ref_alt == "AG":
-                        sample_dict.update({record_position:"R"})
+                        sample_dict.update({record_position: "R"})
                     elif ref_alt == "CT":
-                        sample_dict.update({record_position:"Y"})
+                        sample_dict.update({record_position: "Y"})
                     elif ref_alt == "GC":
-                        sample_dict.update({record_position:"S"})
+                        sample_dict.update({record_position: "S"})
                     elif ref_alt == "AT":
-                        sample_dict.update({record_position:"W"})
+                        sample_dict.update({record_position: "W"})
                     elif ref_alt == "GT":
-                        sample_dict.update({record_position:"K"})
+                        sample_dict.update({record_position: "K"})
                     elif ref_alt == "AC":
-                        sample_dict.update({record_position:"M"})
+                        sample_dict.update({record_position: "M"})
                     elif ref_alt == "GA":
-                        sample_dict.update({record_position:"R"})
+                        sample_dict.update({record_position: "R"})
                     elif ref_alt == "TC":
-                        sample_dict.update({record_position:"Y"})
+                        sample_dict.update({record_position: "Y"})
                     elif ref_alt == "CG":
-                        sample_dict.update({record_position:"S"})
+                        sample_dict.update({record_position: "S"})
                     elif ref_alt == "TA":
-                        sample_dict.update({record_position:"W"})
+                        sample_dict.update({record_position: "W"})
                     elif ref_alt == "TG":
-                        sample_dict.update({record_position:"K"})
+                        sample_dict.update({record_position: "K"})
                     elif ref_alt == "CA":
-                        sample_dict.update({record_position:"M"})
+                        sample_dict.update({record_position: "M"})
                     else:
-                        sample_dict.update({record_position:"N"})
+                        sample_dict.update({record_position: "N"})
                     # Poor calls
                 elif str(record.ALT[0]) != "None" and int(record.QUAL) <= 50:
-                    sample_dict.update({record_position:record.REF[0]})
+                    sample_dict.update({record_position: record.REF[0]})
                 elif str(record.ALT[0]) != "None" and int(record.QUAL) <= arg_options['N_gatk_threshold']:
-                    sample_dict.update({record_position:"N"})
+                    sample_dict.update({record_position: "N"})
                 elif str(record.ALT[0]) != "None": #Insurance -- Will still report on a possible SNP even if missed with above statement
-                    sample_dict.update({record_position:str(record.REF[0])})
+                    sample_dict.update({record_position: str(record.REF[0])})
                 elif str(record.ALT[0]) == "None":
-                    sample_dict.update({record_position:"-"})
+                    sample_dict.update({record_position: "-"})
 
         # After iterating through VCF combine dict to nested dict
         all_map_qualities.update({just_name: sample_map_qualities})
 
         # merge dictionaries and order
-        merge_dict={}
+        merge_dict = {}
         merge_dict.update(all_positions) #abs_pos:REF
         merge_dict.update(sample_dict) # abs_pos:ALT replacing all_positions, because keys must be unique
-        merge_dict=OrderedDict(sorted(merge_dict.items())) #OrderedDict of ('abs_pos', ALT_else_REF), looks like a list of lists
+        merge_dict = OrderedDict(sorted(merge_dict.items())) #OrderedDict of ('abs_pos', ALT_else_REF), looks like a list of lists
         for k, v in merge_dict.items():
-            #print ("k %s, v %s" % (k, v))
-            print (str(v) + "\t", file=table, end="")
-        print ("", file=table) # sample printed to file
+            #print("k %s, v %s" % (k, v))
+            print(str(v) + "\t", file=table, end="")
+        print("", file=table) # sample printed to file
     table.close() #end of loop.  All files done
 
-    ## Select parsimony informative SNPs
+    # Select parsimony informative SNPs
     mytable = pd.read_csv(table_location, sep='\t')
     # drop NaN rows and columns
-    mytable=mytable.dropna(axis=1)
+    mytable = mytable.dropna(axis=1)
 
     # SELECT PARISOMONY INFORMATIVE SNPSs
     # removes columns where all fields are the same
-    parsimony=mytable.loc[:, (mytable != mytable.iloc[0]).any()]
-    parsimony_positions=list(parsimony)
+    parsimony = mytable.loc[:, (mytable != mytable.iloc[0]).any()]
+    parsimony_positions = list(parsimony)
     #write over table (table_location) containing all snps
     parsimony.to_csv(table_location, sep="\t", index=False)
     
-    table=open(table_location, 'a')
+    table = open(table_location, 'a')
     # The reference calls are added after the parsimony positions are selected.
     # added corresponding reference to parsimony table
-    print ("reference_call", end="\t", file=table)
+    print("reference_call", end="\t", file=table)
     #all_positions_list=list(all_positions)
     try: #if there is only one file in the group exception is needed to return a value
         parsimony_positions.remove('reference_pos')
@@ -2534,18 +2554,18 @@ def get_snps(directory, arg_options):
 
     samples_in_fasta = []
     #Print out fasta alignment file from table
-    alignment_file= outdir + directory + "-" + unique_number + ".fasta"
-    write_out=open(alignment_file, 'wt')
+    alignment_file = outdir + directory + "-" + unique_number + ".fasta"
+    write_out = open(alignment_file, 'wt')
     with open(table_location, 'rt') as f:
-        count=0
+        count = 0
         for line in f:
             if count > 0:
-                line=re.sub('^', '>', line)
-                line=line.replace('reference_call', 'root')
-                line=line.replace('\t', '\n', 1)
+                line = re.sub('^', '>', line)
+                line = line.replace('reference_call', 'root')
+                line = line.replace('\t', '\n', 1)
                 samples_in_fasta.append(line.split('\n')[0].replace('>', ''))
-                line=line.replace('\t', '')
-                print (line, end="", file=write_out)
+                line = line.replace('\t', '')
+                print(line, end="", file=write_out)
             count = count + 1
     write_out.close()
 
@@ -2562,39 +2582,35 @@ def get_snps(directory, arg_options):
     mytable = pd.concat(frames)
     mytable.to_csv(table_location, sep="\t", index=False)
 
-    print ("\n%s table dimensions: %s" % (directory, str(mytable.shape)))
+    print("\n%s table dimensions: %s" % (directory, str(mytable.shape)))
 
-    print ("%s RAxML running..." % directory)
-    rooted_tree = outdir + directory + "-rooted.tre"
+    print("%s RAxML running..." % directory)
     try:
         os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
     except:
-        write_out=open('RAXML_FAILED', 'w+')
+        write_out = open('RAXML_FAILED', 'w+')
         write_out.close()
         pass
     try:
         ordered_list_from_tree = outdir + directory + "-cleanedAlignment.txt"
-        write_out=open(ordered_list_from_tree, 'w+')
-        print ("reference_pos", file=write_out)
-        print ("reference_call", file=write_out)
+        write_out = open(ordered_list_from_tree, 'w+')
+        print("reference_pos", file=write_out)
+        print("reference_call", file=write_out)
         if os.path.isfile("RAxML_bestTree.raxml"):
             with open("RAxML_bestTree.raxml", 'rt') as f:
                 for line in f:
-                    line=re.sub('[:,]', '\n', line)
-                    line=re.sub('[)(]', '', line)
-                    line=re.sub('[0-9].*\.[0-9].*\n', '', line)
-                    line=re.sub('root\n', '', line)
+                    line = re.sub('[:,]', '\n', line)
+                    line = re.sub('[)(]', '', line)
+                    line = re.sub('[0-9].*\.[0-9].*\n', '', line)
+                    line = re.sub('root\n', '', line)
                     write_out.write(line)
             best_raxml_tre = directory + "-RAxML-bestTree.tre"
             os.rename("RAxML_bestTree.raxml", best_raxml_tre)
             write_out.close()
     
-        best_raxml_svg = directory + "-RAxML-bestTree.svg"
-        best_raxml_pdf = directory + "-RAxML-bestTree.pdf"
-        
+        best_raxml_svg = directory + "-RAxML-bestTree.svg"        
         try:
             os.system("cat {} | nw_display -s -S -w 1300 -t -v 30 -i 'opacity:0' -b 'opacity:0' -l 'font-size:14;font-family:serif;font-style:italic' -d 'stroke-width:1;stroke:blue' - > {}" .format(best_raxml_tre, best_raxml_svg)) #-s produces svg, -S suppress scale bar, -w to set the number of columns available for display, -t tab format, -v vertical spacing, -i inner node label, -b branch style
-            svg2pdf(url=best_raxml_svg, write_to=best_raxml_pdf)
         except:
             pass
         
@@ -2603,16 +2619,16 @@ def get_snps(directory, arg_options):
 
         sort_table(table_location, ordered_list_from_tree, out_org) #function
 
-        print ("%s Getting map quality..." % directory)
-        average=lambda x: x.mean()
-        all_map_qualities=pd.DataFrame(all_map_qualities)
+        print("%s Getting map quality..." % directory)
+        average = lambda x: x.mean()
+        all_map_qualities = pd.DataFrame(all_map_qualities)
         #ave_mq = Type: Series
         ave_mq = all_map_qualities.apply(average, axis=1)
         ave_mq = ave_mq.astype(int)
         ave_mq.to_csv('outfile.txt', sep='\t') # write to csv
 
-        write_out=open('map_quality.txt', 'w+')
-        print ('reference_pos\tmap-quality', file=write_out)
+        write_out = open('map_quality.txt', 'w+')
+        print('reference_pos\tmap-quality', file=write_out)
         with open('outfile.txt', 'rt') as f:
             for line in f:
                 write_out.write(line)
@@ -2622,7 +2638,7 @@ def get_snps(directory, arg_options):
         quality = pd.read_csv('map_quality.txt', sep='\t')
 
         mytable = pd.read_csv(table_location, sep='\t')
-        mytable=mytable.set_index('reference_pos')
+        mytable = mytable.set_index('reference_pos')
 
         # order list is from tree file
         # gives order for samples to be listed in table to be phylogenetically correct
@@ -2650,15 +2666,15 @@ def get_snps(directory, arg_options):
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
             dict_annotation = get_annotations_table(parsimony_positions, arg_options)
-            write_out=open('annotations.txt', 'w+')
-            print ('reference_pos\tannotations', file=write_out)
+            write_out = open('annotations.txt', 'w+')
+            print('reference_pos\tannotations', file=write_out)
             for k, v in dict_annotation.items():
-                print ('%s\t%s' % (k, v), file=write_out)
+                print('%s\t%s' % (k, v), file=write_out)
             write_out.close()
 
             time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
 
-            print ("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
+            print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
             annotations = pd.read_csv('annotations.txt', sep='\t') #sort
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
             mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
@@ -2676,7 +2692,7 @@ def get_snps(directory, arg_options):
             mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
         else:
-            print ("No gbk file or no table to annotate")
+            print("No gbk file or no table to annotate")
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
             mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
             mytable_sort = mytable_sort.set_index('reference_pos') #sort
@@ -2684,17 +2700,17 @@ def get_snps(directory, arg_options):
             mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
             # add when no annotation
             with open(out_sort, 'rt') as f:
-                line=f.readline()
+                line = f.readline()
             f.close()
             column_count = line.count('\t') #sort
             column_count = column_count - 1 #sort
-            #print ("column_count: %s" % column_count)
+            #print("column_count: %s" % column_count)
             with open(out_sort, 'at') as f:
-                print ("no_annotation", end = '', file=f)
-                print ('\t' * column_count, file=f)
+                print("no_annotation", end='', file=f)
+                print('\t' * column_count, file=f)
             f.close()
 
-            print ("No gbk file or no table to annotate")
+            print("No gbk file or no table to annotate")
             mytable = pd.read_csv(out_org, sep='\t') #org
             mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
             mytable = mytable.set_index('reference_pos') #org
@@ -2702,14 +2718,14 @@ def get_snps(directory, arg_options):
             mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
             # add when no annotation
             with open(out_org, 'rt') as f:
-                line=f.readline()
+                line = f.readline()
             f.close()
             column_count = line.count('\t')
             column_count = column_count - 1
-            #print ("column_count: %s" % column_count)
+            #print("column_count: %s" % column_count)
             with open(out_org, 'at') as f:
-                print ("no_annotation", end = '', file=f)
-                print ('\t' * column_count, file=f)
+                print("no_annotation", end='', file=f)
+                print('\t' * column_count, file=f)
             f.close()
 
         excelwriter(out_sort) #***FUNCTION CALL #sort
@@ -2719,7 +2735,7 @@ def get_snps(directory, arg_options):
             os.remove(r)
 
     except ValueError:
-        print ("##### ValueError: %s #####" % file_name)
+        print("##### ValueError: %s #####" % file_name)
         return
 
     try:
@@ -2740,7 +2756,7 @@ def get_snps(directory, arg_options):
     except FileNotFoundError:
         pass
 
-    ### PANDA NOTES ###
+    # PANDA NOTES
     # get the index: mytable.index
     # get columns: mytable.columns
     # get a column: mytable.AF2122_NC002945_105651, shows index (sample names)
@@ -2753,6 +2769,7 @@ def get_snps(directory, arg_options):
         json.dump(samples_in_fasta, outfile)
 
     return(samples_in_fasta)
+
 
 def get_annotations_table(parsimony_positions, arg_options):
     dict_annotation = {}
@@ -2775,10 +2792,11 @@ def get_annotations_table(parsimony_positions, arg_options):
                             mygene = feature.qualifiers['gene'][0]
                         myout = myproduct + ", gene: " + mygene + ", locus_tag: " + mylocus
                         pos_found = True
-            if pos_found == False:
+            if not pos_found:
                 myout = "No annotated product"
             dict_annotation.update({chrom + "-" + str(pos):myout})
     return (dict_annotation)
+
 
 def sort_table(table_location, ordered, out_org):
     mytable = pd.read_csv(table_location, sep='\t')
@@ -2807,7 +2825,7 @@ def sort_table(table_location, ordered, out_org):
             if element != column[0]:
                 count = count + 1
         snp_per_column.append(count)
-        #print ("the count is: %s" % count)
+        #print("the count is: %s" % count)
     row1 = pd.Series (snp_per_column, mytable.columns, name="snp_per_column")
     #row1 = row1.drop('reference_pos')
 
@@ -2845,13 +2863,14 @@ def sort_table(table_location, ordered, out_org):
     mytable = mytable[:-2]
     mytable.to_csv(out_org, sep='\t', index=False)
 
+
 def excelwriter(filename):
-    orginal_name=filename
     orginal_name = filename
-    filename = filename.replace(".txt",".xlsx")
+    orginal_name = filename
+    filename = filename.replace(".txt", ".xlsx")
     wb = xlsxwriter.Workbook(filename)
     ws = wb.add_worksheet("Sheet1")
-    with open(orginal_name,'r') as csvfile:
+    with open(orginal_name, 'r') as csvfile:
         table = csv.reader(csvfile, delimiter='\t')
         i = 0
         for row in table:
@@ -2860,127 +2879,51 @@ def excelwriter(filename):
 
     col = len(row)
     col = col + 1
-    #print (i, "x", col)
+    #print(i, "x", col)
 
-    formatA = wb.add_format({'bg_color':'#58FA82'})
-    formatG = wb.add_format({'bg_color':'#F7FE2E'})
-    formatC = wb.add_format({'bg_color':'#0000FF'})
-    formatT = wb.add_format({'bg_color':'#FF0000'})
-    formatnormal = wb.add_format({'bg_color':'#FDFEFE'})
-    formatlowqual = wb.add_format({'font_color':'#C70039', 'bg_color':'#E2CFDD'})
-    formathighqual = wb.add_format({'font_color':'#000000', 'bg_color':'#FDFEFE'})
-    formatambigous = wb.add_format({'font_color':'#C70039', 'bg_color':'#E2CFDD'})
-    formatN = wb.add_format({'bg_color':'#E2CFDD'})
+    formatA = wb.add_format({'bg_color': '#58FA82'})
+    formatG = wb.add_format({'bg_color': '#F7FE2E'})
+    formatC = wb.add_format({'bg_color': '#0000FF'})
+    formatT = wb.add_format({'bg_color': '#FF0000'})
+    formatnormal = wb.add_format({'bg_color': '#FDFEFE'})
+    formatlowqual = wb.add_format({'font_color': '#C70039', 'bg_color': '#E2CFDD'})
+    formathighqual = wb.add_format({'font_color': '#000000', 'bg_color': '#FDFEFE'})
+    formatambigous = wb.add_format({'font_color': '#C70039', 'bg_color': '#E2CFDD'})
+    formatN = wb.add_format({'bg_color': '#E2CFDD'})
 
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                            'criteria':'containing',
-                            'value':60,
-                            'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':59,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':58,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':57,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':56,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':55,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':54,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':53,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':52,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':51,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':50,
-                        'format':formathighqual})
-    ws.conditional_format(i-2,1,i-2,col-2, {'type':'text',
-                        'criteria':'not containing',
-                        'value':100,
-                        'format':formatlowqual})
-
-    ws.conditional_format(2,1,i-3,col-2, {'type':'cell',
-                        'criteria':'==',
-                        'value':'B$2',
-                        'format':formatnormal})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'A',
-                        'format':formatA})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'G',
-                        'format':formatG})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'C',
-                        'format':formatC})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'T',
-                        'format':formatT})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'S',
-                        'format':formatambigous})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'Y',
-                        'format':formatambigous})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'R',
-                        'format':formatambigous})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'W',
-                        'format':formatambigous})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'K',
-                        'format':formatambigous})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'M',
-                        'format':formatambigous})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'N',
-                        'format':formatN})
-    ws.conditional_format(2,1,i-3,col-2, {'type':'text',
-                        'criteria':'containing',
-                        'value':'-',
-                        'format':formatN})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 60, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 59, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 58, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 57, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 56, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 55, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 54, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 53, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 52, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 51, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 50, 'format': formathighqual})
+    ws.conditional_format(i - 2, 1, i - 2, col - 2, {'type': 'text', 'criteria': 'not containing', 'value': 100, 'format': formatlowqual})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'cell', 'criteria': '==', 'value': 'B$2', 'format': formatnormal})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'A', 'format': formatA})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'G', 'format': formatG})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'C', 'format': formatC})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'T', 'format': formatT})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'S', 'format': formatambigous})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'Y', 'format': formatambigous})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'R', 'format': formatambigous})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'W', 'format': formatambigous})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'K', 'format': formatambigous})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'M', 'format': formatambigous})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': 'N', 'format': formatN})
+    ws.conditional_format(2, 1, i - 3, col - 2, {'type': 'text', 'criteria': 'containing', 'value': '-', 'format': formatN})
 
     ws.set_column(0, 0, 30)
-    ws.set_column(1, col-2, 2)
+    ws.set_column(1, col - 2, 2)
     ws.freeze_panes(2, 1)
-    format_rotation = wb.add_format({'rotation':'90'})
+    format_rotation = wb.add_format({'rotation': '90'})
     ws.set_row(0, 140, format_rotation)
-    formatannotation = wb.add_format({'font_color':'#0A028C', 'rotation':'-90', 'align':'top'})
+    formatannotation = wb.add_format({'font_color': '#0A028C', 'rotation': '-90', 'align': 'top'})
     #set last row
-    ws.set_row(i-1, 400, formatannotation)
+    ws.set_row(i - 1, 400, formatannotation)
 
     wb.close()

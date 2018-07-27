@@ -2553,10 +2553,10 @@ def get_snps(directory, arg_options):
         return(samples_in_fasta)
 
     # move reference to top row
-    myref=mytable[-1:]
-    myother=mytable[:-1]
+    myref = mytable[-1:]
+    myother = mytable[:-1]
     frames = [myref, myother]
-    mytable=pd.concat(frames)
+    mytable = pd.concat(frames, sort=True)
     mytable.to_csv(table_location, sep="\t", index=False)
 
     print ("\n%s table dimensions: %s" % (directory, str(mytable.shape)))

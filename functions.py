@@ -2164,12 +2164,21 @@ def get_snps(directory, arg_options):
     presize = len(all_positions)
 
     # Filter applied to all positions
-    for pos in filter_dictionary[first_column_header]: #filter_list
-        all_positions.pop(pos, None)
+    try:
+        for pos in filter_dictionary[first_column_header]: #filter_list
+            all_positions.pop(pos, None)
+    except KeyError:
+        # Allow keyerror if group is not represented in filter worksheet
+        print("\n#### KeyError:  No filter column for group {} " .format(directory))
+        pass
 
     # Filter applied to group
-    for pos in filter_dictionary[directory]: #filter_list
-        all_positions.pop(pos, None)
+    try:
+        for pos in filter_dictionary[directory]: #filter_list
+            all_positions.pop(pos, None)
+    except KeyError:
+        print("\n#### KeyError:  No filter column for group {} " .format(directory))
+        pass
 
     print("\nDirectory: {}" .format(directory))
     print("Total positions found: {}" .format(presize))

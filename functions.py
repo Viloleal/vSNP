@@ -270,7 +270,6 @@ def read_aligner(sample_name, arg_options):
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
     arg_options['read_quality_stats'] = read_quality_stats
-    ###
 
     arg_options['sample_name'] = sample_name
     arg_options = species_selection_step1(arg_options)
@@ -292,28 +291,28 @@ def species_selection_step1(arg_options):
     if arg_options['species']:
         species_selection = arg_options['species']
         print("Sample will be ran as:  {}" .format(species_selection))
-        specie_para_dict = all_parameters.choose(species_selection)
+        parameters = all_parameters.choose(species_selection)
     else:
         best_ref_found = best_reference([arg_options['R1'], arg_options['R2']])
         arg_options['species'] = best_ref_found
         print("Sample will be ran as {}" .format(best_ref_found))
-        specie_para_dict = all_parameters.choose(best_ref_found)
+        parameters = all_parameters.choose(best_ref_found)
 
-    if specie_para_dict['species'] is None:
+    if parameters['species'] is None:
         print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(arg_options['R1'], arg_options['R2']))
         arg_options['reference_sequence_name'] = best_ref_found
-        arg_options.update(specie_para_dict)
+        arg_options.update(parameters)
         return arg_options
-    elif specie_para_dict:
-        shutil.copy2(specie_para_dict["reference"], arg_options['root_dir'])
-        shutil.copy2(specie_para_dict["hqs"], arg_options['root_dir'])
-        arg_options.update(specie_para_dict)
+    elif parameters:
+        shutil.copy2(parameters["reference"], arg_options['root_dir'])
+        shutil.copy2(parameters["hqs"], arg_options['root_dir'])
+        arg_options.update(parameters)
         return arg_options
     else:
         print("### See species_selection_step1 function")
         arg_options['species'] = None
         arg_options['reference_sequence_name'] = best_ref_found
-        arg_options.update(specie_para_dict)
+        arg_options.update(parameters)
         return arg_options
 
 
@@ -1431,10 +1430,10 @@ def get_species(arg_options):
         print("single_vcf %s" % each_vcf)
         for record in vcf_reader:
             header = record.CHROM
-            for k, vlist in species_cross_reference.items():
-                for l in vlist:
-                    if l in header:
-                        return(k)
+            for key, vlist in species_cross_reference.items():
+                for li in vlist:
+                    if li in header:
+                        return (key)
 
 
 def run_script2(arg_options):
@@ -1473,11 +1472,13 @@ def run_script2(arg_options):
         raxml_cpu = int(arg_options['cpu_count'] / 10)
     arg_options['raxml_cpu'] = raxml_cpu
 
-    specie_para_dict = species_selection_step2(arg_options)
-    arg_options.update(specie_para_dict)
-
-    print("\nSET VARIABLES")
-    print("\tgenotypingcodes: %s " % arg_options['genotypingcodes'])
+    all_parameters = Get_Specie_Parameters_Step2() # Class of possible parameters
+    print("Sample will be ran as {}" .format(arg_options['species']))
+    parameters, genotype_codes = all_parameters.choose(arg_options['species'])
+    if parameters['qual_gatk_threshold'] is None:
+        print("### See species_selection_step2 function")
+        sys.exit(0)
+    arg_options.update(parameters)
 
     htmlfile_name = arg_options['root_dir'] + "/summary_log.html"
     arg_options['htmlfile_name'] = htmlfile_name
@@ -1498,20 +1499,16 @@ def run_script2(arg_options):
     for i in all_starting_files:
         shutil.copy(i, 'starting_files')
 
-    ##################
-    # FUNCTIONS
-    ##################
-    test_duplicate() #***FUNCTION CALL
+    test_duplicate()
 
     print("\ndefiningSNPs: %s " % arg_options['definingSNPs'])
     print("filter_file: %s " % arg_options['filter_file'])
     print("remove_from_analysis: %s " % arg_options['remove_from_analysis'])
     print("step2_upload: %s \n" % arg_options['step2_upload'])
-    ###
 
-    if arg_options['genotypingcodes']:
+    if genotype_codes:
         print("\nUpdating VCF file names")
-        arg_options = change_names(arg_options) # check if genotypingcodes exist.  if not skip.
+        arg_options = change_names(arg_options, genotype_codes)
         malformed = arg_options['malformed']
         names_not_changed = arg_options['names_not_changed']
     else:
@@ -1909,19 +1906,6 @@ def group_files(each_vcf, arg_options):
     return dict_amb, group_calls, mal
 
 
-def species_selection_step2(arg_options):
-    all_parameters = Get_Specie_Parameters_Step2()
-
-    if arg_options['species']:
-        species_selection = arg_options['species']
-        print("Sample will be ran as {}" .format(species_selection))
-        specie_para_dict = all_parameters.choose(species_selection)
-        return specie_para_dict
-    else:
-        print("### See species_selection_step2 function")
-        sys.exit(0)
-
-
 def send_email_step2(arg_options):
     htmlfile_name = arg_options['htmlfile_name']
     email_list = arg_options['email_list']
@@ -1987,38 +1971,8 @@ def test_duplicate():
         pass
 
 
-def change_names(arg_options):
+def change_names(arg_options, genotype_codes):
     malformed = []
-    code_dictionary = {} # dictionary of new names and whether considered an elite isolate
-    try:
-        wb = xlrd.open_workbook(arg_options['genotypingcodes'])
-        ws = wb.sheet_by_index(0)
-        for rownum in range(ws.nrows):
-            new_name = str(ws.row_values(rownum)[0])
-            new_name = new_name.rstrip()
-            new_name = re.sub('[\/() ]', '_', new_name)
-            new_name = re.sub('#', 'num', new_name)
-            new_name = re.sub('_-', '_', new_name)
-            new_name = re.sub('-_', '_', new_name)
-            new_name = re.sub('__+', '_', new_name)
-            new_name = re.sub('_$', '', new_name)
-            new_name = re.sub('-$', '', new_name)
-            new_name = re.sub(',', '', new_name)
-            try:
-                elite_test = ws.row_values(rownum)[1]
-            except IndexError:
-                #print("except IndexError: when changing names")
-                elite_test = ""
-            #print("newname %s" % new_name)
-            try:
-                if new_name[-1] != "_":
-                    new_name = new_name + "_"
-            except IndexError:
-                pass
-            code_dictionary.update({new_name: elite_test})
-    except FileNotFoundError:
-        print("\n#### except: FileNotFoundError, there was not a \"genotypingcodes\" file given to change names\n")
-
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
     for filename in list_of_files:
@@ -2027,19 +1981,18 @@ def change_names(arg_options):
         vcf_pretext = vcf_pretext.rstrip()
         #Added '^' because h37 18-2397 was finding bovis 18-011018-2397, 2018-06-19
         myregex = re.compile('^' + vcf_pretext + '_.*') #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
-        for key, value in code_dictionary.items():
+        for key, value in genotype_codes.items():
             if myregex.search(key):
                 name_found = True
                 foundname = key.strip('_')
         if name_found:
             os.rename(filename, foundname + ".vcf")
-            print("Name Changed {} --> {}" .format(filename, foundname))
+            print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))
             name_found = False
         else:
             os.rename(filename, each_vcf)
-            print("Genotype code not found:  {}, name not changed" .format(each_vcf))
             names_not_changed.append(each_vcf)
-            print("File Not Changed: {} --> {}" .format(filename, each_vcf))
+            print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
 
     if arg_options['elite']:
@@ -2059,7 +2012,7 @@ def change_names(arg_options):
                 print("time_test true %s" % each_vcf)
                 shutil.copy(each_vcf, "temp_hold")
             else:
-                for k, v in code_dictionary.items():
+                for k, v in genotype_codes.items():
                     if myregex.search(k):
                         try:
                             print("##### %s" % time_test)
@@ -2182,60 +2135,6 @@ def find_positions(filename, arg_options):
     except TypeError:
         print("TypeError error found")
     return found_positions
-
-
-def bruc_private_codes(upload_to):
-
-    found = False
-    if os.path.isfile("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
-        private_location = "/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx"
-        print("private_location:  %s" % private_location)
-        found = True
-
-    elif os.path.isfile("/fdrive/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
-        private_location = "/fdrive/Brucella/Brucella Logsheets/ALL_WGS.xlsx"
-        print("private_location:  %s" % private_location)
-        found = True
-
-    else:
-        print("Path to Brucella genotyping codes not found")
-
-    if found:
-        wb_out = xlsxwriter.Workbook(upload_to + "/brucella/genotyping_codes.xlsx")
-        ws_out = wb_out.add_worksheet()
-
-        wb_in = xlrd.open_workbook(private_location)
-
-        row = 0
-        col = 0
-
-        sheet_in = wb_in.sheet_by_index(1)
-        for row_data in sheet_in.col(32):
-            row_data = row_data.value
-            row_data = re.sub("/", "_", row_data)
-            row_data = re.sub("\.", "_", row_data)
-            row_data = re.sub("\*", "_", row_data)
-            row_data = re.sub("\?", "_", row_data)
-            row_data = re.sub("\(", "_", row_data)
-            row_data = re.sub("\)", "_", row_data)
-            row_data = re.sub("\[", "_", row_data)
-            row_data = re.sub("\]", "_", row_data)
-            row_data = re.sub(" ", "_", row_data)
-            row_data = re.sub("{", "_", row_data)
-            row_data = re.sub("}", "_", row_data)
-            row_data = re.sub("\'", "_", row_data)
-            row_data = re.sub("-_", "_", row_data)
-            row_data = re.sub("_-", "_", row_data)
-            row_data = re.sub("--", "_", row_data)
-            row_data = re.sub("_$", "", row_data)
-            row_data = re.sub("-$", "", row_data)
-            row_data = re.sub("\'", "", row_data)
-            row_data = str(row_data)
-
-            ws_out.write(row, col, row_data)
-            row += 1
-
-        wb_out.close()
 
 
 def get_snps(directory, arg_options):

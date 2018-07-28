@@ -132,11 +132,14 @@ elif vcf_check:
     arg_options['unique_number'] = unique_number
     if not arg_options['species']:
         species = functions.get_species(arg_options)
+        if species is None:
+            print("\nEXITED\n##### Unable to find a species corresponding to CHROM found in VCF files")
+            sys.exit(0)
         arg_options['species'] = species
         print("species %s" % species)
     vcfs_count = len(glob.glob('*vcf'))
     if (all_file_types_count != vcfs_count):
-        print("\n#####You have more than just VCF files in your directory.  Only VCF files are allowed if running script 2\n\n")
+        print("\n##### You have more than just VCF files in your directory.  Only VCF files are allowed if running script 2\n\n")
         sys.exit(0)
     else:
         if arg_options['quiet']:

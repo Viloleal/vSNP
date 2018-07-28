@@ -244,8 +244,8 @@ def get_tb_codes():
         tb_geno_codes = ("/Volumes/Results/mycobacterium/genotyping_codes.xlsx")
     elif os.path.isfile("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx"):
         tb_geno_codes = ("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx")
-    elif os.path.isfile("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx"):
-        tb_geno_codes = ("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx")
+    # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx"):
+    #     tb_geno_codes = ("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx")
     else:
         return None
     wb = xlrd.open_workbook(tb_geno_codes)
@@ -575,6 +575,6 @@ class Get_Specie_Parameters_Step2():
             }
 
         if self.upload_to is None:
-            # genotype_codes = None # This should be on during normal usage, turned off for testing
+            genotype_codes = None # This should be on during normal usage, turned off for testing
             parameters["step2_upload"] = None
         return (parameters, genotype_codes)

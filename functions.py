@@ -197,7 +197,7 @@ def run_loop(arg_options):  #calls read_aligner
                     shutil.move(summary_cumulative_file, '{}' .format(temp_folder + '/stat_backup' + st + '.xlsx'))
                     sorter = list(df_all_trans.index) #list of original column order
                     frames.insert(0, df_all_trans) #put as first item in list
-                    df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
+                    df_concat = pd.concat(frames, axis=1) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     df_sorted.T.to_excel(summary_cumulative_file, index=False) # transpose before writing to excel, numerical index not needed
                 except BlockingIOError:

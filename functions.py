@@ -74,7 +74,7 @@ def run_loop(arg_options):  #calls read_aligner
         col += 1
     ###
 
-    #Cumulative stats
+    # Cumulative stats
     path_found = False
     if os.path.isdir("/bioinfo11/TStuber/Results/stats"): #check bioinfo from server
         path_found = True

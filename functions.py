@@ -543,7 +543,7 @@ def align_reads(arg_options):
 
         loc_sam = working_directory + "/" + sample_name
         os.system("samtools faidx {}" .format(sample_reference))
-        os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
+        os.system("gatk-launch CreateSequenceDictionary -R {}" .format(sample_reference))
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
         allbam = loc_sam + "-all.bam"
@@ -559,11 +559,15 @@ def align_reads(arg_options):
         indel_realigner = loc_sam + ".intervals"
         realignedbam = loc_sam + "-realigned.bam"
         recal_group = loc_sam + "-recal_group"
-        prebam = loc_sam + "-pre.bam"
+        #prebam=loc_sam + "-pre.bam"
         qualitybam = loc_sam + "-quality.bam"
         coverage_file = loc_sam + "-coverage.txt"
         hapall = loc_sam + "-hapall.vcf"
+        zero_coverage_vcf = loc_sam + "_zc.vcf"
+        hapall_bp = loc_sam + "-hapall.gvcf"
+        annotation_vcf = loc_sam + "-nozero.vcf"
         bamout = loc_sam + "-bamout.bam"
+
         print("\n@@@ BWA mem")
         os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
 
@@ -606,7 +610,7 @@ def align_reads(arg_options):
             #allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
 
         print("\n@@@ Find duplicate reads")
-        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
+        os.system("gatk-launch MarkDuplicatesGATK --input={} --output {} --METRICS_FILE {}" .format(sortedbam, nodupbam, metrics))
         os.system("samtools index {}" .format(nodupbam))
         duplicate_stat_file = "duplicate_stat_align.txt"
         duplicate_stat_out = open(duplicate_stat_file, 'w')
@@ -626,33 +630,81 @@ def align_reads(arg_options):
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
         print(unmapped_reads)
 
-        print("\n@@@  Realign indels")
-        os.system("gatk3 -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        if not os.path.isfile(indel_realigner):
-            os.system("gatk3 -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk3 -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk3 -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-
         print("\n@@@ Base recalibration")
-        os.system("gatk3 -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk3 -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+        os.system("gatk-launch IndexFeatureFile -F {}" .format(hqs))
+        os.system("gatk-launch BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
 
         print("\n@@@ Make realigned BAM")
-        os.system("gatk3 -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-        if not os.path.isfile(prebam):
-            os.system("gatk3 -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-
-        print("\n@@@ Clip reads")
-        os.system("gatk3 -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
-        os.system("samtools index {}" .format(qualitybam))
-
-        print("\n@@@ Depth of coverage using GATK")
-        os.system("gatk3 -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+        os.system("gatk-launch ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, qualitybam))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk3 -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+        os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, qualitybam, hapall_bp, bamout))
+
+        vcf_reader = vcf.Reader(open(hapall_bp), 'r')
+        vcf_hapall_writer = vcf.Writer(open(hapall, 'w'), vcf_reader)
+
+        print("Cutting GVCF to informative positions...\n")
+        genome_length = 0
+        total_bases = 0
+        zero_coverage = 0
+        good_snp_count = 0
+        for record in vcf_reader:
+            try:
+                genome_length += 1
+                total_bases += record.genotype(vcf_reader.samples[0])['DP']
+                if record.genotype(vcf_reader.samples[0])['GT'] != '0/0':
+                    vcf_hapall_writer.write_record(record)
+                    if record.QUAL >= 300:
+                        good_snp_count += 1
+                elif int(record.genotype(vcf_reader.samples[0])['DP']) == int(0):
+                    vcf_hapall_writer.write_record(record)
+                    zero_coverage += 1
+            except:
+                pass
+        vcf_hapall_writer.close()
+        ave_coverage = total_bases / genome_length
+        total_coverage = genome_length - zero_coverage
+        genome_coverage =  "{:.2%}".format(total_coverage / genome_length)
+
+        with open(hapall, 'r') as file:
+            entire_file = file.read()
+        entire_file = re.sub(r'<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0:0:0:0,0,0', r'N,<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0,0:1000:0:1000,0,0,0,0,0', entire_file)
+        with open(hapall, 'w') as file:
+            file.write(entire_file)
+
+        os.system("gatk-launch GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall, 'hapall-temp'))
+        os.rename('hapall-temp', hapall)
+
+        with open(hapall, 'r') as file:
+            entire_file = file.read()
+        entire_file = re.sub(r'[A-Z]\tN\t974.78\t.\tAC=1;AF=0.500;AN=2;DP=1000;ExcessHet=3.0103;MLEAC=1;MLEAF=0.500\tGT:AD:DP:GQ:PL\t0/1:0,0:1000:0:1000,0,0', r'N\t.\t.\t.\t.\tGT\t./.', entire_file)
+        with open(hapall, 'w') as file:
+            file.write(entire_file)
+
+        vcf_reader = vcf.Reader(open(hapall), 'r')
+        vcf_zc_writer = vcf.Writer(open(zero_coverage_vcf, 'w'), vcf_reader)
+
+        print("Making zc.vcf...\n")
+        for record in vcf_reader:
+            try:
+                if (len(record.REF) == 1 and len(record.ALT[0]) == 1):
+                    vcf_zc_writer.write_record(record)
+            except TypeError:
+                vcf_zc_writer.write_record(record)
+            except:
+                pass
+        vcf_zc_writer.close()
+
+        vcf_reader = vcf.Reader(open(hapall), 'r')
+        vcf_annotation_nozero = vcf.Writer(open(annotation_vcf, 'w'), vcf_reader)
+        print("Making nozero.vcf...\n")
+        for record in vcf_reader:
+            try:
+                if record.genotype(sample_name)['DP'] != 0:
+                    vcf_annotation_nozero.write_record(record)
+            except:
+                pass
+        vcf_annotation_nozero.close()
 
         try:
             print("Getting Zero Coverage...\n")
@@ -684,7 +736,6 @@ def align_reads(arg_options):
             except AttributeError:
                 pass
 
-        os.remove(coverage_file)
         os.remove(samfile)
         os.remove(allbam)
         os.remove(nodupbam)
@@ -692,20 +743,13 @@ def align_reads(arg_options):
         os.remove(unmapsam)
         os.remove(sortedbam)
         os.remove(sortedbam + ".bai")
-        os.remove(indel_realigner)
-        os.remove(realignedbam)
-        os.remove(loc_sam + "-realigned.bai")
         os.remove(recal_group)
-        os.remove(prebam)
         os.remove(loc_sam + "-pre.bai")
-        os.remove(hqs)
-        os.remove(hqs + ".idx")
         os.remove(sample_reference + ".amb")
         os.remove(sample_reference + ".ann")
         os.remove(sample_reference + ".bwt")
         os.remove(sample_reference + ".pac")
         os.remove(sample_reference + ".sa")
-        os.remove(ref + ".dict")
         os.remove(duplicate_stat_file)
         os.remove(stat_file)
 

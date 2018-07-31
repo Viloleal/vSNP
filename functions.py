@@ -560,9 +560,8 @@ def align_reads(arg_options):
         realignedbam = loc_sam + "-realigned.bam"
         recal_group = loc_sam + "-recal_group"
         #prebam=loc_sam + "-pre.bam"
-        qualitybam = loc_sam + "-quality.bam"
-        coverage_file = loc_sam + "-coverage.txt"
-        hapall = loc_sam + "-hapall.vcf"
+        analysis_ready_bam = loc_sam + "-analysis-ready.bam"
+        hapall_informative = loc_sam + "-hapall_informative.vcf"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
         hapall_bp = loc_sam + "-hapall.gvcf"
         annotation_vcf = loc_sam + "-nozero.vcf"
@@ -630,18 +629,18 @@ def align_reads(arg_options):
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
         print(unmapped_reads)
 
-        print("\n@@@ Base recalibration")
-        os.system("gatk-launch IndexFeatureFile -F {}" .format(hqs))
-        os.system("gatk-launch BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
+        # print("\n@@@ Base recalibration")
+        # os.system("gatk-launch IndexFeatureFile -F {}" .format(hqs))
+        # os.system("gatk-launch BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
 
-        print("\n@@@ Make realigned BAM")
-        os.system("gatk-launch ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, qualitybam))
+        # print("\n@@@ Make realigned BAM")
+        # os.system("gatk-launch ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, analysis_ready_bam))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, qualitybam, hapall_bp, bamout))
+        os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
 
         vcf_reader = vcf.Reader(open(hapall_bp), 'r')
-        vcf_hapall_writer = vcf.Writer(open(hapall, 'w'), vcf_reader)
+        vcf_hapall_informative_writer = vcf.Writer(open(hapall_informative, 'w'), vcf_reader)
 
         print("Cutting GVCF to informative positions...\n")
         genome_length = 0
@@ -653,36 +652,35 @@ def align_reads(arg_options):
                 genome_length += 1
                 total_bases += record.genotype(vcf_reader.samples[0])['DP']
                 if record.genotype(vcf_reader.samples[0])['GT'] != '0/0':
-                    vcf_hapall_writer.write_record(record)
+                    vcf_hapall_informative_writer.write_record(record)
                     if record.QUAL >= 300:
                         good_snp_count += 1
                 elif int(record.genotype(vcf_reader.samples[0])['DP']) == int(0):
-                    vcf_hapall_writer.write_record(record)
+                    vcf_hapall_informative_writer.write_record(record)
                     zero_coverage += 1
             except:
                 pass
-        vcf_hapall_writer.close()
-        ave_coverage = total_bases / genome_length
-        total_coverage = genome_length - zero_coverage
-        genome_coverage =  "{:.2%}".format(total_coverage / genome_length)
+        vcf_hapall_informative_writer.close()
 
-        with open(hapall, 'r') as file:
+        with open(hapall_informative, 'r') as file:
             entire_file = file.read()
+        #trick GenotypeGVCF into keeping the zero coverage position
         entire_file = re.sub(r'<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0:0:0:0,0,0', r'N,<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0,0:1000:0:1000,0,0,0,0,0', entire_file)
-        with open(hapall, 'w') as file:
+        with open(hapall_informative, 'w') as file:
             file.write(entire_file)
 
-        os.system("gatk-launch GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall, 'hapall-temp'))
+        os.system("gatk-launch GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall_informative, 'hapall-temp'))
         os.rename('hapall-temp', hapall)
 
-        with open(hapall, 'r') as file:
+        with open(hapall_informative, 'r') as file:
             entire_file = file.read()
+        #revert back the tricked position for keeping zerocoverage
         entire_file = re.sub(r'[A-Z]\tN\t974.78\t.\tAC=1;AF=0.500;AN=2;DP=1000;ExcessHet=3.0103;MLEAC=1;MLEAF=0.500\tGT:AD:DP:GQ:PL\t0/1:0,0:1000:0:1000,0,0', r'N\t.\t.\t.\t.\tGT\t./.', entire_file)
-        with open(hapall, 'w') as file:
+        with open(hapall_informative, 'w') as file:
             file.write(entire_file)
 
-        vcf_reader = vcf.Reader(open(hapall), 'r')
-        vcf_zc_writer = vcf.Writer(open(zero_coverage_vcf, 'w'), vcf_reader)
+        vcf_reader = vcf.Reader(open(hapall_informative), 'r')
+        vcf_zc_writer = vcf.Writer(open(, 'w'), vcf_reader)
 
         print("Making zc.vcf...\n")
         for record in vcf_reader:
@@ -695,7 +693,7 @@ def align_reads(arg_options):
                 pass
         vcf_zc_writer.close()
 
-        vcf_reader = vcf.Reader(open(hapall), 'r')
+        vcf_reader = vcf.Reader(open(hapall_informative), 'r')
         vcf_annotation_nozero = vcf.Writer(open(annotation_vcf, 'w'), vcf_reader)
         print("Making nozero.vcf...\n")
         for record in vcf_reader:
@@ -706,21 +704,9 @@ def align_reads(arg_options):
                 pass
         vcf_annotation_nozero.close()
 
-        try:
-            print("Getting Zero Coverage...\n")
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
-        except FileNotFoundError:
-            print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
-            text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
-            msg = MIMEMultipart()
-            msg['From'] = "tod.p.stuber@aphis.usda.gov"
-            msg['To'] = "tod.p.stuber@aphis.usda.gov"
-            msg['Date'] = formatdate(localtime=True)
-            msg['Subject'] = "### No coverage file"
-            msg.attach(MIMEText(text))
-            smtp = smtplib.SMTP('10.10.8.12')
-            smtp.send_message(msg)
-            smtp.quit()
+        ave_coverage = total_bases / genome_length
+        total_coverage = genome_length - zero_coverage
+        genome_coverage =  "{:.2%}".format(total_coverage / genome_length)
 
         if arg_options["gbk_file"] is not "None" and not arg_options['no_annotation']:
             try:
@@ -1273,102 +1259,6 @@ def spoligo(arg_options):
 
         write_out.close()
     os.chdir(sample_directory)
-
-
-def add_zero_coverage(coverage_in, vcf_file, loc_sam):
-    temp_vcf = loc_sam + "-temp.vcf"
-    zero_coverage_vcf = loc_sam + "_zc.vcf"
-    zero_position = []
-    total_length = 0
-    total_zero_coverage = 0
-    with open(coverage_in) as f:
-        for line in f:
-            total_length = total_length + 1
-            line.rstrip()
-            line = re.split(':|\t', line)
-            chromosome = line[0]
-            position = line[1]
-            abs_pos = chromosome + "-" + position
-            depth = line[2]
-            if depth == "0":
-                zero_position.append(abs_pos) #positions with zero coverage in coverage file
-                total_zero_coverage = total_zero_coverage + 1
-        print(len(zero_position))
-    genome_coverage = 0
-    total_coverage = total_length - total_zero_coverage
-
-    genome_coverage = "{:.2%}".format(total_coverage / total_length)
-
-    average_list = []
-    with open(coverage_in) as f:
-        for line in f:
-            line.rstrip()
-            line = re.split(':|\t', line)
-            depth = str(line[2])
-            if depth.isdigit():
-                depth = int(depth)
-                average_list.append(depth)
-        ave_coverage = mean(average_list)
-
-    zero_position_found = []
-    write_out = open(temp_vcf, 'w')
-    with open(vcf_file) as f:
-        for line in f:
-            line = line.rstrip()
-            if line.startswith("#"): # save headers to file
-                print(line, file=write_out)
-            elif not line.startswith("#"): # position rows
-                split_line = line.split('\t')
-                chromosome = split_line[0] # get chromosome
-                position = split_line[1] # get position
-                abs_pos = chromosome + "-" + position
-                ref = split_line[3] # REF
-                alt = split_line[4] # ALT
-                ref_len = len(ref)
-                alt_len = len(alt)
-                if abs_pos in zero_position: # if a position has zero coverage
-                    print("%s is in zeropostions" % position)
-                    zero_position_found.append(position)
-                    print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line
-                elif ref_len == 1 and alt_len == 1:
-                    print(line, file=write_out)
-        print("##### Chromosome: %s" % chromosome)
-        #zero_position = list(map(int, zero_position)) # change list items from string to numbers
-        #zero_position_found = list(map(int, zero_position_found))
-
-        print("using list comprehension")
-        zero_not_added = [x for x in zero_position if x not in zero_position_found] # use list comprehension to subtract one list from the other
-        for abs_position in zero_not_added:
-            split_line = abs_position.rsplit('-', 1)
-            chromosome = split_line[0]
-            position = split_line[1]
-            print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line
-    write_out.close()
-
-    os.system("picard SortVcf INPUT={} OUTPUT={}" .format(temp_vcf, zero_coverage_vcf))
-    #os.system("vcf-sort {} > {}" .format(temp_vcf, zero_coverage_vcf))
-    os.remove(temp_vcf)
-    vcf_reader = vcf.Reader(open(zero_coverage_vcf, 'r'))
-    good_snp_count = 0
-    for record in vcf_reader:
-        try:
-            position = record.POS
-            try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > 150:
-                    good_snp_count = good_snp_count + 1
-            except KeyError:
-                pass
-        except ZeroDivisionError:
-            print("ZeroDivisionError error found")
-        except ValueError:
-            print("ValueError error found")
-        except UnboundLocalError:
-            print("UnboundLocalError error found")
-        except TypeError:
-            print("TypeError error found")
-
-    return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-
 
 def send_email_step1(email_list, runtime, path_found, summary_file):
     text = "See attached:  "

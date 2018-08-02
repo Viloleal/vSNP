@@ -18,7 +18,7 @@ class Get_Specie_Parameters_Step1():
 
     def choose(self, species_selection):
         if species_selection == "typhimurium-14028S":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/typhimurium-14028S/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents/script1"
             parameters = {
                 "upload_to": str(self.upload_to),
                 "spoligo_db": None,
@@ -29,9 +29,9 @@ class Get_Specie_Parameters_Step1():
             }
             return(parameters)
         elif species_selection == "typhimurium-LT2":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/typhimurium-LT2/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents/script1"
             parameters = {
-                "upload_to": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script1",
+                "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
                 "spoligo_db": None,
                 "reference": script_dependents + "/AE006468.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
@@ -39,9 +39,9 @@ class Get_Specie_Parameters_Step1():
                 "species": species_selection,
             }
         elif species_selection == "heidelberg-SL476":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/heidelberg-SL476/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents/script1"
             parameters = {
-                "upload_to": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script1",
+                "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_011083.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
@@ -363,7 +363,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
             }
         elif species_selection == "typhimurium-14028S":
-            script_dependents = self.dependents_dir + "/bi/salmonella/vsnp/typhimurium-14028S/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents/script2"
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -372,10 +372,10 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-14028S/script2",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/typhimurium-14028S/script2",
             }
         elif species_selection == "typhimurium-LT2":
-            script_dependents = self.dependents_dir + "/bi/salmonella/vsnp/typhimurium-LT2/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-LT2/script_dependents/script2"
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -384,10 +384,10 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script2",
             }
         elif species_selection == "heidelberg-SL476":
-            script_dependents = self.dependents_dir + "/bi/salmonella/vsnp/heidelberg-SL476/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/bi/salmonella/heidelberg-SL476/script_dependents/script2"
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -396,7 +396,7 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script2",
             }
         elif species_selection == "suis1":
             script_dependents = self.dependents_dir + "/brucella/suis1/script_dependents/script2"

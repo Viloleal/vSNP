@@ -1623,7 +1623,11 @@ def run_script2(arg_options):
     pretext_flattened_list = get_pretext_list(flattened_list)
     pretext_vcf_starting_list = get_pretext_list(vcf_starting_list)
     pretext_vcf_starting_list = set(pretext_vcf_starting_list)
-    pretext_flattened_list.remove('root')
+    try:
+        pretext_flattened_list.remove('root')
+    except ValueError:
+        print("\n#### Defining SNPs needed.  If there are no defining SNP then rerun using -a option\n")
+        exit(0)
     difference_start_end_file = pretext_vcf_starting_list.symmetric_difference(pretext_flattened_list)
     difference_start_end_file = list(difference_start_end_file)
     difference_start_end_file.sort()

@@ -8,4 +8,4 @@ markdown: kramdown
 theme: minima
 
 #GitHub repo
-baseurl: /snp_analysis
+baseurl: /vSNP

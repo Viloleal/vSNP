@@ -31,28 +31,29 @@ Once Anaconda is installed close and reopen your terminal.
 
 Clone script to home directory: 
 
-    $ git clone https://github.com/USDA-VS/snp_analysis.git
+    $ git clone https://github.com/USDA-VS/vSNP.git
 
-    $ cd snp_analysis
+    $ cd vSNP
     $ conda env create
     $ conda activate vsnp
 
-When GATK 3.8 is downloaded using Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package: https://software.broadinstitute.org/gatk/download/archive
+Follow instructions to configure 'conda activate' if requested when trying `$ conda activate vsnp`.
+
+In short the following can be used
+    `$ echo ". /home/tstuber/anaconda3/etc/profile.d/conda.sh" >> ~/.bashrc`
+Close and reopen your terminal, and again `$ conda activate vsnp`.
+
+When GATK 3.8 is downloaded from Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package: https://software.broadinstitute.org/gatk/download/archive
 unzip it:  
     $ tar -vxjf GenomeAnalysisTK-3.8*
 and run:
     $ gatk-register /path/to/Downloads/GenomeAnalysisTK*/GenomeAnalysisTK.jar
     
-After `gatk-register` is ran, GATK just downloaded from the GATK website, can be deleted.  The download was only needed to register the Anaconda GATK package.
+After `gatk-register` is ran, GATK just downloaded from the GATK website, can be deleted.  The download was only needed to register the Anaconda GATK package.  It might be a good idea to keep it though encase it is needed again.
 
-Put `snp_analysis` in your $PATH, or easier run lines below to put script in your anaconda PATH.
+Put `vSNP` in your $PATH, or easier run lines below to put script in your anaconda PATH.
 
-    $ ln -s ~/snp_analysis/vSNP.py ~/anaconda*/bin/
-
-## Dependency files
-vSNP requires reference files, high quality VCF files for GATK best practices, defining SNP positions to group closely related isolates and those positions to filter.  These files are provide as dependency files.  When vSNP is ran it looks for these file in your home directory.  If they are not found vSNP will exit with an error message.  These files can also be added now.
-
-    $ cd ~; git clone https://github.com/USDA-VS/dependencies.git
+    $ ln -s {FULL PATH TO}/vSNP/vSNP.py ~/anaconda*/bin/
 
 ## Step 1 test
 
@@ -63,22 +64,18 @@ Test files can be downloaded at:
     
 Files have been cut to 200,000 reads, which will give around 20X coverage.  This file size is convenent for downloading and testing.  They should not be added to any currated database or used in reporting.  The complete sequence files are available in SRA.
 
-Test by making directory containing FASTQs the working directory.
+Test by making directory containing FASTQ files your working directory.
 
     ~$ cd ~/fastq_data_set-tb_complex
 
-To aid in testing make a backup of the files
+To aid in testing make a backup of files
 
     $ mkdir original test; cp *gz original; mv *gz test; cd test; ls
 
-`vSNP.py` must only see `*fastq.gz` files in the working directory.  It will exit if any other file type is found.  `vSNP` will batch FASTQs based on available computer resources.
+`vSNP.py` must only see `*fastq.gz` files in the working directory.  It will exit if any other file type is found.  `vSNP` will batch FASTQs based on available computer resources.  Run vSNP on the working directory containing FASTQ files.
 
     $ vSNP.py
 
-If an error occurs it may have to do with running multiple samples and downloading dependencies.  Reset `test` directory and restart.
-
-    $ rm -r ../test/*; cp ../original/* ./; ls
-    $ vSNP.py
 
 ## Step 2 test
 
@@ -106,7 +103,7 @@ For list of options:
 
 <br>
 
-To deactivate virtual environment, use:
+To deactivate the conda environment, use:
     
     $ conda deactivate # will put you back into your base environment
     $ conda env list # to see all available environments

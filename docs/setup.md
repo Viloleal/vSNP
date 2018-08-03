@@ -39,8 +39,8 @@ Clone script to home directory:
 
 Follow instructions to configure 'conda activate' if requested when trying `$ conda activate vsnp`.
 
-In short the following can be used
-    `$ echo ". /home/tstuber/anaconda3/etc/profile.d/conda.sh" >> ~/.bashrc`
+In short, follow the first line echo'ing conda.sh to your profile.
+
 Close and reopen your terminal, and again `$ conda activate vsnp`.
 
 When GATK 3.8 is downloaded from Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package: https://software.broadinstitute.org/gatk/download/archive

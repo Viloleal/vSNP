@@ -2264,11 +2264,14 @@ def get_snps(directory, arg_options):
                 except ValueError:
                     pass
             # Removing those already being filtered for specific group
-            for pos in filter_dictionary[directory]: #filter_list
-                try:
-                    all_maybe_filter.remove(pos)
-                except ValueError:
-                    pass
+            try:
+                for pos in filter_dictionary[directory]: #filter_list
+                    try:
+                        all_maybe_filter.remove(pos)
+                    except ValueError:
+                        pass
+            except KeyError:
+                print("KeyError, group {} was not found in filter file" .format(directory))
         # for each possible posible position check if to filter.
         for absolute_positon in all_maybe_filter:
             ave_qual_value = ave_qual[absolute_positon]
@@ -2276,7 +2279,7 @@ def get_snps(directory, arg_options):
             ave_map_value = ave_map[absolute_positon]
             max_map_value = max_map[absolute_positon]
             print("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value))
-            if max_qual_value < 1300 and ave_qual_value < 800 or ave_map_value < 56:
+            if max_qual_value < 1300 and ave_qual_value < 700 or ave_map_value < 56:
                 print("%s, max_qual_value: %s, ave_qual_value: %s, max_map_value: %s, ave_map_value: %s" % (absolute_positon, max_qual_value, ave_qual_value, max_map_value, ave_map_value), file=write_out_details)
                 print(absolute_positon, file=write_out_positions)
             else:
@@ -2460,10 +2463,10 @@ def get_snps(directory, arg_options):
                     line = re.sub('[0-9].*\.[0-9].*\n', '', line)
                     line = re.sub('root\n', '', line)
                     write_out.write(line)
-            best_raxml_tre = directory + "-RAxML-bestTree.tre"
+            best_raxml_tre = directory + "-" + unique_number + "-RAxML-bestTree.tre"
             os.rename("RAxML_bestTree.raxml", best_raxml_tre)
             write_out.close()
-        best_raxml_svg = directory + "-RAxML-bestTree.svg"
+        best_raxml_svg = directory + "-" + unique_number + "-RAxML-bestTree.svg"
         try:
             os.system("cat {} | nw_display -s -S -w 1300 -t -v 30 -i 'opacity:0' -b 'opacity:0' -l 'font-size:14;font-family:serif;font-style:italic' -d 'stroke-width:1;stroke:blue' - > {}" .format(best_raxml_tre, best_raxml_svg)) #-s produces svg, -S suppress scale bar, -w to set the number of columns available for display, -t tab format, -v vertical spacing, -i inner node label, -b branch style
         except:

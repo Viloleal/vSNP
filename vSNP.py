@@ -1,27 +1,11 @@
 #!/usr/bin/env python
 
-import zipfile
-import xlsxwriter
-import xlrd
-import vcf
-import time
-import sys
-import subprocess
-import smtplib,ssl
-import shutil
-import regex
-import re
-import numpy as np
-import pandas as pd
 import os
+import sys
 import multiprocessing
-from multiprocessing import Pool
-import gzip
-import glob
-import git
-import csv
 import argparse
 import textwrap
+<<<<<<< HEAD
 import signal
 import json
 from collections import defaultdict
@@ -4343,51 +4327,18 @@ class loop():
 ################################################################################################################################################
 ################################################################################################################################################
 def get_species():
+=======
+import glob
+import random
+>>>>>>> env_setup
 
-    #species = corresponding NCBI accession
-    species_cross_reference = {}
-    species_cross_reference["salmonella"] = ["016856, 016855"]
-    species_cross_reference["bovis"] = ["AF2122_NC002945", "00879"]
-    species_cross_reference["af"] = ["NC_002945.4"]
-    species_cross_reference["h37"] = ["000962", "002755", "009525", "018143"]
-    species_cross_reference["para"] = ["NC_002944"]
-    species_cross_reference["ab1"] = ["006932", "006933"]
-    species_cross_reference["ab3"] = ["007682", "007683"]
-    species_cross_reference["canis"] = ["010103", "010104"]
-    species_cross_reference["ceti1"] = ["Bceti1Cudo"]
-    species_cross_reference["ceti2"] = ["022905", "022906"]
-    species_cross_reference["mel1"] = ["003317", "003318"]
-    species_cross_reference["mel1b"] = ["CP018508", "CP018509"]
-    species_cross_reference["mel2"] = ["012441", "012442"]
-    species_cross_reference["mel3"] = ["007760", "007761"]
-    species_cross_reference["ovis"] = ["009504", "009505"]
-    species_cross_reference["neo"] = ["KN046827"]
-    species_cross_reference["suis1"] = ["017250", "017251"]
-    species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
-    species_cross_reference["suis3"] = ["007719", "007718"]
-    species_cross_reference["suis4"] = ["B-REF-BS4-40"]
-    
-    vcf_list = glob.glob('*vcf')
-    for each_vcf in vcf_list:
-        print(each_vcf)
-        mal = fix_vcf(each_vcf)
-        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
-        print("single_vcf %s" % each_vcf)
-        for record in vcf_reader:
-            header = record.CHROM
-            for k, vlist in species_cross_reference.items():
-                for l in vlist:
-                    if l in header:
-                        return(k)
+import functions
 
-global root_dir
 root_dir = str(os.getcwd())
 
-global cpu_count
-global limited_cpu_count
 #set cpu usage
 cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count/4)
+limited_cpu_count = int(cpu_count / 4)
 if limited_cpu_count == 0:
     limited_cpu_count = 1
 
@@ -4404,31 +4355,42 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
         Step 2: VCFs --> Tables & Trees
 
+<<<<<<< HEAD
 -s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, salmonella, typhimurium
+=======
+-s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, typhimurium-14028S, typhimurium-LT2, heidelberg-SL476, 
+>>>>>>> env_setup
 
 '''), epilog='''---------------------------------------------------------''')
 
 #universal
 parser.add_argument('-s', '--species', action='store', dest='species', help='OPTIONAL: Used to FORCE species type <see options above>')
-
-parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', help='debug, run without loop.map for loops')
+parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', help='debug, run without pool.map')
 parser.add_argument('-g', '--get', action='store_true', dest='get', help='get, get to the core functions for debugging')
 parser.add_argument('-n', '--no_annotation', action='store_true', dest='no_annotation', help='no_annotation, run without annotation')
 parser.add_argument('-a', '--all_vcf', action='store_true', dest='all_vcf', help='make tree using all VCFs')
 parser.add_argument('-e', '--elite', action='store_true', dest='elite', help='create a tree with on elite sample representation')
-parser.add_argument('-f', '--filter', action='store_true', dest='filter', help='Find possible positions to filter')
-
+parser.add_argument('-f', '--filter', action='store_true', dest='filter_finder', help='Find possible positions to filter')
 parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', help='[**APHIS only**] prevent stats going to cumlative collection')
 parser.add_argument('-m', '--email', action='store', dest='email', help='[**APHIS only**, specify own SMTP address for functionality] email options: all, s, tod, jess, suelee, chris, email_address')
 parser.add_argument('-u', '--upload', action='store_true', dest='upload', help='[**APHIS only**, specify own storage for functionality] upload files to the bioinfo drive')
-
-parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.0.1')
-
 args = parser.parse_args()
-print ("\nSET ARGUMENTS: ")
-print (args)
+print("\nSET ARGUMENTS: ")
+print(args)
+arg_options = {
+    "species": args.species,
+    "debug_call": args.debug_call,
+    "get": args.get,
+    "no_annotation": args.no_annotation,
+    "all_vcf": args.all_vcf,
+    "elite": args.elite,
+    "filter_finder": args.filter_finder,
+    "quiet": args.quiet,
+    "upload": args.upload,
+}
 print("")
 
+email_list = None
 if args.email == "all":
     email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, patrick.m.camp@aphis.usda.gov, David.T.Farrell@aphis.usda.gov, Robin.L.Swanson@aphis.usda.gov, hannah.m.tharp@aphis.usda.gov, Doris.M.Bravo@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov"
 elif args.email == "tod":
@@ -4446,15 +4408,16 @@ elif args.email == "chris-":
 elif args.email == "doris":
     email_list = "tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, doris.m.bravo@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov, kristina.lantz@aphis.usda.gov"
 else:
-    email_list = "tod.p.stuber@aphis.usda.gov"
+    email_list = None
 
+arg_options['email_list'] = email_list
 ################################################################################################################################################
-
 
 all_file_types_count = len(glob.glob('*.*'))
 fastq_check = len(glob.glob('*fastq.gz'))
 vcf_check = len(glob.glob('*vcf'))
 
+# Check that there are either FASTQs or VCFs, not both
 if fastq_check > 0:
     fastq_check = True
 if vcf_check > 0:
@@ -4463,6 +4426,11 @@ if fastq_check and vcf_check:
     print("\n#####You have a mix of FASTQ and VCF files.  This is not allowed\n\n")
     sys.exit(0)
 
+arg_options['root_dir'] = root_dir
+arg_options['cpu_count'] = cpu_count
+arg_options['limited_cpu_count'] = limited_cpu_count
+
+# Check that there an equal number of both R1 and R2 reads
 if fastq_check:
     R1 = glob.glob('*_R1*fastq.gz')
     R2 = glob.glob('*_R2*fastq.gz')
@@ -4479,35 +4447,40 @@ if fastq_check:
         print("\n#####Only zipped FASTQ files are allowed in directory\n\n")
         sys.exit(0)
     elif (fastq_count > 1):
-        if args.all_vcf or args.elite or args.upload or args.filter:
+        if arg_options['all_vcf'] or arg_options['elite'] or arg_options['upload'] or arg_options['filter_finder']:
             print("#####Incorrect use of options when running loop/script 1")
             sys.exit(0)
         else:
-            print("\n--> RUNNING LOOP/SCRIPT 1\n") #
-            loop().run_loop()
+            print("\n--> RUNNING LOOP/SCRIPT 1\n")
+            #Enter script 1 -->
+            functions.run_loop(arg_options)
+            print("See files, vSNP has finished alignments")
 elif vcf_check:
-
-    if not args.species:
-        args.species = get_species()
-        print("args.species %s" % args.species)
-
+    unique_number = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3))
+    arg_options['unique_number'] = unique_number
+    if not arg_options['species']:
+        species = functions.get_species(arg_options)
+        if species is None:
+            print("\nEXITED\n##### Unable to find a species corresponding to CHROM found in VCF files")
+            sys.exit(0)
+        arg_options['species'] = species
+        print("species %s" % species)
     vcfs_count = len(glob.glob('*vcf'))
     if (all_file_types_count != vcfs_count):
-        print("\n#####You have more than just VCF files in your directory.  Only VCF files are allowed if running script 2\n\n")
+        print("\n##### You have more than just VCF files in your directory.  Only VCF files are allowed if running script 2\n\n")
         sys.exit(0)
     else:
-        if args.quiet:
-            print("#####Incorrect use of options when running script 2")
+        if arg_options['quiet']:
+            print("#####Incorrect use of options when running script 2, when running step 2 -q cannot be used")
             sys.exit(0)
         else:
-            if args.species:
-                print("\n--> RUNNING SCRIPT 2\n") #
-                script2().run_script2()
+            if arg_options['species']:
+                print("\n--> RUNNING SCRIPT 2\n")
+                #Enter script 2 -->
+                functions.run_script2(arg_options)
             else:
                 print("#####Based on VCF CHROM id (reference used to build VCF) a matching species cannot be found neither was there a -s option given")
                 sys.exit(0)
-
 else:
-    print ("#####Error determining file type.")
+    print("#####Error determining file type.")
     sys.exit(0)
-

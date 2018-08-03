@@ -1,0 +1,22 @@
+name: vsnp
+channels:
+  - bioconda
+  - r
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.6
+  - biopython
+  - regex
+  - pandas
+  - pyvcf
+  - xlrd
+  - xlsxwriter
+  - gitpython
+  - bwa
+  - samtools
+  - picard
+  - abyss
+  - gatk=3.8
+  - raxml
+  - newick_utils

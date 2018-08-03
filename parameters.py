@@ -372,7 +372,7 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/typhimurium-14028S/script2",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-14028S/script2",
             }
         elif species_selection == "typhimurium-LT2":
             script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-LT2/script_dependents/script2"
@@ -384,7 +384,7 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script2",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
             }
         elif species_selection == "heidelberg-SL476":
             script_dependents = self.dependents_dir + "/bi/salmonella/heidelberg-SL476/script_dependents/script2"
@@ -396,7 +396,7 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script2",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
             }
         elif species_selection == "suis1":
             script_dependents = self.dependents_dir + "/brucella/suis1/script_dependents/script2"

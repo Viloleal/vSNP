@@ -29,32 +29,7 @@ When installing from the command line use Anaconda's default installation except
     
 Once Anaconda is installed close and reopen your terminal.
 
-<<<<<<< HEAD
----
-
-<strong>Optional:</strong>
-If you are currently using Python 2, and wish to keep it as your default, a virtual environment can be built.  `vSNP.py` can run in this virtual environment.  See notes at the bottom of this page.  It is recommend to not run in a virtual environment if possible.
-
----
-
-<br>
-Setup Bioconda channels.  Add them in the order shown below.  Order is important.
-
-    ~$ conda config --add channels conda-forge
-    ~$ conda config --add channels defaults # Can ignored warning
-    ~$ conda config --add channels r
-    ~$ conda config --add channels bioconda
-    
-Install programs.
-    
-    ~$ conda install pyvcf biopython bwa samtools picard abyss gatk=3.8 raxml newick_utils xlrd xlsxwriter gitpython regex pandas
-
-Install cairosvg.  At the time of writing this (2018-02-22) cairosvg via conda was not compatiable with Python 3.6.
-
-    ~$ pip install cairosvg
-=======
 Clone script to home directory: 
->>>>>>> env_setup
 
     $ git clone https://github.com/USDA-VS/snp_analysis.git
 

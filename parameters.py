@@ -18,7 +18,7 @@ class Get_Specie_Parameters_Step1():
 
     def choose(self, species_selection):
         if species_selection == "typhimurium-14028S":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to),
                 "spoligo_db": None,
@@ -29,7 +29,7 @@ class Get_Specie_Parameters_Step1():
             }
             return(parameters)
         elif species_selection == "typhimurium-LT2":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
                 "spoligo_db": None,
@@ -39,7 +39,7 @@ class Get_Specie_Parameters_Step1():
                 "species": species_selection,
             }
         elif species_selection == "heidelberg-SL476":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",
                 "spoligo_db": None,
@@ -50,128 +50,128 @@ class Get_Specie_Parameters_Step1():
             }
             return(parameters)
         elif species_selection == "ab1":
-            script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus1/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_00693c.fasta",
-                "hqs": script_dependents + "/NC_00693cHighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_006932-NC_006933.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "ab3":
-            script_dependents = str(self.dependents_dir) + "/brucella/abortus3/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/abortus3/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus3/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/CP007682-7683c.fasta",
-                "hqs": script_dependents + "/CP007682-7683cHighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/CP007682-CP007683.gbk",
                 "species": species_selection,
             }
             return (parameters)
         elif species_selection == "canis":
-            script_dependents = str(self.dependents_dir) + "/brucella/canis/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/canis/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/canis/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/BcanisATCC23365.fasta",
-                "hqs": script_dependents + "/canisHighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_010103-NC_010104.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "ceti1":
-            script_dependents = str(self.dependents_dir) + "/brucella/ceti1/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/ceti1/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ceti1/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/Bceti1Cudo.fasta",
-                "hqs": script_dependents + "/ceti1HighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": None,
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "ceti2":
-            script_dependents = str(self.dependents_dir) + "/brucella/ceti2/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/ceti2/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ceti2/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/Bceti2-TE10759.fasta",
-                "hqs": script_dependents + "/ceti2HighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_022905-NC_022906.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "mel1":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv1-NC003317.fasta",
-                "hqs": script_dependents + "/mel-bv1-NC003317-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_003317-NC_003318.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "mel1b":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1b/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1b/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1b/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv1b-CP018508.fasta",
-                "hqs": script_dependents + "/mel-bv1b-CP018508-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/mel-bv1b-CP018508.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "mel2":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv2/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv2/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv2/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv2-NC012441.fasta",
-                "hqs": script_dependents + "/mel-bv2-NC012441-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_012441-NC_012442.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "mel3":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv3/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv3/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv3/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv3-NZCP007760.fasta",
-                "hqs": script_dependents + "/mel-bv3-NZCP007760-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NZ_CP007760-NZ_CP007761.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "suis1":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis1/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/suis1/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis1/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_017251-NC_017250.fasta",
-                "hqs": script_dependents + "/B00-0468-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_017251-NC_017250.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "suis2":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis2/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/suis2/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis2/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_010169-NC_010167.fasta",
-                "hqs": script_dependents + "/BsuisF7-06-1-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_010169-NC_010167.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "suis3":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis3/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/suis3/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis3/data",
                 "spoligo_db": None,
@@ -182,40 +182,40 @@ class Get_Specie_Parameters_Step1():
             }
             return(parameters)
         elif species_selection == "suis4":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis4/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/suis4/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis4/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/B-REF-BS4-40.fasta",
-                "hqs": script_dependents + "/suis4HighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": None,
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "ovis":
-            script_dependents = str(self.dependents_dir) + "/brucella/ovis/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/ovis/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ovis/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/BovisATCC25840.fasta",
-                "hqs": script_dependents + "/BovisATCC25840HighestQualitySNPs.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_009505-NC_009504.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "neo":
-            script_dependents = str(self.dependents_dir) + "/brucella/neotomae/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/brucella/neotomae/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/neotomae/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/KN046827.fasta",
-                "hqs": script_dependents + "/ERR1845155-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/KN046827.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "af":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/af2122/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/af2122/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/af2122/script1",
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
@@ -226,23 +226,23 @@ class Get_Specie_Parameters_Step1():
             }
             return(parameters)
         elif species_selection == "h37":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/h37/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/h37/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/h37/script1",
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
                 "reference": script_dependents + "/NC000962.fasta",
-                "hqs": script_dependents + "/15-3162-highqualitysnps.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_000962.gbk",
                 "species": species_selection,
             }
             return(parameters)
         elif species_selection == "para":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/para_cattle-bison/script_dependents/script1"
+            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/para_cattle-bison/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/data",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_002944.fasta",
-                "hqs": script_dependents + "/HQ-NC002944.vcf",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
                 "gbk_file": script_dependents + "/NC_002944.gbk",
                 "species": species_selection,
             }
@@ -351,7 +351,7 @@ class Get_Specie_Parameters_Step2():
 
     def choose(self, species_selection):
         if species_selection == "af":
-            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,
@@ -363,7 +363,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
             }
         elif species_selection == "typhimurium-14028S":
-            script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents"
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -375,7 +375,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-14028S/script2",
             }
         elif species_selection == "typhimurium-LT2":
-            script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-LT2/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-LT2/script_dependents"
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -387,7 +387,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
             }
         elif species_selection == "heidelberg-SL476":
-            script_dependents = self.dependents_dir + "/bi/salmonella/heidelberg-SL476/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/bi/salmonella/heidelberg-SL476/script_dependents"
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -399,7 +399,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
             }
         elif species_selection == "suis1":
-            script_dependents = self.dependents_dir + "/brucella/suis1/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/suis1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -412,7 +412,7 @@ class Get_Specie_Parameters_Step2():
             }
 
         elif species_selection == "suis2":
-            script_dependents = self.dependents_dir + "/brucella/suis2/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/suis2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -424,7 +424,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/suis2/vcfs",
             }
         elif species_selection == "suis3":
-            script_dependents = self.dependents_dir + "/brucella/suis3/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/suis3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -436,7 +436,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/suis3/vcfs",
             }
         elif species_selection == "suis4":
-            script_dependents = self.dependents_dir + "/brucella/suis4/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/suis4/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -448,7 +448,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/suis4/vcfs",
             }
         elif species_selection == "ab1":
-            script_dependents = self.dependents_dir + "/brucella/abortus1/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/abortus1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -460,7 +460,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/abortus1/vcfs",
             }
         elif species_selection == "ab3":
-            script_dependents = self.dependents_dir + "/brucella/abortus3/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/abortus3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -472,7 +472,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/abortus3/vcfs",
             }
         elif species_selection == "mel1":
-            script_dependents = self.dependents_dir + "/brucella/melitensis-bv1/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/melitensis-bv1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -484,7 +484,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv1/vcfs",
             }
         elif species_selection == "mel1b":
-            script_dependents = self.dependents_dir + "/brucella/melitensis-bv1b/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/melitensis-bv1b/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -496,7 +496,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv1b/vcfs",
             }
         elif species_selection == "mel2":
-            script_dependents = self.dependents_dir + "/brucella/melitensis-bv2/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/melitensis-bv2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -508,7 +508,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv2/vcfs",
             }
         elif species_selection == "mel3":
-            script_dependents = self.dependents_dir + "/brucella/melitensis-bv3/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/melitensis-bv3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -520,7 +520,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv3/vcfs",
             }
         elif species_selection == "canis":
-            script_dependents = self.dependents_dir + "/brucella/canis/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/canis/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -532,7 +532,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/canis/vcfs",
             }
         elif species_selection == "ceti1":
-            script_dependents = self.dependents_dir + "/brucella/ceti1/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/ceti1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -544,7 +544,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/ceti1/vcfs",
             }
         elif species_selection == "ceti2":
-            script_dependents = self.dependents_dir + "/brucella/ceti2/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/ceti2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -556,7 +556,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/ceti2/vcfs",
             }
         elif species_selection == "ovis":
-            script_dependents = self.dependents_dir + "/brucella/ovis/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/ovis/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -568,7 +568,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/ovis/vcfs",
             }
         elif species_selection == "neo":
-            script_dependents = self.dependents_dir + "/brucella/neotomae/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/brucella/neotomae/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
@@ -580,7 +580,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/brucella/neotomae/vcfs",
             }
         elif species_selection == "h37":
-            script_dependents = self.dependents_dir + "/mycobacterium/tbc/h37/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/mycobacterium/tbc/h37/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,
@@ -593,7 +593,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/h37/script2",
             }
         elif species_selection == "para":
-            script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/para_cattle-bison/script_dependents/script2"
+            script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/para_cattle-bison/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,

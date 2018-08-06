@@ -17,6 +17,7 @@ import xlrd
 import vcf
 import smtplib
 from multiprocessing import Pool
+from dask import delayed
 from itertools import repeat as itertools_repeat
 from collections import Iterable
 from numpy import mean
@@ -1045,7 +1046,7 @@ def finding_sp(v):
     total_finds = [len(regex.findall("(" + spacer + "){s<=1}", seq_string)) for spacer in v]
     for number in total_finds:
         total += number
-    return(v, total)
+    return(total)
 
 
 def binary_to_octal(binary):
@@ -1165,12 +1166,20 @@ def spoligo(arg_options):
         #if < 100 then search all reads, not just those with repeat regions.
         seq_string = "".join(sequence_list)
 
-    with Pool(maxtasksperchild=4) as pool: #max_workers=4
-        for v, count in pool.map(finding_sp, spoligo_dictionary.values(), chunksize=8):
-            for k, value in spoligo_dictionary.items():
-                if v == value:
-                    count_summary.update({k: count})
-                    count_summary = OrderedDict(sorted(count_summary.items()))
+    # for spacer_id, spacer_sequence in spoligo_dictionary.items():
+    #     count = finding_sp(spacer_sequence)
+    #     count_summary.update({spacer_id: count})
+    # count_summary = OrderedDict(sorted(count_summary.items()))
+    # print("count_summary {}" .format(count_summary))
+
+    for spacer_id, spacer_sequence in spoligo_dictionary.items():
+        count = delayed(finding_sp)(spacer_sequence)
+        count_summary.update({spacer_id: count})
+    pull = delayed(count_summary)
+    count_summary = pull.compute()
+    count_summary = OrderedDict(sorted(count_summary.items()))
+    print("count_summary {}".format(count_summary))
+
     seq_string = ""
 
     spoligo_binary_dictionary = {}

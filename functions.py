@@ -563,7 +563,7 @@ def align_reads(arg_options):
         analysis_ready_bam = loc_sam + "-analysis-ready.bam"
         hapall_informative = loc_sam + "-hapall_informative.vcf"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
-        hapall_bp = loc_sam + "-hapall.gvcf"
+        hapall_gvcf = loc_sam + "-hapall.gvcf"
         annotation_vcf = loc_sam + "-nozero.vcf"
         bamout = loc_sam + "-bamout.bam"
 
@@ -598,6 +598,7 @@ def align_reads(arg_options):
         stat_out = open(stat_file, 'w')
         stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
         stat_out.close()
+
 
         with open(stat_file) as f:
             first_line = f.readline()
@@ -637,10 +638,10 @@ def align_reads(arg_options):
         # os.system("gatk-launch ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, analysis_ready_bam))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
-        sys.exit(0)
 
-        vcf_reader = vcf.Reader(open(hapall_bp), 'r')
+        os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
+
+        vcf_reader = vcf.Reader(open(hapall_gvcf), 'r')
         vcf_hapall_informative_writer = vcf.Writer(open(hapall_informative, 'w'), vcf_reader)
 
         print("Cutting GVCF to informative positions...\n")

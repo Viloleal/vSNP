@@ -18,6 +18,7 @@ import vcf
 import smtplib
 from multiprocessing import Pool
 from dask import delayed
+import allel
 from itertools import repeat as itertools_repeat
 from collections import Iterable
 from numpy import mean
@@ -2117,36 +2118,17 @@ def find_filter_dict(each_vcf):
 
 
 def find_positions(filename, arg_options):
-    found_positions = {}
-    vcf_reader = vcf.Reader(open(filename, 'r'))
-    try:
-        for record in vcf_reader:
-            chrom = record.CHROM
-            position = record.POS
-            absolute_positon = str(chrom) + "-" + str(position)
-            # Usable positins are those that:
-            # ADD PARAMETERS HERE TO CHANGE WHAT'S SNP WILL BE USED
-            # IF NOT FOUND HERE THE SNP WILL BE IGNORED.  WILL NOT BE REPRESENTED.  HARD REMOVAL
-            # GATK parameters
-            # str(record.ALT[0]) != "None" --> filter deletions
-            # len(record.REF) == 1 --> filter bad ref call with 2 nt present
-            # len(record.ALT[0]) == 1 --> filter bad alt call with 2 nt present
-            # record.heterozygosity == 0.0 --> filter AC=1, heterozygosity.
-            # record.QUAL > 150 --> filter poor quality
-            # record.INFO['MQ'] --> filter low map quality
-            try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_gatk_threshold']:
-                    found_positions.update({absolute_positon: record.REF})
-            except KeyError:
-                pass
-    except ZeroDivisionError:
-        print("ZeroDivisionError error found")
-    except ValueError:
-        print("ValueError error found")
-    except UnboundLocalError:
-        print("UnboundLocalError error found")
-    except TypeError:
-        print("TypeError error found")
+
+    df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/ALT', 'variants/AC', 'variants/DP'], alt_number=1)
+    df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
+    df.drop('CHROM', axis=1, inplace=True)
+    df.drop('POS', axis=1, inplace=True)
+    df = df.query('QUAL > {} and AC == 2' .format(arg_options['qual_gatk_threshold']))
+    df = df[df['ALT'].str.len() == 1] #get any ALT with more than one nucleotide call
+    df = df[['ABS_VALUE', 'REF']]
+    df = df.set_index('ABS_VALUE')
+    ref_dict = df.to_dict()
+    found_positions = ref_dict['REF']
     return found_positions
 
 

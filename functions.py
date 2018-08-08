@@ -638,6 +638,7 @@ def align_reads(arg_options):
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
         os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
+        sys.exit(0)
 
         vcf_reader = vcf.Reader(open(hapall_bp), 'r')
         vcf_hapall_informative_writer = vcf.Writer(open(hapall_informative, 'w'), vcf_reader)
@@ -680,18 +681,18 @@ def align_reads(arg_options):
             file.write(entire_file)
 
         vcf_reader = vcf.Reader(open(hapall_informative), 'r')
-        vcf_zc_writer = vcf.Writer(open(, 'w'), vcf_reader)
+        # vcf_zc_writer = vcf.Writer(open(, 'w'), vcf_reader)
 
-        print("Making zc.vcf...\n")
-        for record in vcf_reader:
-            try:
-                if (len(record.REF) == 1 and len(record.ALT[0]) == 1):
-                    vcf_zc_writer.write_record(record)
-            except TypeError:
-                vcf_zc_writer.write_record(record)
-            except:
-                pass
-        vcf_zc_writer.close()
+        # print("Making zc.vcf...\n")
+        # for record in vcf_reader:
+        #     try:
+        #         if (len(record.REF) == 1 and len(record.ALT[0]) == 1):
+        #             vcf_zc_writer.write_record(record)
+        #     except TypeError:
+        #         vcf_zc_writer.write_record(record)
+        #     except:
+        #         pass
+        # vcf_zc_writer.close()
 
         vcf_reader = vcf.Reader(open(hapall_informative), 'r')
         vcf_annotation_nozero = vcf.Writer(open(annotation_vcf, 'w'), vcf_reader)

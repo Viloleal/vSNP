@@ -1995,14 +1995,18 @@ def change_names(arg_options, genotype_codes):
         #Added '^' because h37 18-2397 was finding bovis 18-011018-2397, 2018-06-19
         myregex = re.compile('^' + vcf_pretext + '_.*') #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
         for key, value in genotype_codes.items():
+            name_found = False
             if myregex.search(key):
+                name_found = True
                 foundname = key.strip('_')
-                os.rename(filename, foundname + ".vcf")
-                print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))
-            else:
-                os.rename(filename, each_vcf)
-                names_not_changed.append(each_vcf)
-                print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
+        if name_found:
+            os.rename(filename, foundname + ".vcf")
+            print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))
+            name_found = False
+        else:
+            os.rename(filename, each_vcf)
+            names_not_changed.append(each_vcf)
+            print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
 
     if arg_options['elite']:

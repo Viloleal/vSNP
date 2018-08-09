@@ -2152,7 +2152,7 @@ def find_positions(filename, arg_options):
 
 def get_snps(directory, arg_options):
 
-    time_mark = datetime.fromtimestamp(time.time()).strftime('d%Y-%m-%d_%H-%M')
+    time_mark = datetime.fromtimestamp(time.time()).strftime('D%Y%m%d_%H-%M')
 
     os.chdir(arg_options['root_dir'] + "/" + directory)
     print("\n----------------------------")

@@ -2152,7 +2152,7 @@ def find_positions(filename, arg_options):
 
 def get_snps(directory, arg_options):
 
-    time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+    time_mark = datetime.fromtimestamp(time.time()).strftime('d%Y-%m-%d_%H-%M-%S')
 
     os.chdir(arg_options['root_dir'] + "/" + directory)
     print("\n----------------------------")
@@ -2422,7 +2422,7 @@ def get_snps(directory, arg_options):
 
     samples_in_fasta = []
     #Print out fasta alignment file from table
-    alignment_file = outdir + directory + "-" + time_mark + ".fasta"
+    alignment_file = outdir + directory + "_" + time_mark + ".fasta"
     write_out = open(alignment_file, 'wt')
     with open(table_location, 'rt') as f:
         count = 0
@@ -2472,16 +2472,16 @@ def get_snps(directory, arg_options):
                     line = re.sub('[0-9].*\.[0-9].*\n', '', line)
                     line = re.sub('root\n', '', line)
                     write_out.write(line)
-            best_raxml_tre = directory + "-" + time_mark + "-RAxML-bestTree.tre"
+            best_raxml_tre = directory + "_" + time_mark + "-RAxML-bestTree.tre"
             os.rename("RAxML_bestTree.raxml", best_raxml_tre)
             write_out.close()
-        best_raxml_svg = directory + "-" + time_mark + "-RAxML-bestTree.svg"
+        best_raxml_svg = directory + "_" + time_mark + "-RAxML-bestTree.svg"
         try:
             os.system("cat {} | nw_display -s -S -w 1300 -t -v 30 -i 'opacity:0' -b 'opacity:0' -l 'font-size:14;font-family:serif;font-style:italic' -d 'stroke-width:1;stroke:blue' - > {}" .format(best_raxml_tre, best_raxml_svg)) #-s produces svg, -S suppress scale bar, -w to set the number of columns available for display, -t tab format, -v vertical spacing, -i inner node label, -b branch style
         except:
             pass
-        out_org = str(os.getcwd()) + "/" + directory + "-" + time_mark + "-organized-table.txt"
-        out_sort = str(os.getcwd()) + "/" + directory + "-" + time_mark + "-sorted-table.txt"
+        out_org = str(os.getcwd()) + "/" + directory + "_" + time_mark + "-organized-table.txt"
+        out_sort = str(os.getcwd()) + "/" + directory + "_" + time_mark + "-sorted-table.txt"
 
         sort_table(table_location, ordered_list_from_tree, out_org) #function
 

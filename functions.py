@@ -2002,7 +2002,6 @@ def change_names(arg_options, genotype_codes):
         if name_found:
             os.rename(filename, foundname + ".vcf")
             print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))
-            name_found = False
         else:
             os.rename(filename, each_vcf)
             names_not_changed.append(each_vcf)

@@ -2628,7 +2628,7 @@ def get_snps(directory, arg_options):
     # strip off the bottom row: mytable[:-1]
     # get the bottom row: mytable[-1:]
 
-    with open(directory + "-samples_in_fasta.json", 'w') as outfile:
+    with open(directory + "_" + time_mark + "-samples_in_fasta.json", 'w') as outfile:
         json.dump(samples_in_fasta, outfile)
 
     return(samples_in_fasta)

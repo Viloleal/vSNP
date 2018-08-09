@@ -2614,7 +2614,7 @@ def get_snps(directory, arg_options):
         os.remove('RAxML_log.raxml')
         os.remove('RAxML_parsimonyTree.raxml')
         os.remove('RAxML_result.raxml')
-        os.remove(directory + '.fasta.reduced')
+        os.remove(directory + "_" + time_mark + '.fasta.reduced')
 
     except FileNotFoundError:
         pass

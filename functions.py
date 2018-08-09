@@ -1996,16 +1996,13 @@ def change_names(arg_options, genotype_codes):
         myregex = re.compile('^' + vcf_pretext + '_.*') #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
         for key, value in genotype_codes.items():
             if myregex.search(key):
-                name_found = True
                 foundname = key.strip('_')
-        if name_found:
-            os.rename(filename, foundname + ".vcf")
-            print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))
-            name_found = False
-        else:
-            os.rename(filename, each_vcf)
-            names_not_changed.append(each_vcf)
-            print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
+                os.rename(filename, foundname + ".vcf")
+                print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))
+            else:
+                os.rename(filename, each_vcf)
+                names_not_changed.append(each_vcf)
+                print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
 
     if arg_options['elite']:

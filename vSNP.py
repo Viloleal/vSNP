@@ -128,8 +128,6 @@ if fastq_check:
             functions.run_loop(arg_options)
             print("See files, vSNP has finished alignments")
 elif vcf_check:
-    unique_number = ''.join(random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(3))
-    arg_options['unique_number'] = unique_number
     if not arg_options['species']:
         species = functions.get_species(arg_options)
         if species is None:

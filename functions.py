@@ -2122,7 +2122,7 @@ def find_positions(filename, arg_options):
     import warnings
     warnings.filterwarnings("ignore")
 
-    df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/ALT', 'variants/AC', 'variants/DP'], alt_number=1)
+    df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP'], alt_number=1)
     df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
     df.drop('CHROM', axis=1, inplace=True)
     df.drop('POS', axis=1, inplace=True)

@@ -1,0 +1,29 @@
+for i in directory_list:
+	samples_in_fasta = get_snps(i, arg_options)
+---
+		- Find all possible snp positions (done, dict-> {abs_pos: ref}) - could this be the one time file are read in?
+		- Apply filters from already processed filter dictionary, by first column then directory name
+		
+---
+		- Find regions to filter: select and get average and max qual and map
+---		
+		- For each VCF:
+			-if record_position in all_positions
+			-get positions: len(ALT) == 1 
+				-of these what are AC1 and AC2, if AC1 change to ambiguity code
+				-if qual < N threshold then N
+				-if blank (zero coverage) then -
+			-put each df into list
+		-merge
+		-remove parsimony uninformative
+		-write alignment file
+		-raxml
+		-organize table
+
+152		
+1614
+2162	
+			
+df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP'], alt_number=1)
+df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
+df.drop(['CHROM', 'POS'], axis=1, inplace=True)

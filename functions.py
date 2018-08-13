@@ -1603,9 +1603,9 @@ def run_script2(arg_options):
     directory_list = next(os.walk('.'))[1] # get list of subdirectories
     directory_list.remove('starting_files')
 
-    print("Placing positions to filter into dictionary...")
-    filter_dictionary = get_filters(arg_options)
-    arg_options['filter_dictionary'] = filter_dictionary
+    print("Placing positions to filter into dataframe...")
+    filter_df = get_filters(arg_options)
+    arg_options['filter_df'] = filter_df
 
     samples_in_output = []
     print("Getting SNPs in each directory")
@@ -2090,7 +2090,8 @@ def get_filters(arg_options):
                     for position in range(int(value[0]), int(value[1]) + 1):
                         expanded_list.append(str(sheet) + "-" + str(position))
             filter_dictionary[group_name] = expanded_list
-    return(filter_dictionary)
+    filter_df = pd.DataFrame.from_dict(filter_dictionary)
+    return(filter_df)
 
 
 def get_read_mean(rec):
@@ -2124,64 +2125,52 @@ def find_positions(filename, arg_options):
 
     df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP'], alt_number=1)
     df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
-    df.drop('CHROM', axis=1, inplace=True)
-    df.drop('POS', axis=1, inplace=True)
+    df.drop(['CHROM', 'POS'], axis=1, inplace=True)
     df = df.query('QUAL > {} and AC == 2' .format(arg_options['qual_gatk_threshold']))
     df = df[df['ALT'].str.len() == 1] #get any ALT with more than one nucleotide call
     df = df[['ABS_VALUE', 'REF']]
     df = df.set_index('ABS_VALUE')
-    ref_dict = df.to_dict()
-    found_positions = ref_dict['REF']
-    return found_positions
+    #ref_dict = df.to_dict()
+    #found_positions = ref_dict['REF']
+    return df
 
 
 def get_snps(directory, arg_options):
 
     unique_number = arg_options['unique_number']
+    filter_df = arg_options['filter_df']
+    first_column_header = arg_options["first_column_header"]
 
     os.chdir(arg_options['root_dir'] + "/" + directory)
     print("\n----------------------------")
     print("\nworking on: %s " % directory)
     outdir = str(os.getcwd()) + "/"
 
-    filter_dictionary = arg_options['filter_dictionary']
-    first_column_header = arg_options["first_column_header"]
-
     files = glob.glob('*vcf')
-    all_positions = {}
+    all_positions_df = pd.DataFrame()
     if arg_options['debug_call'] and not arg_options['get']:
+        # All possible SNP positions found
         for i in files:
-            found_positions = find_positions(i, arg_options)
-            all_positions.update(found_positions)
+            sample_snps_found_df = find_positions(i, arg_options) #ABS_VALUE:index, REF, single column
+            all_positions_df = pd.concat([all_positions_df, sample_snps_found_df])
     else:
         with futures.ProcessPoolExecutor() as pool:
-            for found_positions in pool.map(find_positions, files, itertools_repeat(arg_options)):
-                all_positions.update(found_positions)
+            for sample_snps_found_df in pool.map(find_positions, files, itertools_repeat(arg_options)):
+                all_positions_df = pd.concat([all_positions_df, sample_snps_found_df])
 
-    print("Directory %s found positions %s" % (directory, len(all_positions)))
-    presize = len(all_positions)
+    all_positions_df = all_positions_df.groupby(level=0).first()
+    presize = len(all_positions_df)
 
-    # Filter applied to all positions
-    try:
-        for pos in filter_dictionary[first_column_header]: #filter_list
-            all_positions.pop(pos, None)
-    except KeyError:
-        # Allow keyerror if group is not represented in filter worksheet
-        print("\n#### KeyError:  No filter column for group {} " .format(directory))
-        pass
-
-    # Filter applied to group
-    try:
-        for pos in filter_dictionary[directory]: #filter_list
-            all_positions.pop(pos, None)
-    except KeyError:
-        print("\n#### KeyError:  No filter column for group {} " .format(directory))
-        pass
+    #Temp change all_positions_df to df for readablity
+    df = all_positions_df.reset_index()  #ABS_VALUE cannot be set as index
+    #All positions ~ not in filter_df
+    #Do ~ not include those in filter_df to be included as an all position
+    df = df[~df.ABS_VALUE.isin(filter_df[first_column_header])]
+    all_positions_df = df[~df.ABS_VALUE.isin(filter_df[directory])]
 
     print("\nDirectory: {}" .format(directory))
     print("Total positions found: {}" .format(presize))
-    print("Possible positions filtered {}" .format(len(filter_dictionary)))
-    print("Positions after filtering {}" .format(len(all_positions)))
+    print("Positions after filtering {}" .format(len(all_positions_df)))
 
     if arg_options['filter_finder']:
         #write to files
@@ -2282,99 +2271,71 @@ def get_snps(directory, arg_options):
         write_out_details.close()
         write_out_good_snps.close()
 
-    table_location = outdir + directory + "-table.txt"
-    table = open(table_location, 'wt')
+    # table_location = outdir + directory + "-table.txt"
+    # table = open(table_location, 'wt')
 
-    # write absolute positions to table
-    # order before adding to file to match with ordering of individual samples below
-    # all_positions is abs_pos:REF
-    all_positions = OrderedDict(sorted(all_positions.items()))
-    # Add the positions to the table
-    print("reference_pos", end="\t", file=table)
-    for k, v in all_positions.items():
-        print(k, end="\t", file=table)
-    print("", file=table)
+    # # write absolute positions to table
+    # # order before adding to file to match with ordering of individual samples below
+    # # all_positions is abs_pos:REF
+    # all_positions = OrderedDict(sorted(all_positions.items()))
+    # # Add the positions to the table
+    # print("reference_pos", end="\t", file=table)
+    # for k, v in all_positions.items():
+    #     print(k, end="\t", file=table)
+    # print("", file=table)
+
+    ambig_codes = {
+        "AG": "R",
+        "CT": "Y",
+        "GC": "S",
+        "AT": "W",
+        "GT": "K",
+        "AC": "M",
+        "GA": "R",
+        "TC": "Y",
+        "CG": "S",
+        "TA": "W",
+        "TG": "K",
+        "CA": "M",
+    }
 
     list_of_files = glob.glob('*vcf')
 
     # for each vcf
-    all_map_qualities = {}
-    for file_name in list_of_files:
+    all_sample_dataframes = []
+    for filename in list_of_files:
         sample_map_qualities = {}
-        just_name = file_name.replace('.vcf', '')
+        just_name = filename.replace('.vcf', '')
         just_name = re.sub('\..*', '*', just_name) # if after the .vcf is removed there is stilll a "." in the name it is assumed the name did not get changed
-        print(just_name, end="\t", file=table)
-        # for each line in vcf
-        vcf_reader = vcf.Reader(open(file_name, 'r'))
-        sample_dict = {}
-        for record in vcf_reader:
-            record_position = str(record.CHROM) + "-" + str(record.POS)
-            if record_position in all_positions:
-                #print("############, %s, %s" % (file_name, record_position))
-                # NOT SURE THIS IS THE BEST PLACE TO CAPTURE MQ AVERAGE
-                # MAY BE FASTER AFTER PARSIMONY SNPS ARE DECIDED, BUT THEN IT WILL REQUIRE OPENING THE FILES AGAIN.
-                if str(record.ALT[0]) != "None" and str(record.INFO['MQ']) != "nan": #on rare occassions MQ gets called "NaN" thus passing a string when a number is expected when calculating average.
-                    #print("getting map quality:    %s          %s      %s" % (record.INFO['MQ'], file_name, str(record.POS)))
-                    sample_map_qualities.update({record_position: record.INFO['MQ']})
-                # ADD PARAMETERS HERE TO CHANGE WHAT'S EACH VCF REPRESENTS.
-                # SNP IS REPRESENTED IN TABLE, NOW HOW WILL THE VCF REPRESENT THE CALLED POSITION
-                # str(record.ALT[0]) != "None", which means a deletion as ALT
-                # not record.FILTER, or rather PASSED.
-                # check record.QUAL
-                # In GATK VCFs "!= None" not used.
-                if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['N_gatk_threshold']:
-                    sample_dict.update({record_position: record.ALT[0]})
-                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > arg_options['N_gatk_threshold']:
-                    ref_alt = str(record.ALT[0]) + str(record.REF[0])
-                    if ref_alt == "AG":
-                        sample_dict.update({record_position: "R"})
-                    elif ref_alt == "CT":
-                        sample_dict.update({record_position: "Y"})
-                    elif ref_alt == "GC":
-                        sample_dict.update({record_position: "S"})
-                    elif ref_alt == "AT":
-                        sample_dict.update({record_position: "W"})
-                    elif ref_alt == "GT":
-                        sample_dict.update({record_position: "K"})
-                    elif ref_alt == "AC":
-                        sample_dict.update({record_position: "M"})
-                    elif ref_alt == "GA":
-                        sample_dict.update({record_position: "R"})
-                    elif ref_alt == "TC":
-                        sample_dict.update({record_position: "Y"})
-                    elif ref_alt == "CG":
-                        sample_dict.update({record_position: "S"})
-                    elif ref_alt == "TA":
-                        sample_dict.update({record_position: "W"})
-                    elif ref_alt == "TG":
-                        sample_dict.update({record_position: "K"})
-                    elif ref_alt == "CA":
-                        sample_dict.update({record_position: "M"})
-                    else:
-                        sample_dict.update({record_position: "N"})
-                    # Poor calls
-                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= 50:
-                    sample_dict.update({record_position: record.REF[0]})
-                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= arg_options['N_gatk_threshold']:
-                    sample_dict.update({record_position: "N"})
-                elif str(record.ALT[0]) != "None": #Insurance -- Will still report on a possible SNP even if missed with above statement
-                    sample_dict.update({record_position: str(record.REF[0])})
-                elif str(record.ALT[0]) == "None":
-                    sample_dict.update({record_position: "-"})
+        
+        df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP', 'variants/MQ'], alt_number=1)
+        df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
+        df.drop(['CHROM', 'POS'], axis=1, inplace=True)
+        #Only work with positions captured all_positions_df
+        df = df[df.ABS_VALUE.isin(all_positions_df['ABS_VALUE'])]
+        #Only work with position with SNPs, no indels allowed
+        df = df[(df['ALT'].str.len() == 1) | (df['QUAL'].isnull())]
 
-        # After iterating through VCF combine dict to nested dict
-        all_map_qualities.update({just_name: sample_map_qualities})
+        #Update ALTs with AC1 to ambiguity codes
+        df = df.set_index('ABS_VALUE')
+        ambiguity = df.query('QUAL > {} and AC == 1' .format(300))
+        ambiguity['ALT'] = ambiguity['REF'].map(str) + ambiguity['ALT'].map(str)
+        ambiguity.replace(ambig_codes, inplace=True)
+        df.update(ambiguity)
+        
+        n_alt = df.query('QUAL <= {}' .format(50))
+        n_alt['ALT'] = 'N'
+        df.update(n_alt)
 
-        # merge dictionaries and order
-        merge_dict = {}
-        merge_dict.update(all_positions) #abs_pos:REF
-        merge_dict.update(sample_dict) # abs_pos:ALT replacing all_positions, because keys must be unique
-        merge_dict = OrderedDict(sorted(merge_dict.items())) #OrderedDict of ('abs_pos', ALT_else_REF), looks like a list of lists
-        for k, v in merge_dict.items():
-            #print("k %s, v %s" % (k, v))
-            print(str(v) + "\t", file=table, end="")
-        print("", file=table) # sample printed to file
-    table.close() #end of loop.  All files done
+        zero_cov = df[df['QUAL'].isnull()]
+        zero_cov['ALT'] = '-'
+        df.update(zero_cov)
+        all_sample_dataframes.append(df)
+
+        
+        
+        
+        
 
     # Select parsimony informative SNPs
     mytable = pd.read_csv(table_location, sep='\t')

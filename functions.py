@@ -2333,10 +2333,13 @@ def get_snps(directory, arg_options):
 
     all_positions_df = all_positions_df.set_index('ABS_VALUE')
     for sample_name, df in all_sample_dataframes.items():
-        print(sample_name)
         alt_df = df['ALT'].to_frame()
-        all_positions_df = all_positions_df.merge(alt_df, left_index=True, right_index=True)
+        all_positions_df = all_positions_df.merge(alt_df, how='outer', left_index=True, right_index=True)
         all_positions_df.rename(columns={'ALT': sample_name}, inplace=True)
+        no_ref = all_positions_df['REF']
+    df = all_positions_df
+    del df['REF']
+    all_positions_df.to_excel("test.xlsx")
     print("completed")
         
         

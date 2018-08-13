@@ -2302,11 +2302,10 @@ def get_snps(directory, arg_options):
     list_of_files = glob.glob('*vcf')
 
     # for each vcf
-    all_sample_dataframes = []
+    all_sample_dataframes = {}
     for filename in list_of_files:
-        sample_map_qualities = {}
-        just_name = filename.replace('.vcf', '')
-        just_name = re.sub('\..*', '*', just_name) # if after the .vcf is removed there is stilll a "." in the name it is assumed the name did not get changed
+        sample_name = filename.replace('.vcf', '')
+        sample_name = re.sub('\..*', '*', sample_name) # if after the .vcf is removed there is stilll a "." in the name it is assumed the name did not get changed
         
         df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP', 'variants/MQ'], alt_number=1)
         df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
@@ -2330,8 +2329,15 @@ def get_snps(directory, arg_options):
         zero_cov = df[df['QUAL'].isnull()]
         zero_cov['ALT'] = '-'
         df.update(zero_cov)
-        all_sample_dataframes.append(df)
+        all_sample_dataframes[sample_name] = df
 
+    all_positions_df = all_positions_df.set_index('ABS_VALUE')
+    for sample_name, df in all_sample_dataframes.items():
+        print(sample_name)
+        alt_df = df['ALT'].to_frame()
+        all_positions_df = all_positions_df.merge(alt_df, left_index=True, right_index=True)
+        all_positions_df.rename(columns={'ALT': sample_name}, inplace=True)
+    print("completed")
         
         
         

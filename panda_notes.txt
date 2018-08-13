@@ -22,8 +22,56 @@ for i in directory_list:
 
 152		
 1614
-2162	
-			
+2311	
+
+ambig_codes = {
+    "AG": "R",
+    "CT": "Y",
+    "GC": "S",
+    "AT": "W",
+    "GT": "K",
+    "AC": "M",
+    "GA": "R",
+    "TC": "Y",
+    "CG": "S",
+    "TA": "W",
+    "TG": "K",
+    "CA": "M",
+}
+
 df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP'], alt_number=1)
 df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
 df.drop(['CHROM', 'POS'], axis=1, inplace=True)
+
+df = df[~df.ABS_VALUE.isin(all_positions_df['ABS_VALUE'])]
+df = df[df['ALT'].str.len() == 1]
+
+ambiguity = df.query('QUAL > {} and AC == 1' .format(300))
+ambiguity = ambiguity[['ref_alt']]
+ambiguity['ref_alt'].replace(ambig_codes, inplace=True)
+
+
+df = df.query('QUAL > {} and AC == 2' .format(arg_options['qual_gatk_threshold']))
+df = df[['ABS_VALUE', 'REF']]
+df = df.set_index('ABS_VALUE')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

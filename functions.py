@@ -2334,14 +2334,14 @@ def get_snps(directory, arg_options):
     all_positions_df = all_positions_df.set_index('ABS_VALUE')
     for sample_name, df in all_sample_dataframes.items():
         alt_df = df['ALT'].to_frame()
-        all_positions_df = all_positions_df.merge(alt_df, how='outer', left_index=True, right_index=True)
+        all_positions_df = all_positions_df.merge(alt_df, how='left', left_index=True, right_index=True)
         all_positions_df.rename(columns={'ALT': sample_name}, inplace=True)
         no_ref = all_positions_df['REF']
-    df = all_positions_df
-    del df['REF']
+    del all_positions_df['REF']
+    #Remove parsimony uninformative SNP positions
+    all_positions_df = all_positions_df[~all_positions_df.eq(all_positions_df.iloc[:, 0], axis=0).all(1)]
     all_positions_df.to_excel("test.xlsx")
     print("completed")
-        
         
         
         

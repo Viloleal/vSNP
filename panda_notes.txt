@@ -54,6 +54,7 @@ ambiguity['ref_alt'].replace(ambig_codes, inplace=True)
 df = df.query('QUAL > {} and AC == 2' .format(arg_options['qual_gatk_threshold']))
 df = df[['ABS_VALUE', 'REF']]
 df = df.set_index('ABS_VALUE')
+435
 
 
 

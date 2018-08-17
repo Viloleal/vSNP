@@ -206,6 +206,7 @@ def run_loop(arg_options):  #calls read_aligner
                     df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     df_sorted.T.to_excel(summary_cumulative_file_temp, index=False)
+                    pass
                 except OSError:
                     sorter = list(df_stat_summary.index) #list of original column order
                     df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
@@ -215,6 +216,7 @@ def run_loop(arg_options):  #calls read_aligner
                     except OSError:
                         print("##### UNABLE TO MAKE CONNECTION TO BIOINFO")
                         pass
+                    pass
             else:
                 print("Path to cumulative stat summary file not found")
 

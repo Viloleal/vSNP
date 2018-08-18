@@ -2137,6 +2137,9 @@ def find_positions(filename, arg_options):
 
 def get_snps(directory, arg_options):
 
+    import warnings
+    warnings.filterwarnings("ignore")
+
     unique_number = arg_options['unique_number']
     filter_df = arg_options['filter_df']
     first_column_header = arg_options["first_column_header"]
@@ -2322,30 +2325,55 @@ def get_snps(directory, arg_options):
         ambiguity.replace(ambig_codes, inplace=True)
         df.update(ambiguity)
         
+        #Update N calls
         n_alt = df.query('QUAL <= {}' .format(50))
         n_alt['ALT'] = 'N'
         df.update(n_alt)
 
+        #Update zero coverage
         zero_cov = df[df['QUAL'].isnull()]
         zero_cov['ALT'] = '-'
         df.update(zero_cov)
         all_sample_dataframes[sample_name] = df
 
     all_positions_df = all_positions_df.set_index('ABS_VALUE')
+    #Create dataframe of all samples with just ALT call
     for sample_name, df in all_sample_dataframes.items():
         alt_df = df['ALT'].to_frame()
         all_positions_df = all_positions_df.merge(alt_df, how='left', left_index=True, right_index=True)
         all_positions_df.rename(columns={'ALT': sample_name}, inplace=True)
-        no_ref = all_positions_df['REF']
-        no_ref = no_ref.to_frame()
+        ref = all_positions_df['REF']
+        ref_df = ref.to_frame() #for merging bake into dataframe
+        ref_dict = ref.to_dict() #for fillna
     del all_positions_df['REF']
+
     #Remove parsimony uninformative SNP positions
     all_positions_df = all_positions_df[~all_positions_df.eq(all_positions_df.iloc[:, 0], axis=0).all(1)]
-    all_positions_df = all_positions_df.merge(no_ref, how='left', left_index=True, right_index=True)
+    #all_positions_df.to_json("all_positions_df.json")
+    # ref.to_json("ref.json")
+
+    #Fill in NaN with references call
+    transform_temp = all_positions_df.T #must transform.  matching is on column names (index)
+    transform_temp = transform_temp.fillna(ref_dict)
+    all_positions_df = transform_temp.T
+
+    #Add reference back into dataframe
+    all_positions_df = ref_df.merge(all_positions_df, how='right', left_index=True, right_index=True)
+    #all_positions_df = all_positions_df.merge(ref, how='left', left_index=True, right_index=True)
+
     all_positions_df.to_excel("test.xlsx")
+
     print("completed")
+    sys.exit(0)
         
         
+
+
+    #########################################################
+    #########################################################
+    #########################################################
+    
+    all_positions_df.to_json("all_positions_df.json")
     # Select parsimony informative SNPs
     mytable = pd.read_csv(table_location, sep='\t')
     # drop NaN rows and columns

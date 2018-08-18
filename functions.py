@@ -2349,8 +2349,6 @@ def get_snps(directory, arg_options):
 
     #Remove parsimony uninformative SNP positions
     all_positions_df = all_positions_df[~all_positions_df.eq(all_positions_df.iloc[:, 0], axis=0).all(1)]
-    #all_positions_df.to_json("all_positions_df.json")
-    # ref.to_json("ref.json")
 
     #Fill in NaN with references call
     transform_temp = all_positions_df.T #must transform.  matching is on column names (index)
@@ -2361,79 +2359,24 @@ def get_snps(directory, arg_options):
     all_positions_df = ref_df.merge(all_positions_df, how='right', left_index=True, right_index=True)
     #all_positions_df = all_positions_df.merge(ref, how='left', left_index=True, right_index=True)
 
-    all_positions_df.to_excel("test.xlsx")
+    fasta_file = outdir + directory + "-" + unique_number + ".fasta"
+    fasta_out = open(fasta_file, 'wt')
+    all_positions_df.rename(columns={'REF': 'root'}, inplace=True)
+    all_positions_dict = all_positions_df.to_dict('list')
+    for key, value in all_positions_dict.items():
+        value = ''.join(value)
+        print(">{}\n{}" .format(key, value), file=fasta_out)
+    fasta_out.close()
 
-    print("completed")
-    sys.exit(0)
-        
-        
+    print("\n%s table dimensions: %s" % (directory, str(all_positions_df.shape)))
 
-
-    #########################################################
-    #########################################################
-    #########################################################
-    
-    all_positions_df.to_json("all_positions_df.json")
-    # Select parsimony informative SNPs
-    mytable = pd.read_csv(table_location, sep='\t')
-    # drop NaN rows and columns
-    mytable = mytable.dropna(axis=1)
-
-    # SELECT PARISOMONY INFORMATIVE SNPSs
-    # removes columns where all fields are the same
-    parsimony = mytable.loc[:, (mytable != mytable.iloc[0]).any()]
-    parsimony_positions = list(parsimony)
-    #write over table (table_location) containing all snps
-    parsimony.to_csv(table_location, sep="\t", index=False)
-    table = open(table_location, 'a')
-    # The reference calls are added after the parsimony positions are selected.
-    # added corresponding reference to parsimony table
-    print("reference_call", end="\t", file=table)
-    #all_positions_list=list(all_positions)
-    try: #if there is only one file in the group exception is needed to return a value
-        parsimony_positions.remove('reference_pos')
-    except ValueError:
-        samples_in_fasta = []
-        return(samples_in_fasta)
-
-    list_of_ref = []
-    for abs_pos in parsimony_positions:
-        list_of_ref.append(all_positions.get(abs_pos))
-    string_of_ref = "\t".join(list_of_ref)
-    print(string_of_ref, file=table)
-    table.close()
-
-    samples_in_fasta = []
-    #Print out fasta alignment file from table
-    alignment_file = outdir + directory + "-" + unique_number + ".fasta"
-    write_out = open(alignment_file, 'wt')
-    with open(table_location, 'rt') as f:
-        count = 0
-        for line in f:
-            if count > 0:
-                line = re.sub('^', '>', line)
-                line = line.replace('reference_call', 'root')
-                line = line.replace('\t', '\n', 1)
-                samples_in_fasta.append(line.split('\n')[0].replace('>', ''))
-                line = line.replace('\t', '')
-                print(line, end="", file=write_out)
-            count = count + 1
-    write_out.close()
-
-    try: #if there are no SNP is the table
-        mytable = pd.read_csv(table_location, sep='\t')
+    print("%s RAxML running..." % directory)
+    try:
+        os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], fasta_file, arg_options['raxml_cpu']))
     except:
-        samples_in_fasta = []
-        return(samples_in_fasta)
-
-    # move reference to top row
-    myref = mytable[-1:]
-    myother = mytable[:-1]
-    frames = [myref, myother]
-    mytable = pd.concat(frames)
-    mytable.to_csv(table_location, sep="\t", index=False)
-
-    print("\n%s table dimensions: %s" % (directory, str(mytable.shape)))
+        write_out = open('RAXML_FAILED', 'w+')
+        write_out.close()
+        pass
 
     print("%s RAxML running..." % directory)
     try:
@@ -2443,10 +2386,9 @@ def get_snps(directory, arg_options):
         write_out.close()
         pass
     try:
-        ordered_list_from_tree = outdir + directory + "-cleanedAlignment.txt"
-        write_out = open(ordered_list_from_tree, 'w+')
-        print("reference_pos", file=write_out)
-        print("reference_call", file=write_out)
+        ordered_list_from_tree = []
+        ordered_list_from_tree.append("reference_pos")
+        ordered_list_from_tree.append("reference_call")
         if os.path.isfile("RAxML_bestTree.raxml"):
             with open("RAxML_bestTree.raxml", 'rt') as f:
                 for line in f:
@@ -2454,10 +2396,9 @@ def get_snps(directory, arg_options):
                     line = re.sub('[)(]', '', line)
                     line = re.sub('[0-9].*\.[0-9].*\n', '', line)
                     line = re.sub('root\n', '', line)
-                    write_out.write(line)
+                    ordered_list_from_tree.append(line)
             best_raxml_tre = directory + "-" + unique_number + "-RAxML-bestTree.tre"
             os.rename("RAxML_bestTree.raxml", best_raxml_tre)
-            write_out.close()
         best_raxml_svg = directory + "-" + unique_number + "-RAxML-bestTree.svg"
         try:
             os.system("cat {} | nw_display -s -S -w 1300 -t -v 30 -i 'opacity:0' -b 'opacity:0' -l 'font-size:14;font-family:serif;font-style:italic' -d 'stroke-width:1;stroke:blue' - > {}" .format(best_raxml_tre, best_raxml_svg)) #-s produces svg, -S suppress scale bar, -w to set the number of columns available for display, -t tab format, -v vertical spacing, -i inner node label, -b branch style
@@ -2466,7 +2407,7 @@ def get_snps(directory, arg_options):
         out_org = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-organized-table.txt"
         out_sort = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-sorted-table.txt"
 
-        sort_table(table_location, ordered_list_from_tree, out_org) #function
+        sort_table(all_positions_df, ordered_list_from_tree, out_org) #function
 
         print("%s Getting map quality..." % directory)
         average = lambda x: x.mean()
@@ -2646,20 +2587,14 @@ def get_annotations_table(parsimony_positions, arg_options):
     return (dict_annotation)
 
 
-def sort_table(table_location, ordered, out_org):
-    mytable = pd.read_csv(table_location, sep='\t')
-    #mytable=mytable.set_index('reference_pos')
-
-    # order list is from tree file
-    # gives order for samples to be listed in table to be phylogenetically correct
-    ordered_list = []
-    with open(ordered) as infile:
-        for i in infile:
-            i = i.rstrip()
-            ordered_list.append(i)
+def sort_table(all_positions_df, ordered_list, out_org):
+    all_positions_df
 
     # Convert reference_pos-column to category and in set the ordered_list as categories hierarchy
+    all_positions_df.reference_pos = all_positions_df.reference_pos.astype("category")
     mytable.reference_pos = mytable.reference_pos.astype("category")
+    
+    
     mytable.reference_pos.cat.set_categories(ordered_list, inplace=True)
     mytable = mytable.sort_values(["reference_pos"]) # 'sort' changed to 'sort_values'
 

@@ -2357,7 +2357,6 @@ def get_snps(directory, arg_options):
 
     #Add reference back into dataframe
     all_positions_df = ref_df.merge(all_positions_df, how='right', left_index=True, right_index=True)
-    #all_positions_df = all_positions_df.merge(ref, how='left', left_index=True, right_index=True)
 
     fasta_file = outdir + directory + "-" + unique_number + ".fasta"
     fasta_out = open(fasta_file, 'wt')
@@ -2378,25 +2377,21 @@ def get_snps(directory, arg_options):
         write_out.close()
         pass
 
-    print("%s RAxML running..." % directory)
-    try:
-        os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
-    except:
-        write_out = open('RAXML_FAILED', 'w+')
-        write_out.close()
-        pass
     try:
         ordered_list_from_tree = []
         ordered_list_from_tree.append("reference_pos")
         ordered_list_from_tree.append("reference_call")
         if os.path.isfile("RAxML_bestTree.raxml"):
-            with open("RAxML_bestTree.raxml", 'rt') as f:
-                for line in f:
-                    line = re.sub('[:,]', '\n', line)
-                    line = re.sub('[)(]', '', line)
-                    line = re.sub('[0-9].*\.[0-9].*\n', '', line)
-                    line = re.sub('root\n', '', line)
-                    ordered_list_from_tree.append(line)
+            with open("RAxML_bestTree.raxml", 'rt') as tree_file:
+                for line in tree_file:
+                    line = re.split('[:,]', line)
+                    for breakup in line:
+                        breakup = re.sub('[)(]', '', breakup)
+                        breakup = re.sub('[0-9].*\.[0-9].*', '', breakup)
+                        breakup = re.sub('root', '', breakup)
+                        breakup = re.sub('\n', '', breakup)
+                        if breakup:
+                            ordered_list_from_tree.append(breakup)
             best_raxml_tre = directory + "-" + unique_number + "-RAxML-bestTree.tre"
             os.rename("RAxML_bestTree.raxml", best_raxml_tre)
         best_raxml_svg = directory + "-" + unique_number + "-RAxML-bestTree.svg"

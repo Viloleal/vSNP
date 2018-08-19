@@ -2583,36 +2583,35 @@ def get_annotations_table(parsimony_positions, arg_options):
 
 
 def sort_table(all_positions_df, ordered_list, out_org):
-    all_positions_df
 
-    # Convert reference_pos-column to category and in set the ordered_list as categories hierarchy
+    all_positions_df.rename(columns={'root': 'reference_call'}, inplace=True)
+    all_positions_df = all_positions_df.T
+    all_positions_df = all_positions_df.reset_index()
+    all_positions_df.rename(columns={'reference_pos': ''}, inplace=True)
+    all_positions_df.rename(columns={'index': 'reference_pos'}, inplace=True)
     all_positions_df.reference_pos = all_positions_df.reference_pos.astype("category")
-    mytable.reference_pos = mytable.reference_pos.astype("category")
-    
-    
-    mytable.reference_pos.cat.set_categories(ordered_list, inplace=True)
-    mytable = mytable.sort_values(["reference_pos"]) # 'sort' changed to 'sort_values'
-
+    all_positions_df.reference_pos.cat.set_categories(ordered_list, inplace=True)
+    all_positions_df = all_positions_df.sort_values(["reference_pos"]) # 'sort' changed to 'sort_values'
     # count number of SNPs in each column
     snp_per_column = []
-    for column_header in mytable:
+    for column_header in all_positions_df:
         count = 0
-        column = mytable[column_header]
+        column = all_positions_df[column_header]
         # for each element in the column
         for element in column:
             if element != column[0]:
                 count = count + 1
         snp_per_column.append(count)
         #print("the count is: %s" % count)
-    row1 = pd.Series(snp_per_column, mytable.columns, name="snp_per_column")
+    row1 = pd.Series(snp_per_column, all_positions_df.columns, name="snp_per_column")
     #row1 = row1.drop('reference_pos')
 
     # get the snp count per column
     # for each column in the table
     snp_from_top = []
-    for column_header in mytable:
+    for column_header in all_positions_df:
         count = 0
-        column = mytable[column_header]
+        column = all_positions_df[column_header]
         # for each element in the column
         # skip the first element
         for element in column[1:]:
@@ -2621,24 +2620,24 @@ def sort_table(all_positions_df, ordered_list, out_org):
             else:
                 break
         snp_from_top.append(count)
-    row2 = pd.Series(snp_from_top, mytable.columns, name="snp_from_top")
+    row2 = pd.Series(snp_from_top, all_positions_df.columns, name="snp_from_top")
     #row2 = row2.drop('reference_pos')
 
-    mytable = mytable.append([row1])
-    mytable = mytable.append([row2])
+    all_positions_df = all_positions_df.append([row1])
+    all_positions_df = all_positions_df.append([row2])
     #In pandas=0.18.1 even this does not work:
     #    abc = row1.to_frame()
-    #    abc = abc.T --> mytable.shape (5, 18), abc.shape (1, 18)
-    #    mytable.append(abc)
+    #    abc = abc.T --> all_positions_df.shape (5, 18), abc.shape (1, 18)
+    #    all_positions_df.append(abc)
     #Continue to get error: "*** ValueError: all the input arrays must have same number of dimensions"
 
-    mytable = mytable.T
-    mytable = mytable.sort_values(['snp_from_top', 'snp_per_column'], ascending=[True, False])
-    mytable = mytable.T
+    all_positions_df = all_positions_df.T
+    all_positions_df = all_positions_df.sort_values(['snp_from_top', 'snp_per_column'], ascending=[True, False])
+    all_positions_df = all_positions_df.T
 
     # remove snp_per_column and snp_from_top rows
-    mytable = mytable[:-2]
-    mytable.to_csv(out_org, sep='\t', index=False)
+    all_positions_df = all_positions_df[:-2]
+    all_positions_df.to_csv(out_org, sep='\t', index=False)
 
 
 def excelwriter(filename):

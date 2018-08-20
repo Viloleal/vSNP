@@ -2435,69 +2435,69 @@ def get_snps(directory, arg_options):
         #sorted_df = add_map_quality(sorted_df, mq_ave_df)
         sorted_df.to_csv(out_sort, sep='\t', index=False)
 
-        # if arg_options['gbk_file'] and not arg_options['no_annotation']:
-        #     dict_annotation = get_annotations_table(parsimony_positions, arg_options)
-        #     write_out = open('annotations.txt', 'w+')
-        #     print('reference_pos\tannotations', file=write_out)
-        #     for k, v in dict_annotation.items():
-        #         print('%s\t%s' % (k, v), file=write_out)
-        #     write_out.close()
+        if arg_options['gbk_file'] and not arg_options['no_annotation']:
+            dict_annotation = get_annotations_table(parsimony_positions, arg_options)
+            write_out = open('annotations.txt', 'w+')
+            print('reference_pos\tannotations', file=write_out)
+            for k, v in dict_annotation.items():
+                print('%s\t%s' % (k, v), file=write_out)
+            write_out.close()
 
-        #     time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+            time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
 
-        #     print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
-        #     annotations = pd.read_csv('annotations.txt', sep='\t') #sort
-        #     mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
-        #     mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
-        #     mytable_sort = mytable_sort.merge(annotations, on='reference_pos', how='inner') #sort
-        #     mytable_sort = mytable_sort.set_index('reference_pos') #sort
-        #     mytable_sort = mytable_sort.transpose() #sort
-        #     mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
+            print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
+            annotations = pd.read_csv('annotations.txt', sep='\t') #sort
+            mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
+            mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
+            mytable_sort = mytable_sort.merge(annotations, on='reference_pos', how='inner') #sort
+            mytable_sort = mytable_sort.set_index('reference_pos') #sort
+            mytable_sort = mytable_sort.transpose() #sort
+            mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
 
-        #     #annotations = pd.read_csv('annotations.txt', sep='\t') #org
-        #     mytable = pd.read_csv(out_org, sep='\t') #org
-        #     mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
-        #     mytable = mytable.merge(annotations, on='reference_pos', how='inner') #org
-        #     mytable = mytable.set_index('reference_pos') #org
-        #     mytable = mytable.transpose() #org
-        #     mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
+            #annotations = pd.read_csv('annotations.txt', sep='\t') #org
+            mytable = pd.read_csv(out_org, sep='\t') #org
+            mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
+            mytable = mytable.merge(annotations, on='reference_pos', how='inner') #org
+            mytable = mytable.set_index('reference_pos') #org
+            mytable = mytable.transpose() #org
+            mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
-        # else:
-        #     print("No gbk file or no table to annotate")
-        #     mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
-        #     mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
-        #     mytable_sort = mytable_sort.set_index('reference_pos') #sort
-        #     mytable_sort = mytable_sort.transpose() #sort
-        #     mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
-        #     # add when no annotation
-        #     with open(out_sort, 'rt') as f:
-        #         line = f.readline()
-        #     f.close()
-        #     column_count = line.count('\t') #sort
-        #     column_count = column_count - 1 #sort
-        #     #print("column_count: %s" % column_count)
-        #     with open(out_sort, 'at') as f:
-        #         print("no_annotation", end='', file=f)
-        #         print('\t' * column_count, file=f)
-        #     f.close()
+        else:
+            print("No gbk file or no table to annotate")
+            mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
+            mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
+            mytable_sort = mytable_sort.set_index('reference_pos') #sort
+            mytable_sort = mytable_sort.transpose() #sort
+            mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
+            # add when no annotation
+            with open(out_sort, 'rt') as f:
+                line = f.readline()
+            f.close()
+            column_count = line.count('\t') #sort
+            column_count = column_count - 1 #sort
+            #print("column_count: %s" % column_count)
+            with open(out_sort, 'at') as f:
+                print("no_annotation", end='', file=f)
+                print('\t' * column_count, file=f)
+            f.close()
 
-        #     print("No gbk file or no table to annotate")
-        #     mytable = pd.read_csv(out_org, sep='\t') #org
-        #     mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
-        #     mytable = mytable.set_index('reference_pos') #org
-        #     mytable = mytable.transpose() #org
-        #     mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
-        #     # add when no annotation
-        #     with open(out_org, 'rt') as f:
-        #         line = f.readline()
-        #     f.close()
-        #     column_count = line.count('\t')
-        #     column_count = column_count - 1
-        #     #print("column_count: %s" % column_count)
-        #     with open(out_org, 'at') as f:
-        #         print("no_annotation", end='', file=f)
-        #         print('\t' * column_count, file=f)
-        #     f.close()
+            print("No gbk file or no table to annotate")
+            mytable = pd.read_csv(out_org, sep='\t') #org
+            mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
+            mytable = mytable.set_index('reference_pos') #org
+            mytable = mytable.transpose() #org
+            mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
+            # add when no annotation
+            with open(out_org, 'rt') as f:
+                line = f.readline()
+            f.close()
+            column_count = line.count('\t')
+            column_count = column_count - 1
+            #print("column_count: %s" % column_count)
+            with open(out_org, 'at') as f:
+                print("no_annotation", end='', file=f)
+                print('\t' * column_count, file=f)
+            f.close()
 
         excelwriter(out_sort) #***FUNCTION CALL #sort
         excelwriter(out_org) #***FUNCTION CALL #org

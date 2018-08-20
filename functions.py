@@ -2412,9 +2412,9 @@ def get_snps(directory, arg_options):
         out_org = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-organized-table.txt"
         out_sort = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-sorted-table.txt"
 
-        # Organize table, cascade SNP
+        # Organize table --> cascade SNP, add MQ
         org_table_df = organize_table(all_positions_df, ordered_list_from_tree)
-        org_table_df.to_json("org_table.json")
+        org_table_df = add_map_quality(org_table_df, mq_ave_df)
         org_table_df.to_csv(out_org, sep='\t', index=False)
 
         # Sort ABS_VALUEs numerically, smallest to largest position number
@@ -2432,8 +2432,8 @@ def get_snps(directory, arg_options):
         sorted_df = sorted_df.T
         sorted_df = sorted_df.reset_index()
         sorted_df = sorted_df.rename(columns={'index': 'reference_pos'})
+        #sorted_df = add_map_quality(sorted_df, mq_ave_df)
         sorted_df.to_csv(out_sort, sep='\t', index=False)
-
 
         # if arg_options['gbk_file'] and not arg_options['no_annotation']:
         #     dict_annotation = get_annotations_table(parsimony_positions, arg_options)
@@ -2625,6 +2625,17 @@ def organize_table(all_positions_df, ordered_list):
     # remove snp_per_column and snp_from_top rows
     all_positions_df = all_positions_df[:-2]
     return(all_positions_df)
+
+
+def add_map_quality(table_df, mq_ave_df):
+    table_df = table_df.set_index('reference_pos').T
+    mq_ave_df = mq_ave_df.to_frame()
+    mq_ave_df = mq_ave_df.rename(columns={0: 'map-quality'})
+    table_df = table_df.merge(mq_ave_df, how='left', left_index=True, right_index=True)
+    table_df = table_df.T
+    table_df = table_df.reset_index()
+    table_df = table_df.rename(columns={'index': 'reference_pos'})
+    return(table_df)
 
 
 def excelwriter(filename):

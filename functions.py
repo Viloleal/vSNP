@@ -2306,12 +2306,14 @@ def get_snps(directory, arg_options):
 
     # for each vcf
     all_sample_dataframes = {}
+    mq_all_df = pd.DataFrame()
     for filename in list_of_files:
         sample_name = filename.replace('.vcf', '')
         sample_name = re.sub('\..*', '*', sample_name) # if after the .vcf is removed there is stilll a "." in the name it is assumed the name did not get changed
         
         df = allel.vcf_to_dataframe(filename, fields=['variants/CHROM', 'variants/POS', 'variants/QUAL', 'variants/REF', 'variants/ALT', 'variants/AC', 'variants/DP', 'variants/MQ'], alt_number=1)
-        df['ABS_VALUE'] = df['CHROM'].map(str) + '-' + df['POS'].map(str)
+        chromosome_name = df['CHROM'].map(str)
+        df['ABS_VALUE'] = chromosome_name + '-' + df['POS'].map(str)
         df.drop(['CHROM', 'POS'], axis=1, inplace=True)
         #Only work with positions captured all_positions_df
         df = df[df.ABS_VALUE.isin(all_positions_df['ABS_VALUE'])]
@@ -2335,6 +2337,13 @@ def get_snps(directory, arg_options):
         zero_cov['ALT'] = '-'
         df.update(zero_cov)
         all_sample_dataframes[sample_name] = df
+
+        mq_df = df['MQ'].to_frame()
+        #mq_df.rename(columns={'MQ': sample_name}, inplace=True)
+        mq_all_df = mq_all_df.merge(mq_df, how='outer', left_index=True, right_index=True)
+
+    mq_ave_df = mq_all_df.apply(lambda x: x.mean(), axis=1)
+    mq_ave_df = mq_ave_df.astype(int)
 
     all_positions_df = all_positions_df.set_index('ABS_VALUE')
     #Create dataframe of all samples with just ALT call
@@ -2399,118 +2408,96 @@ def get_snps(directory, arg_options):
             os.system("cat {} | nw_display -s -S -w 1300 -t -v 30 -i 'opacity:0' -b 'opacity:0' -l 'font-size:14;font-family:serif;font-style:italic' -d 'stroke-width:1;stroke:blue' - > {}" .format(best_raxml_tre, best_raxml_svg)) #-s produces svg, -S suppress scale bar, -w to set the number of columns available for display, -t tab format, -v vertical spacing, -i inner node label, -b branch style
         except:
             pass
+
         out_org = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-organized-table.txt"
         out_sort = str(os.getcwd()) + "/" + directory + "-" + unique_number + "-sorted-table.txt"
 
-        sort_table(all_positions_df, ordered_list_from_tree, out_org) #function
+        # Organize table, cascade SNP
+        org_table_df = organize_table(all_positions_df, ordered_list_from_tree)
+        org_table_df.to_json("org_table.json")
+        org_table_df.to_csv(out_org, sep='\t', index=False)
 
-        print("%s Getting map quality..." % directory)
-        average = lambda x: x.mean()
-        all_map_qualities = pd.DataFrame(all_map_qualities)
-        #ave_mq = Type: Series
-        ave_mq = all_map_qualities.apply(average, axis=1)
-        ave_mq = ave_mq.astype(int)
-        ave_mq.to_csv('outfile.txt', sep='\t') # write to csv
+        # Sort ABS_VALUEs numerically, smallest to largest position number
+        chromosome_name = chromosome_name[0]
+        df = org_table_df.set_index('reference_pos')
+        del df.index.name
+        sorted_df = df.T
+        sorted_df = sorted_df.reset_index()
+        sorted_df = sorted_df.replace(to_replace='^' + chromosome_name + '-', value='', regex=True)
+        sorted_df['ABS_VALUE'] = sorted_df[['ABS_VALUE']].astype(int)
+        sorted_df = sorted_df.sort_values('ABS_VALUE')
+        sorted_df['ABS_VALUE'] = sorted_df[['ABS_VALUE']].astype(str)
+        sorted_df['ABS_VALUE'] = sorted_df[['ABS_VALUE']].replace(to_replace='^', value=chromosome_name + '-', regex=True)
+        sorted_df = sorted_df.set_index('ABS_VALUE')
+        sorted_df = sorted_df.T
+        sorted_df = sorted_df.reset_index()
+        sorted_df = sorted_df.rename(columns={'index': 'reference_pos'})
+        sorted_df.to_csv(out_sort, sep='\t', index=False)
 
-        write_out = open('map_quality.txt', 'w+')
-        print('reference_pos\tmap-quality', file=write_out)
-        with open('outfile.txt', 'rt') as f:
-            for line in f:
-                write_out.write(line)
-        write_out.close()
-        #seemed pooling did not like a function with no parameters given
-        quality = pd.read_csv('map_quality.txt', sep='\t')
 
-        mytable = pd.read_csv(table_location, sep='\t')
-        mytable = mytable.set_index('reference_pos')
+        # if arg_options['gbk_file'] and not arg_options['no_annotation']:
+        #     dict_annotation = get_annotations_table(parsimony_positions, arg_options)
+        #     write_out = open('annotations.txt', 'w+')
+        #     print('reference_pos\tannotations', file=write_out)
+        #     for k, v in dict_annotation.items():
+        #         print('%s\t%s' % (k, v), file=write_out)
+        #     write_out.close()
 
-        # order list is from tree file
-        # gives order for samples to be listed in table to be phylogenetically correct
-        ordered_list = []
-        with open(ordered_list_from_tree) as infile:
-            for i in infile:
-                i = i.rstrip()
-                ordered_list.append(i)
-        # sinces this is set as the mytable index do not include in ordering
-        ordered_list.remove('reference_pos')
+        #     time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
 
-        # reorder table based on order of list
-        mytable = mytable.reindex(ordered_list)
-        mytable.to_csv(table_location, sep='\t')
+        #     print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
+        #     annotations = pd.read_csv('annotations.txt', sep='\t') #sort
+        #     mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
+        #     mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
+        #     mytable_sort = mytable_sort.merge(annotations, on='reference_pos', how='inner') #sort
+        #     mytable_sort = mytable_sort.set_index('reference_pos') #sort
+        #     mytable_sort = mytable_sort.transpose() #sort
+        #     mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
 
-        mytable_sort = pd.read_csv(table_location, sep='\t') #sorted
-        mytable_sort = mytable_sort.set_index('reference_pos') #sorted
-        mytable_sort = mytable_sort.transpose() #sort
-        mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
+        #     #annotations = pd.read_csv('annotations.txt', sep='\t') #org
+        #     mytable = pd.read_csv(out_org, sep='\t') #org
+        #     mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
+        #     mytable = mytable.merge(annotations, on='reference_pos', how='inner') #org
+        #     mytable = mytable.set_index('reference_pos') #org
+        #     mytable = mytable.transpose() #org
+        #     mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
-        mytable = pd.read_csv(out_org, sep='\t') #org
-        mytable = mytable.set_index('reference_pos') #org
-        mytable = mytable.transpose() #org
-        mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
+        # else:
+        #     print("No gbk file or no table to annotate")
+        #     mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
+        #     mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
+        #     mytable_sort = mytable_sort.set_index('reference_pos') #sort
+        #     mytable_sort = mytable_sort.transpose() #sort
+        #     mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
+        #     # add when no annotation
+        #     with open(out_sort, 'rt') as f:
+        #         line = f.readline()
+        #     f.close()
+        #     column_count = line.count('\t') #sort
+        #     column_count = column_count - 1 #sort
+        #     #print("column_count: %s" % column_count)
+        #     with open(out_sort, 'at') as f:
+        #         print("no_annotation", end='', file=f)
+        #         print('\t' * column_count, file=f)
+        #     f.close()
 
-        if arg_options['gbk_file'] and not arg_options['no_annotation']:
-            dict_annotation = get_annotations_table(parsimony_positions, arg_options)
-            write_out = open('annotations.txt', 'w+')
-            print('reference_pos\tannotations', file=write_out)
-            for k, v in dict_annotation.items():
-                print('%s\t%s' % (k, v), file=write_out)
-            write_out.close()
-
-            time_mark = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
-
-            print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
-            annotations = pd.read_csv('annotations.txt', sep='\t') #sort
-            mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
-            mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
-            mytable_sort = mytable_sort.merge(annotations, on='reference_pos', how='inner') #sort
-            mytable_sort = mytable_sort.set_index('reference_pos') #sort
-            mytable_sort = mytable_sort.transpose() #sort
-            mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
-
-            #annotations = pd.read_csv('annotations.txt', sep='\t') #org
-            mytable = pd.read_csv(out_org, sep='\t') #org
-            mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
-            mytable = mytable.merge(annotations, on='reference_pos', how='inner') #org
-            mytable = mytable.set_index('reference_pos') #org
-            mytable = mytable.transpose() #org
-            mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
-
-        else:
-            print("No gbk file or no table to annotate")
-            mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
-            mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
-            mytable_sort = mytable_sort.set_index('reference_pos') #sort
-            mytable_sort = mytable_sort.transpose() #sort
-            mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
-            # add when no annotation
-            with open(out_sort, 'rt') as f:
-                line = f.readline()
-            f.close()
-            column_count = line.count('\t') #sort
-            column_count = column_count - 1 #sort
-            #print("column_count: %s" % column_count)
-            with open(out_sort, 'at') as f:
-                print("no_annotation", end='', file=f)
-                print('\t' * column_count, file=f)
-            f.close()
-
-            print("No gbk file or no table to annotate")
-            mytable = pd.read_csv(out_org, sep='\t') #org
-            mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
-            mytable = mytable.set_index('reference_pos') #org
-            mytable = mytable.transpose() #org
-            mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
-            # add when no annotation
-            with open(out_org, 'rt') as f:
-                line = f.readline()
-            f.close()
-            column_count = line.count('\t')
-            column_count = column_count - 1
-            #print("column_count: %s" % column_count)
-            with open(out_org, 'at') as f:
-                print("no_annotation", end='', file=f)
-                print('\t' * column_count, file=f)
-            f.close()
+        #     print("No gbk file or no table to annotate")
+        #     mytable = pd.read_csv(out_org, sep='\t') #org
+        #     mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
+        #     mytable = mytable.set_index('reference_pos') #org
+        #     mytable = mytable.transpose() #org
+        #     mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
+        #     # add when no annotation
+        #     with open(out_org, 'rt') as f:
+        #         line = f.readline()
+        #     f.close()
+        #     column_count = line.count('\t')
+        #     column_count = column_count - 1
+        #     #print("column_count: %s" % column_count)
+        #     with open(out_org, 'at') as f:
+        #         print("no_annotation", end='', file=f)
+        #         print('\t' * column_count, file=f)
+        #     f.close()
 
         excelwriter(out_sort) #***FUNCTION CALL #sort
         excelwriter(out_org) #***FUNCTION CALL #org
@@ -2582,7 +2569,7 @@ def get_annotations_table(parsimony_positions, arg_options):
     return (dict_annotation)
 
 
-def sort_table(all_positions_df, ordered_list, out_org):
+def organize_table(all_positions_df, ordered_list):
 
     all_positions_df.rename(columns={'root': 'reference_call'}, inplace=True)
     all_positions_df = all_positions_df.T
@@ -2637,11 +2624,10 @@ def sort_table(all_positions_df, ordered_list, out_org):
 
     # remove snp_per_column and snp_from_top rows
     all_positions_df = all_positions_df[:-2]
-    all_positions_df.to_csv(out_org, sep='\t', index=False)
+    return(all_positions_df)
 
 
 def excelwriter(filename):
-    orginal_name = filename
     orginal_name = filename
     filename = filename.replace(".txt", ".xlsx")
     wb = xlsxwriter.Workbook(filename)

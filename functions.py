@@ -2438,6 +2438,28 @@ def get_snps(directory, arg_options):
         sorted_df.to_json("sorted_df.json")
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
+
+            pro = pd.read_csv("/Users/tstuber/Desktop/gff_to_dataframe/ProteinTable161_354758.txt", sep='\t')
+            df = org_table_df.set_index('reference_pos')
+            del df.index.name
+            df = df.T
+            df = df.reset_index()
+            ref_pos = df[['index']]
+            ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
+            ref_pos = split = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values,columns=['reference','position'])
+            df = pd.merge(df, ref_pos, left_index=True, right_index=True)
+            pro.index = pd.IntervalIndex.from_arrays(pro['Start'],pro['Stop'],closed='both')
+            for i in df.position:
+                try:
+                    a = pro.iloc[pro.index.get_loc(int(i))][['Protein name', 'Locus', 'Locus tag']]
+                    name, locus, tag = a.values[0]
+                    print(name, locus, tag)
+                except KeyError:
+                    print("{} has KeyError" .format(i))
+
+
+
+
             dict_annotation = get_annotations_table(parsimony_positions, arg_options)
             write_out = open('annotations.txt', 'w+')
             print('reference_pos\tannotations', file=write_out)

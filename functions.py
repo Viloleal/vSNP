@@ -1990,6 +1990,7 @@ def change_names(arg_options, genotype_codes):
     malformed = []
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
+    name_found = False
     for filename in list_of_files:
         each_vcf = filename.replace("‐", "-")
         vcf_pretext = re.sub(r'(.*?)[._].*', r'\1', each_vcf) # ? was needed to make greedy, in my view the regex was searching right to left without it.

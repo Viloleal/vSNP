@@ -1989,6 +1989,7 @@ def change_names(arg_options, genotype_codes):
     malformed = []
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
+    name_found = False
     for filename in list_of_files:
         each_vcf = filename.replace("‐", "-")
         vcf_pretext = re.sub(r'(.*?)[._].*', r'\1', each_vcf) # ? was needed to make greedy, in my view the regex was searching right to left without it.
@@ -2416,6 +2417,7 @@ def get_snps(directory, arg_options):
         org_table_df = organize_table(all_positions_df, ordered_list_from_tree)
         org_table_df = add_map_quality(org_table_df, mq_ave_df)
         org_table_df.to_csv(out_org, sep='\t', index=False)
+        org_table_df.to_json("org_table_df.json")
 
         # Sort ABS_VALUEs numerically, smallest to largest position number
         chromosome_name = chromosome_name[0]
@@ -2432,8 +2434,8 @@ def get_snps(directory, arg_options):
         sorted_df = sorted_df.T
         sorted_df = sorted_df.reset_index()
         sorted_df = sorted_df.rename(columns={'index': 'reference_pos'})
-        #sorted_df = add_map_quality(sorted_df, mq_ave_df)
         sorted_df.to_csv(out_sort, sep='\t', index=False)
+        sorted_df.to_json("sorted_df.json")
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
             dict_annotation = get_annotations_table(parsimony_positions, arg_options)

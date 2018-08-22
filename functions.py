@@ -2438,6 +2438,30 @@ def get_snps(directory, arg_options):
         sorted_df.to_json("sorted_df.json")
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
+            gbk_dict = SeqIO.to_dict(SeqIO.parse("/Users/tstuber/Desktop/gff_to_dataframe/NC_002945v4.gbk", "genbank"))
+            write_out = open('temp.csv', 'w+')
+            for key, value in gbk_dict.items():
+                for feature in value.features:
+                    if "CDS" in feature.type:
+                        myproduct = None
+                        mylocus = None
+                        mygene = None
+                        try:
+                            myproduct = feature.qualifiers['product'][0]
+                        except KeyError:
+                            pass
+                        mylocus = feature.qualifiers['locus_tag'][0]
+                        try:
+                            mygene = feature.qualifiers['gene'][0]
+                        except KeyError:
+                            pass
+                    print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
+            write_out.close()
+            df = pd.read_csv('temp.csv', sep='\t', skiprows=1, names=["chrom", "start", "stop", "locus", "product", "gene"])
+            df = df.sort_values(['start', 'gene'], ascending=[True, False])
+            df = df.drop_duplicates('start')
+df.reset_index(drop=True)
+
 
             pro = pd.read_csv("/Users/tstuber/Desktop/gff_to_dataframe/ProteinTable161_354758.txt", sep='\t')
             df = org_table_df.set_index('reference_pos')

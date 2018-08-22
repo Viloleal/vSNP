@@ -2446,10 +2446,13 @@ def get_snps(directory, arg_options):
             df = df.reset_index()
             ref_pos = df[['index']]
             ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
-            ref_pos = split = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values,columns=['reference','position'])
+            ref_pos = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values,columns=['reference','position'])
             df = pd.merge(df, ref_pos, left_index=True, right_index=True)
             pro.index = pd.IntervalIndex.from_arrays(pro['Start'],pro['Stop'],closed='both')
-            for i in df.position:
+            pos = df.position.to_frame()
+            for index, row in pos.iterrows():
+                i = row.position
+                print(index, row.position)
                 try:
                     a = pro.iloc[pro.index.get_loc(int(i))][['Protein name', 'Locus', 'Locus tag']]
                     name, locus, tag = a.values[0]

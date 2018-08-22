@@ -2460,7 +2460,7 @@ def get_snps(directory, arg_options):
             df = pd.read_csv('temp.csv', sep='\t', skiprows=1, names=["chrom", "start", "stop", "locus", "product", "gene"])
             df = df.sort_values(['start', 'gene'], ascending=[True, False])
             df = df.drop_duplicates('start')
-df.reset_index(drop=True)
+            df.reset_index(drop=True)
 
 
             pro = pd.read_csv("/Users/tstuber/Desktop/gff_to_dataframe/ProteinTable161_354758.txt", sep='\t')

@@ -2438,7 +2438,11 @@ def get_snps(directory, arg_options):
         sorted_df.to_json("sorted_df.json")
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
+            import json
+            import pandas as pd
+            from Bio import SeqIO
             gbk_dict = SeqIO.to_dict(SeqIO.parse("/Users/tstuber/Desktop/gff_to_dataframe/NC_002945v4.gbk", "genbank"))
+            org_table_df = pd.read_json("/Users/tstuber/Desktop/vcf_test_files/bovis/org_table_df.json")
             write_out = open('temp.csv', 'w+')
             for key, value in gbk_dict.items():
                 for feature in value.features:
@@ -2460,30 +2464,28 @@ def get_snps(directory, arg_options):
             df = pd.read_csv('temp.csv', sep='\t', skiprows=1, names=["chrom", "start", "stop", "locus", "product", "gene"])
             df = df.sort_values(['start', 'gene'], ascending=[True, False])
             df = df.drop_duplicates('start')
-            df.reset_index(drop=True)
-
-
-            pro = pd.read_csv("/Users/tstuber/Desktop/gff_to_dataframe/ProteinTable161_354758.txt", sep='\t')
-            df = org_table_df.set_index('reference_pos')
-            del df.index.name
-            df = df.T
-            df = df.reset_index()
-            ref_pos = df[['index']]
+            pro = df.reset_index(drop=True)
+            pro.index = pd.IntervalIndex.from_arrays(pro['start'],pro['stop'],closed='both')
+            org_in_table_df = pd.read_json("/Users/tstuber/Desktop/vcf_test_files/bovis/org_table_df.json")
+            org_table_df = org_in_table_df.set_index('reference_pos')
+            del org_table_df.index.name
+            org_table_df = org_table_df.T
+            org_table_df = org_table_df.reset_index()
+            ref_pos = org_table_df[['index']]
             ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
             ref_pos = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values,columns=['reference','position'])
-            df = pd.merge(df, ref_pos, left_index=True, right_index=True)
-            pro.index = pd.IntervalIndex.from_arrays(pro['Start'],pro['Stop'],closed='both')
-            pos = df.position.to_frame()
+            org_table_df = pd.merge(org_table_df, ref_pos, left_index=True, right_index=True)
+            pos = org_table_df.position.to_frame().astype(int)
+            pro.index = pd.IntervalIndex.from_arrays(pro['start'],pro['stop'],closed='both')
+            pos = org_table_df.position.to_frame()
             for index, row in pos.iterrows():
                 i = row.position
-                print(index, row.position)
                 try:
-                    a = pro.iloc[pro.index.get_loc(int(i))][['Protein name', 'Locus', 'Locus tag']]
+                    a = pro.iloc[pro.index.get_loc(int(i))][['locus', 'product', 'gene']]
                     name, locus, tag = a.values[0]
-                    print(name, locus, tag)
+                    print(index, name, locus, tag)
                 except KeyError:
-                    print("{} has KeyError" .format(i))
-
+                    print("{} None" .format(index))
 
 
 

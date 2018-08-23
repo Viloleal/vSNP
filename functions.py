@@ -31,6 +31,7 @@ from datetime import datetime
 from concurrent import futures
 from collections import OrderedDict
 from collections import Counter
+from collections import defaultdict
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
@@ -2071,11 +2072,10 @@ def get_filters(arg_options):
     #get first header to apply all filters to vcf
     worksheet = pd.read_excel(arg_options['filter_file'])
     arg_options["first_column_header"] = worksheet.dtypes.index[0]
-    filter_dictionary = {} # key: group_name, values: expanded list
+    filter_dictionary = defaultdict(list) # key: group_name, values: expanded list
     wb = xlrd.open_workbook(arg_options['filter_file'])
     sheets = wb.sheet_names()
     for sheet in sheets:
-        expanded_list = []
         ws = wb.sheet_by_name(sheet)
         for colnum in range(ws.ncols): # for each column in worksheet
             group_name = ws.col_values(colnum)[0] # column header naming file
@@ -2086,12 +2086,11 @@ def get_filters(arg_options):
                 value = value.replace(sheet + "-", '')
                 if "-" not in value:
                     value = int(float(value)) # change str to float to int
-                    expanded_list.append(str(sheet) + "-" + str(value))
+                    filter_dictionary[group_name].append(str(sheet) + "-" + str(value))
                 elif "-" in value:
                     value = value.split("-")
                     for position in range(int(value[0]), int(value[1]) + 1):
-                        expanded_list.append(str(sheet) + "-" + str(position))
-            filter_dictionary[group_name] = expanded_list
+                        filter_dictionary[group_name].append(str(sheet) + "-" + str(position))
     return(filter_dictionary)
 
 

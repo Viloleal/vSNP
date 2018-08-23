@@ -2091,7 +2091,7 @@ def get_filters(arg_options):
                     value = value.split("-")
                     for position in range(int(value[0]), int(value[1]) + 1):
                         expanded_list.append(str(sheet) + "-" + str(position))
-                filter_dictionary[group_name] = expanded_list
+            filter_dictionary[group_name] = expanded_list
     return(filter_dictionary)
 
 

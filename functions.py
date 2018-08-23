@@ -2533,6 +2533,7 @@ def get_snps(directory, arg_options):
         mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
+
             dict_annotation = get_annotations_table(parsimony_positions, arg_options)
             write_out = open('annotations.txt', 'w+')
             print('reference_pos\tannotations', file=write_out)
@@ -2543,7 +2544,8 @@ def get_snps(directory, arg_options):
             print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
             annotations = pd.read_csv('annotations.txt', sep='\t') #sort
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
-            mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner') #sort
+            mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner')  #sort
+            mytable_sort.to_json('mytable_sort.json')
             mytable_sort = mytable_sort.merge(annotations, on='reference_pos', how='inner') #sort
             mytable_sort = mytable_sort.set_index('reference_pos') #sort
             mytable_sort = mytable_sort.transpose() #sort

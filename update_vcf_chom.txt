@@ -1,0 +1,1 @@
+for i in *; do sed 's/gi|384222553|ref|NC_017250.1|/NC_017250.1/' $i | sed 's/gi|384223698|ref|NC_017251.1|/NC_017251.1/' > ${i%.vcf}.temp; rm $i; mv ${i%.vcf}.temp $i; done

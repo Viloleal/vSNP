@@ -2534,30 +2534,71 @@ def get_snps(directory, arg_options):
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
 
-            dict_annotation = get_annotations_table(parsimony_positions, arg_options)
-            write_out = open('annotations.txt', 'w+')
-            print('reference_pos\tannotations', file=write_out)
-            for k, v in dict_annotation.items():
-                print('%s\t%s' % (k, v), file=write_out)
-            write_out.close()
-
             print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
-            annotations = pd.read_csv('annotations.txt', sep='\t') #sort
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
             mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner')  #sort
             mytable_sort.to_json('mytable_sort.json')
-            mytable_sort = mytable_sort.merge(annotations, on='reference_pos', how='inner') #sort
-            mytable_sort = mytable_sort.set_index('reference_pos') #sort
+
+            for gbk in arg_options['gbk_file']:
+                gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
+                gbk_chrome = list(gbk_dict.keys())[0]
+                ref_pos = mytable_sort[['reference_pos']]
+                ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
+                ref_pos = split = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values,columns=['reference','position'])
+                ref_pos = ref_pos[ref_pos['reference'] == gbk_chrome]
+                
+                write_out = open('temp.csv', 'w+')
+                for key, value in gbk_dict.items():
+                    for feature in value.features:
+                        if "CDS" in feature.type:
+                            myproduct = None
+                            mylocus = None
+                            mygene = None
+                            try:
+                                myproduct = feature.qualifiers['product'][0]
+                            except KeyError:
+                                pass
+                            mylocus = feature.qualifiers['locus_tag'][0]
+                            try:
+                                mygene = feature.qualifiers['gene'][0]
+                            except KeyError:
+                                pass
+                            print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
+                write_out.close()
+                
+                df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
+                df = df.sort_values(['start', 'gene'], ascending=[True, False])
+                df = df.drop_duplicates('start')
+                pro = df.reset_index(drop=True)
+                pro.index = pd.IntervalIndex.from_arrays(pro['start'],pro['stop'],closed='both')
+                
+                write_out = open('annonations.csv', 'a')
+                positions = ref_pos.position.to_frame()
+                for index, row in positions.iterrows():
+                    pos = row.position
+                    try:
+                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+                        chrom, name, locus, tag = a.values[0]
+                        print("{}-{}\t{}, {}, {}" .format(chrom, pos, locus, tag, name), file=write_out)
+                    except KeyError:
+                        print("{}-{}\tNo annotated product" .format(chrom, pos), file=write_out)
+                write_out.close()
+                
+                annotations_df = pd.read_csv('annonations.csv', sep='\t', header=None, names=['index', 'annotations'], index_col='index')
+
+            annotations_df.index.names = ['reference_pos']
+            mytable_sort = mytable_sort.set_index('reference_pos')
+            annotations_df.index.names = ['reference_pos']
+            mytable_sort = mytable_sort.merge(annotations_df, left_index=True, right_index=True)
             mytable_sort = mytable_sort.transpose() #sort
             mytable_sort.to_csv(out_sort, sep='\t', index_label='reference_pos') #sort
 
-            #annotations = pd.read_csv('annotations.txt', sep='\t') #org
-            mytable = pd.read_csv(out_org, sep='\t') #org
-            mytable = mytable.merge(quality, on='reference_pos', how='inner') #org
-            mytable = mytable.merge(annotations, on='reference_pos', how='inner') #org
-            mytable = mytable.set_index('reference_pos') #org
-            mytable = mytable.transpose() #org
-            mytable.to_csv(out_org, sep='\t', index_label='reference_pos') #org
+            mytable_org = pd.read_csv(out_org, sep='\t') #org
+            mytable_org = mytable_org.merge(quality, on='reference_pos', how='inner') #org
+            mytable_org = mytable_org.set_index('reference_pos')
+            mytable_org = mytable_org.merge(annotations_df, left_index=True, right_index=True)
+            mytable_org = mytable_org.transpose() #org
+            mytable_org.to_csv(out_org, sep='\t', index_label='reference_pos') #org
 
         else:
             print("No gbk file or no table to annotate")
@@ -2637,33 +2678,6 @@ def get_snps(directory, arg_options):
         json.dump(samples_in_fasta, outfile)
 
     return(samples_in_fasta)
-
-
-def get_annotations_table(parsimony_positions, arg_options):
-    dict_annotation = {}
-    gbk_dict = SeqIO.to_dict(SeqIO.parse(arg_options['gbk_file'], "genbank"))
-    for each_absolute_pos in parsimony_positions:
-        each_absolute_pos = each_absolute_pos.split("-")
-        chrom = each_absolute_pos[0]
-        pos = int(each_absolute_pos[1])
-        pos_found = False
-        for each_key, each_value in gbk_dict.items():
-            if chrom == each_key: # need to check chrom when multiple chroms present
-                for feature in each_value.features:
-                    if pos in feature and "CDS" in feature.type:
-                        myproduct = "none list"
-                        mylocus = "none list"
-                        mygene = "none list"
-                        myproduct = feature.qualifiers['product'][0]
-                        mylocus = feature.qualifiers['locus_tag'][0]
-                        if "gene" in feature.qualifiers:
-                            mygene = feature.qualifiers['gene'][0]
-                        myout = myproduct + ", gene: " + mygene + ", locus_tag: " + mylocus
-                        pos_found = True
-            if not pos_found:
-                myout = "No annotated product"
-            dict_annotation.update({chrom + "-" + str(pos): myout})
-    return (dict_annotation)
 
 
 def sort_table(table_location, ordered, out_org):

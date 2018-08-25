@@ -2581,7 +2581,7 @@ def get_snps(directory, arg_options):
                         chrom, name, locus, tag = a.values[0]
                         print("{}-{}\t{}, {}, {}" .format(chrom, pos, locus, tag, name), file=write_out)
                     except KeyError:
-                        print("{}-{}\tNo annotated product" .format(chrom, pos), file=write_out)
+                        print("{}-{}\tNo annotated product" .format(gbk_chrome, pos), file=write_out)
                 write_out.close()
                 
                 annotations_df = pd.read_csv('annonations.csv', sep='\t', header=None, names=['index', 'annotations'], index_col='index')

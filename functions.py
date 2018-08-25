@@ -1608,6 +1608,39 @@ def run_script2(arg_options):
     filter_dictionary = get_filters(arg_options)
     arg_options['filter_dictionary'] = filter_dictionary
 
+    if arg_options['gbk_file'] and not arg_options['no_annotation']:
+        print("Putting gbk into indexed dataframe...")
+        annotation_dict = {}
+        for gbk in arg_options['gbk_file']:
+            gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
+            gbk_chrome = list(gbk_dict.keys())[0]
+            write_out = open('temp.csv', 'w+')
+            for key, value in gbk_dict.items():
+                for feature in value.features:
+                    if "CDS" in feature.type:
+                        myproduct = None
+                        mylocus = None
+                        mygene = None
+                        try:
+                            myproduct = feature.qualifiers['product'][0]
+                        except KeyError:
+                            pass
+                        mylocus = feature.qualifiers['locus_tag'][0]
+                        try:
+                            mygene = feature.qualifiers['gene'][0]
+                        except KeyError:
+                            pass
+                        print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
+            write_out.close()
+            
+            df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
+            df = df.sort_values(['start', 'gene'], ascending=[True, False])
+            df = df.drop_duplicates('start')
+            pro = df.reset_index(drop=True)
+            pro.index = pd.IntervalIndex.from_arrays(pro['start'], pro['stop'], closed='both')
+            annotation_dict[gbk_chrome] = pro
+        arg_options['annotation_dict'] = annotation_dict
+
     samples_in_output = []
     print("Getting SNPs in each directory")
     if arg_options['debug_call']:
@@ -2534,43 +2567,17 @@ def get_snps(directory, arg_options):
 
         if arg_options['gbk_file'] and not arg_options['no_annotation']:
 
-            print("{} gbk is present, getting annotation... {}" .format(directory, time_mark))
+            print("{} annotating from annotation dictionary... {}" .format(directory, time_mark))
             mytable_sort = pd.read_csv(out_sort, sep='\t') #sort
             mytable_sort = mytable_sort.merge(quality, on='reference_pos', how='inner')  #sort
             mytable_sort.to_json('mytable_sort.json')
 
-            for gbk in arg_options['gbk_file']:
-                gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
-                gbk_chrome = list(gbk_dict.keys())[0]
+            annotation_dict = arg_options['annotation_dict']
+            for gbk_chrome, pro in annotation_dict.items():
                 ref_pos = mytable_sort[['reference_pos']]
                 ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
-                ref_pos = split = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values,columns=['reference','position'])
+                ref_pos = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values, columns=['reference', 'position'])
                 ref_pos = ref_pos[ref_pos['reference'] == gbk_chrome]
-                
-                write_out = open('temp.csv', 'w+')
-                for key, value in gbk_dict.items():
-                    for feature in value.features:
-                        if "CDS" in feature.type:
-                            myproduct = None
-                            mylocus = None
-                            mygene = None
-                            try:
-                                myproduct = feature.qualifiers['product'][0]
-                            except KeyError:
-                                pass
-                            mylocus = feature.qualifiers['locus_tag'][0]
-                            try:
-                                mygene = feature.qualifiers['gene'][0]
-                            except KeyError:
-                                pass
-                            print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
-                write_out.close()
-                
-                df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
-                df = df.sort_values(['start', 'gene'], ascending=[True, False])
-                df = df.drop_duplicates('start')
-                pro = df.reset_index(drop=True)
-                pro.index = pd.IntervalIndex.from_arrays(pro['start'],pro['stop'],closed='both')
                 
                 write_out = open('annonations.csv', 'a')
                 positions = ref_pos.position.to_frame()

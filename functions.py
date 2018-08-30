@@ -631,32 +631,32 @@ def align_reads(arg_options):
         print(unmapped_reads)
 
         print("\n@@@  Realign indels")
-        os.system("gatk3 -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
         if not os.path.isfile(indel_realigner):
-            os.system("gatk3 -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk3 -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
         if not os.path.isfile(realignedbam):
-            os.system("gatk3 -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
 
         print("\n@@@ Base recalibration")
-        os.system("gatk3 -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
         if not os.path.isfile(realignedbam):
-            os.system("gatk3 -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
 
         print("\n@@@ Make realigned BAM")
-        os.system("gatk3 -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
+        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
         if not os.path.isfile(prebam):
-            os.system("gatk3 -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
+            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
 
         print("\n@@@ Clip reads")
-        os.system("gatk3 -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
+        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
         os.system("samtools index {}" .format(qualitybam))
 
         print("\n@@@ Depth of coverage using GATK")
-        os.system("gatk3 -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+        os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk3 -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
         try:
             print("Getting Zero Coverage...\n")
@@ -784,7 +784,7 @@ def align_reads(arg_options):
                 conda list abyss | grep -v "^#"; \
                 conda list picard | grep -v "^#"; \
                 conda list samtools | grep -v "^#"; \
-                conda list gatk3 | grep -v "^#"; \
+                conda list gatk | grep -v "^#"; \
                 conda list biopython | grep -v "^#"').read(), file=verison_out)
             verison_out.close()
         except:
@@ -963,7 +963,7 @@ def mlst(arg_options):
 
     print("\n@@@ Calling SNPs with UnifiedGenotyper")
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
-    os.system("gatk3 -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
+    os.system("gatk -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
 
     # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
 

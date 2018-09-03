@@ -39,9 +39,13 @@ Clone script to home directory:
 
 Follow instructions to configure 'conda activate' if requested when trying `$ conda activate vsnp`.
 
-In short, follow the first line echo'ing conda.sh to your profile.
-
 Close and reopen your terminal, and again `$ conda activate vsnp`.
+
+Check that gatk is found in your path.  `$ which gatk`.  If not found run the following:
+
+    $ ln -s ~/anaconda3/envs/vsnp/bin/gatk3 ~/anaconda3/envs/vsnp/bin/gatk
+
+This will allow GATK to be accessed using either `gatk` or gatk3`.
 
 When GATK 3.8 is downloaded from Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package: https://software.broadinstitute.org/gatk/download/archive
 unzip it:  

@@ -709,7 +709,6 @@ def align_reads(arg_options):
                 pro = df.reset_index(drop=True)
                 pro.index = pd.IntervalIndex.from_arrays(pro['start'], pro['stop'], closed='both')
                 annotation_dict[gbk_chrome] = pro
-                arg_options['annotation_dict'] = annotation_dict
 
             header_out = open('v_header.csv', 'w+')
             with open(zero_coverage_vcf) as fff:
@@ -747,6 +746,9 @@ def align_reads(arg_options):
                     with open(cf, "rb") as infile:
                         outfile.write(infile.read())
 
+        os.remove('temp.csv')
+        os.remove('v_header.csv')
+        os.remove('v_annotated_body.csv')
         os.remove(coverage_file)
         os.remove(samfile)
         os.remove(allbam)

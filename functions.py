@@ -674,18 +674,78 @@ def align_reads(arg_options):
             smtp.quit()
 
         if arg_options["gbk_file"] is not "None" and not arg_options['no_annotation']:
-            try:
-                in_annotation_as_dict = SeqIO.to_dict(SeqIO.parse(arg_options["gbk_file"], "genbank"))
-                annotated_vcf = loc_sam + "-annotated.vcf"
-                write_out = open(annotated_vcf, 'w')
-                with open(zero_coverage_vcf) as vfile:
-                    print("finding annotations...\n")
-                    for line in vfile:
-                        annotated_line = get_annotations(line, in_annotation_as_dict)
-                        print("%s" % annotated_line, file=write_out)
+            annotated_vcf = loc_sam + "-annotated.vcf"
+            gbk_file = arg_options['gbk_file']
+
+            arg_options = {}
+            print("Putting gbk into indexed dataframe...")
+            annotation_dict = {}
+            #for gbk in arg_options['gbk_file']:
+            for gbk in gbk_file:
+                gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
+                gbk_chrome = list(gbk_dict.keys())[0]
+                write_out = open('temp.csv', 'w+')
+                for key, value in gbk_dict.items():
+                    for feature in value.features:
+                        if "CDS" in feature.type:
+                            myproduct = None
+                            mylocus = None
+                            mygene = None
+                            try:
+                                myproduct = feature.qualifiers['product'][0]
+                            except KeyError:
+                                pass
+                            mylocus = feature.qualifiers['locus_tag'][0]
+                            try:
+                                mygene = feature.qualifiers['gene'][0]
+                            except KeyError:
+                                pass
+                            print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
                 write_out.close()
-            except AttributeError:
-                pass
+
+                df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
+                df = df.sort_values(['start', 'gene'], ascending=[True, False])
+                df = df.drop_duplicates('start')
+                pro = df.reset_index(drop=True)
+                pro.index = pd.IntervalIndex.from_arrays(pro['start'], pro['stop'], closed='both')
+                annotation_dict[gbk_chrome] = pro
+                arg_options['annotation_dict'] = annotation_dict
+
+            header_out = open('v_header.csv', 'w+')
+            with open(zero_coverage_vcf) as fff:
+                for line in fff:
+                    if re.search('^#', line):
+                        print(line.strip(), file=header_out)
+            header_out.close()
+
+            vcf_df = pd.read_csv(zero_coverage_vcf, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
+            vcf_df['ABS_VALUE'] = vcf_df['CHROM'].map(str) + '-' + vcf_df['POS'].map(str)
+            vcf_df = vcf_df.set_index('ABS_VALUE')
+
+            annotation_dict = arg_options['annotation_dict']
+            annotate_condense_dict = {}
+            for gbk_chrome, pro in annotation_dict.items():
+                matching_chrom_df = vcf_df[vcf_df['CHROM']== gbk_chrome]
+                for index, row in matching_chrom_df.iterrows():
+                    pos = row.POS
+                    try:
+                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+                        chrom, name, locus, tag = a.values[0]
+                        annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}" .format(name, locus, tag)
+                    except KeyError:
+                        annotate_condense_dict[str(gbk_chrome) + "-" + str(pos)] = "No annotated product"
+
+            annotate_df = pd.DataFrame.from_dict(annotate_condense_dict, orient='index', columns=["ID"])
+            annotate_df.index.name = 'ABS_VALUE'
+            vcf_df.drop(['ID'], axis=1, inplace=True)
+            vcf_df = vcf_df.merge(annotate_df, how='left', left_index=True, right_index=True)
+            vcf_df = vcf_df[["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"]]
+            vcf_df.to_csv('v_annotated_body.csv', sep='\t', header=False, index=False)
+            cat_files = ['v_header.csv', 'v_annotated_body.csv']
+            with open(annotated_vcf, "wb") as outfile:
+                for cf in cat_files:
+                    with open(cf, "rb") as infile:
+                        outfile.write(infile.read())
 
         os.remove(coverage_file)
         os.remove(samfile)
@@ -2753,7 +2813,6 @@ def sort_table(table_location, ordered, out_org):
 
 
 def excelwriter(filename):
-    orginal_name = filename
     orginal_name = filename
     filename = filename.replace(".txt", ".xlsx")
     wb = xlsxwriter.Workbook(filename)

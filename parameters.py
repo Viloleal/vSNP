@@ -155,7 +155,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_017251-NC_017250.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_017251-NC_017250.gbk",
+                "gbk_file": [script_dependents + "/NC_017251.gbk", script_dependents + "/NC_017250.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -221,7 +221,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
                 "reference": script_dependents + "/NC_002945v4.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_002945v4.gbk",
+                "gbk_file": [script_dependents + "/NC_002945v4.gbk"],
                 "species": species_selection,
             }
             return(parameters)

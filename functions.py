@@ -721,7 +721,6 @@ def align_reads(arg_options):
             vcf_df['ABS_VALUE'] = vcf_df['CHROM'].map(str) + '-' + vcf_df['POS'].map(str)
             vcf_df = vcf_df.set_index('ABS_VALUE')
 
-            annotation_dict = arg_options['annotation_dict']
             annotate_condense_dict = {}
             for gbk_chrome, pro in annotation_dict.items():
                 matching_chrom_df = vcf_df[vcf_df['CHROM']== gbk_chrome]

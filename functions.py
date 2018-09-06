@@ -487,6 +487,16 @@ def finding_best_ref(v, fastq_list):
                 count += seq.count(v)
     return(v, count)
 
+def pos_annotation_from_index(pos, gbk_chrome):
+    try:
+        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+        chrom, name, locus, tag = a.values[0]
+        key = str(chrom) + "-" + str(pos)
+        value = "{}, {}, {}" .format(name, locus, tag)
+    except KeyError:
+        key = str(gbk_chrome) + "-" + str(pos)
+        value = "No annotated product"
+    return(key, value)
 
 def align_reads(arg_options):
     working_directory = os.getcwd()
@@ -721,17 +731,26 @@ def align_reads(arg_options):
             vcf_df = vcf_df.set_index('ABS_VALUE')
 
             annotate_condense_dict = {}
-            for gbk_chrome, pro in annotation_dict.items():
-                print("gbk_chrome: %s" % gbk_chrome)
-                matching_chrom_df = vcf_df[vcf_df['CHROM'] == gbk_chrome]
-                for index, row in matching_chrom_df.iterrows():
-                    pos = row.POS
-                    try:
-                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
-                        chrom, name, locus, tag = a.values[0]
-                        annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}" .format(name, locus, tag)
-                    except KeyError:
-                        annotate_condense_dict[str(gbk_chrome) + "-" + str(pos)] = "No annotated product"
+            position_list = []
+            if arg_options['debug_call'] and not arg_options['get']:
+                for gbk_chrome, pro in annotation_dict.items():
+                    print("gbk_chrome: %s" % gbk_chrome)
+                    matching_chrom_df = vcf_df[vcf_df['CHROM'] == gbk_chrome]
+                    for index, row in matching_chrom_df.iterrows():
+                        position_list.append(row.POS)
+                    for pos in position_list:
+                        key, value = pos_annotation_from_index(pos, gbk_chrome)
+                        annotate_condense_dict[key] = value
+            else:
+                for gbk_chrome, pro in annotation_dict.items():
+                    print("gbk_chrome: %s" % gbk_chrome)
+                    matching_chrom_df = vcf_df[vcf_df['CHROM'] == gbk_chrome]
+                    for index, row in matching_chrom_df.iterrows():
+                        position_list.append(row.POS)
+                    with futures.ProcessPoolExecutor() as pool:
+                        #parallelize position list to function
+                        for key, value in pool.map(pos_annotation_from_index, position_list, itertools_repeat(gbk_chrome)):
+                            annotate_condense_dict[key] = value
 
             annotate_df = pd.DataFrame.from_dict(annotate_condense_dict, orient='index', columns=["ID"])
             annotate_df.index.name = 'ABS_VALUE'

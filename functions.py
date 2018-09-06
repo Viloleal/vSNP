@@ -710,13 +710,13 @@ def align_reads(arg_options):
                 annotation_dict[gbk_chrome] = pro
 
             header_out = open('v_header.csv', 'w+')
-            with open(annotated_vcf) as fff:
+            with open(zero_coverage_vcf) as fff:
                 for line in fff:
                     if re.search('^#', line):
                         print(line.strip(), file=header_out)
             header_out.close()
 
-            vcf_df = pd.read_csv(annotated_vcf, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
+            vcf_df = pd.read_csv(zero_coverage_vcf, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
             vcf_df['ABS_VALUE'] = vcf_df['CHROM'].map(str) + '-' + vcf_df['POS'].map(str)
             vcf_df = vcf_df.set_index('ABS_VALUE')
 

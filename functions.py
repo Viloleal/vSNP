@@ -677,14 +677,13 @@ def align_reads(arg_options):
             annotated_vcf = loc_sam + "-annotated.vcf"
             gbk_file = arg_options['gbk_file']
 
-            arg_options = {}
             print("Putting gbk into indexed dataframe...")
             annotation_dict = {}
-            #for gbk in arg_options['gbk_file']:
             for gbk in gbk_file:
+                print("gbk %s" % gbk)
+                write_out = open('temp.csv', 'w+')
                 gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
                 gbk_chrome = list(gbk_dict.keys())[0]
-                write_out = open('temp.csv', 'w+')
                 for key, value in gbk_dict.items():
                     for feature in value.features:
                         if "CDS" in feature.type:
@@ -702,28 +701,29 @@ def align_reads(arg_options):
                                 pass
                             print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
                 write_out.close()
-
                 df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
                 df = df.sort_values(['start', 'gene'], ascending=[True, False])
                 df = df.drop_duplicates('start')
                 pro = df.reset_index(drop=True)
                 pro.index = pd.IntervalIndex.from_arrays(pro['start'], pro['stop'], closed='both')
+                print(gbk_chrome)
                 annotation_dict[gbk_chrome] = pro
 
             header_out = open('v_header.csv', 'w+')
-            with open(zero_coverage_vcf) as fff:
+            with open(annotated_vcf) as fff:
                 for line in fff:
                     if re.search('^#', line):
                         print(line.strip(), file=header_out)
             header_out.close()
 
-            vcf_df = pd.read_csv(zero_coverage_vcf, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
+            vcf_df = pd.read_csv(annotated_vcf, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
             vcf_df['ABS_VALUE'] = vcf_df['CHROM'].map(str) + '-' + vcf_df['POS'].map(str)
             vcf_df = vcf_df.set_index('ABS_VALUE')
 
             annotate_condense_dict = {}
             for gbk_chrome, pro in annotation_dict.items():
-                matching_chrom_df = vcf_df[vcf_df['CHROM']== gbk_chrome]
+                print("gbk_chrome: %s" % gbk_chrome)
+                matching_chrom_df = vcf_df[vcf_df['CHROM'] == gbk_chrome]
                 for index, row in matching_chrom_df.iterrows():
                     pos = row.POS
                     try:
@@ -736,9 +736,11 @@ def align_reads(arg_options):
             annotate_df = pd.DataFrame.from_dict(annotate_condense_dict, orient='index', columns=["ID"])
             annotate_df.index.name = 'ABS_VALUE'
             vcf_df.drop(['ID'], axis=1, inplace=True)
+
             vcf_df = vcf_df.merge(annotate_df, how='left', left_index=True, right_index=True)
             vcf_df = vcf_df[["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"]]
             vcf_df.to_csv('v_annotated_body.csv', sep='\t', header=False, index=False)
+
             cat_files = ['v_header.csv', 'v_annotated_body.csv']
             with open(annotated_vcf, "wb") as outfile:
                 for cf in cat_files:

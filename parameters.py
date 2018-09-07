@@ -24,7 +24,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_016856-NC_016855.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_016856-NC_016855.gbk",
+                "gbk_file": [script_dependents + "/NC_016856-NC_016855.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -35,7 +35,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/AE006468.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/AE006468.gbk",
+                "gbk_file": [script_dependents + "/AE006468.gbk"],
                 "species": species_selection,
             }
         elif species_selection == "heidelberg-SL476":
@@ -45,7 +45,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_011083.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_011083.gbk",
+                "gbk_file": [script_dependents + "/NC_011083.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -56,7 +56,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_00693c.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_006932-NC_006933.gbk",
+                "gbk_file": [script_dependents + "/NC_006932-NC_006933.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -67,7 +67,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/CP007682-7683c.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/CP007682-CP007683.gbk",
+                "gbk_file": [script_dependents + "/CP007682-CP007683.gbk"],
                 "species": species_selection,
             }
             return (parameters)
@@ -78,7 +78,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/BcanisATCC23365.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_010103-NC_010104.gbk",
+                "gbk_file": [script_dependents + "/NC_010103-NC_010104.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -100,7 +100,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/Bceti2-TE10759.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_022905-NC_022906.gbk",
+                "gbk_file": [script_dependents + "/NC_022905-NC_022906.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -111,7 +111,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv1-NC003317.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_003317-NC_003318.gbk",
+                "gbk_file": [script_dependents + "/NC_003317-NC_003318.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -122,7 +122,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv1b-CP018508.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/mel-bv1b-CP018508.gbk",
+                "gbk_file": [script_dependents + "/mel-bv1b-CP018508.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -133,7 +133,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv2-NC012441.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_012441-NC_012442.gbk",
+                "gbk_file": [script_dependents + "/NC_012441-NC_012442.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -144,7 +144,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/mel-bv3-NZCP007760.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NZ_CP007760-NZ_CP007761.gbk",
+                "gbk_file": [script_dependents + "/NZ_CP007760-NZ_CP007761.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -166,7 +166,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_010169-NC_010167.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_010169-NC_010167.gbk",
+                "gbk_file": [script_dependents + "/NC_010169-NC_010167.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -199,7 +199,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/BovisATCC25840.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_009505-NC_009504.gbk",
+                "gbk_file": [script_dependents + "/NC_009505-NC_009504.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -210,7 +210,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/KN046827.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/KN046827.gbk",
+                "gbk_file": [script_dependents + "/KN046827.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -243,7 +243,7 @@ class Get_Specie_Parameters_Step1():
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_002944.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_002944.gbk",
+                "gbk_file": [script_dependents + "/NC_002944.gbk"],
                 "species": species_selection,
             }
             return (parameters)
@@ -368,7 +368,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_016856-NC_016855.gbk",
+                "gbk_file": [script_dependents + "/NC_016856-NC_016855.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -380,7 +380,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_016856-NC_016855.gbk",
+                "gbk_file": [script_dependents + "/NC_016856-NC_016855.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -392,7 +392,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_011083.gbk",
+                "gbk_file": [script_dependents + "/NC_011083.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -417,7 +417,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_010169-NC_010167.gbk",
+                "gbk_file": [script_dependents + "/NC_010169-NC_010167.gbk"],
                 "definingSNPs": script_dependents + "/Defining_SNPs.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -429,7 +429,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NZ_CP007719-NZ_CP007718.gbk",
+                "gbk_file": [script_dependents + "/NZ_CP007719-NZ_CP007718.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -453,7 +453,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_006932-NC_006933.gbk",
+                "gbk_file": [script_dependents + "/NC_006932-NC_006933.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -465,7 +465,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/CP007682-CP007683.gbk",
+                "gbk_file": [script_dependents + "/CP007682-CP007683.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -477,7 +477,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_003317-NC_003318.gbk",
+                "gbk_file": [script_dependents + "/NC_003317-NC_003318.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -489,7 +489,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/mel-bv1b-CP018508.gbk",
+                "gbk_file": [script_dependents + "/mel-bv1b-CP018508.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -501,7 +501,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_012441-NC_012442.gbk",
+                "gbk_file": [script_dependents + "/NC_012441-NC_012442.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -513,7 +513,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NZ_CP007760-NZ_CP007761.gbk",
+                "gbk_file": [script_dependents + "/NZ_CP007760-NZ_CP007761.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -525,7 +525,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_010103-NC_010104.gbk",
+                "gbk_file": [script_dependents + "/NC_010103-NC_010104.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -549,7 +549,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_022905-NC_022906.gbk",
+                "gbk_file": [script_dependents + "/NC_022905-NC_022906.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -561,7 +561,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/NC_009505-NC_009504.gbk",
+                "gbk_file": [script_dependents + "/NC_009505-NC_009504.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -573,7 +573,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": script_dependents + "/KN046827.gbk",
+                "gbk_file": [script_dependents + "/KN046827.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -599,7 +599,7 @@ class Get_Specie_Parameters_Step2():
                 "qual_gatk_threshold": 150,
                 "N_gatk_threshold": 150,
                 "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_genotyping_codes.xlsx",
-                "gbk_file": script_dependents + "/NC_002944.gbk",
+                "gbk_file": [script_dependents + "/NC_002944.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",

@@ -230,9 +230,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/h37/script1",
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
-                "reference": script_dependents + "/NC000962.fasta",
+                "reference": script_dependents + "/NC_000962.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": script_dependents + "/NC_000962.gbk",
+                "gbk_file": [script_dependents + "/NC_000962.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -586,7 +586,7 @@ class Get_Specie_Parameters_Step2():
                 "qual_gatk_threshold": 150,
                 "N_gatk_threshold": 150,
                 "genotypingcodes": str(self.upload_to) + "/mycobacterium/genotyping_codes.xlsx",
-                "gbk_file": script_dependents + "/NC_000962.gbk",
+                "gbk_file": [script_dependents + "/NC_000962.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",

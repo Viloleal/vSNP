@@ -2064,7 +2064,7 @@ def change_names(arg_options, genotype_codes):
             print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
     arg_options['names_not_changed'] = names_not_changed
-    
+
     if arg_options['elite']:
         list_of_files = []
         list_of_files = glob.glob('*vcf')
@@ -2583,7 +2583,7 @@ def get_snps(directory, arg_options):
                 ref_pos = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values, columns=['reference', 'position'])
                 ref_pos = ref_pos[ref_pos['reference'] == gbk_chrome]
                 
-                write_out = open('annonations.csv', 'a')
+                write_out = open('annotations.csv', 'a')
                 positions = ref_pos.position.to_frame()
                 for index, row in positions.iterrows():
                     pos = row.position
@@ -2595,7 +2595,7 @@ def get_snps(directory, arg_options):
                         print("{}-{}\tNo annotated product" .format(gbk_chrome, pos), file=write_out)
                 write_out.close()
                 
-                annotations_df = pd.read_csv('annonations.csv', sep='\t', header=None, names=['index', 'annotations'], index_col='index')
+                annotations_df = pd.read_csv('annotations.csv', sep='\t', header=None, names=['index', 'annotations'], index_col='index')
 
             annotations_df.index.names = ['reference_pos']
             mytable_sort = mytable_sort.set_index('reference_pos')

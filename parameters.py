@@ -47,6 +47,56 @@ class Get_Specie_Parameters_Step1():
                 "gbk_file": [script_dependents + "/NC_018108.gbk"],
                 "species": species_selection,
             }
+        elif species_selection == "te_09-0932":
+            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_09-0932/script_dependents"
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_09-0932/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NZ_CP021201.fasta",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": [script_dependents + "/NZ_CP021201.gbk"],
+                "species": species_selection,
+            }
+        elif species_selection == "te_89-0490":
+            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_89-0490/script_dependents"
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_89-0490/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NZ_CP021199.fasta",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": [script_dependents + "/NZ_CP021199.gbk"],
+                "species": species_selection,
+            }
+        elif species_selection == "te_92-0972":
+            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_92-0972/script_dependents"
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_92-0972/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NZ_CP021060.fasta",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": [script_dependents + "/NZ_CP021060.gbk"],
+                "species": species_selection,
+            }
+        elif species_selection == "te_98-0554":
+            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_98-0554/script_dependents"
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_98-0554/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NZ_CP021246.fasta",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": [script_dependents + "/NZ_CP021246.gbk"],
+                "species": species_selection,
+            }
+        elif species_selection == "te_mce9":
+            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_mce9/script_dependents"
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NC_014914.fasta",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": [script_dependents + "/NC_014914.gbk"],
+                "species": species_selection,
+            }
         elif species_selection == "heidelberg-SL476":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
             parameters = {
@@ -363,6 +413,66 @@ class Get_Specie_Parameters_Step2():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script2",
+            }
+        elif species_selection == "te_09-0932":
+            script_dependents = self.dependents_dir + "/bi/taylorella/te_09-0932/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "qual_gatk_threshold": 300,
+                "N_gatk_threshold": 350,
+                "gbk_file": [script_dependents + "/NZ_CP021201.gbk"],
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_09-0932/script2",
+            }
+        elif species_selection == "te_89-0490":
+            script_dependents = self.dependents_dir + "/bi/taylorella/te_89-0490/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "qual_gatk_threshold": 300,
+                "N_gatk_threshold": 350,
+                "gbk_file": [script_dependents + "/NZ_CP021199.gbk"],
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_89-0490/script2",
+            }
+        elif species_selection == "te_92-0972":
+            script_dependents = self.dependents_dir + "/bi/taylorella/te_92-0972/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "qual_gatk_threshold": 300,
+                "N_gatk_threshold": 350,
+                "gbk_file": [script_dependents + "/NZ_CP021060.gbk"],
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_92-0972/script2",
+            }
+        elif species_selection == "te_98-0554":
+            script_dependents = self.dependents_dir + "/bi/taylorella/te_98-0554/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "qual_gatk_threshold": 300,
+                "N_gatk_threshold": 350,
+                "gbk_file": [script_dependents + "/NZ_CP021246.gbk"],
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_98-0554/script2",
+            }
+        elif species_selection == "te_mce9":
+            script_dependents = self.dependents_dir + "/bi/taylorella/te_mce9/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "qual_gatk_threshold": 300,
+                "N_gatk_threshold": 350,
+                "gbk_file": [script_dependents + "/NC_014914.gbk"],
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script2",
             }
         elif species_selection == "typhimurium-14028S":
             script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents"

@@ -37,6 +37,16 @@ class Get_Specie_Parameters_Step1():
                 "gbk_file": [script_dependents + "/AE006468.gbk"],
                 "species": species_selection,
             }
+        elif species_selection == "te_atcc35865":
+            script_dependents = str(self.dependents_dir) + "/bi/taylorella/vsnp/te_atcc35865/script_dependents"
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NC_018108.fasta",
+                "hqs": script_dependents + "/highqualitysnps.vcf",
+                "gbk_file": [script_dependents + "/NC_018108.gbk"],
+                "species": species_selection,
+            }
         elif species_selection == "heidelberg-SL476":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
             parameters = {
@@ -341,6 +351,18 @@ class Get_Specie_Parameters_Step2():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx", # previous excelinfile
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
+            }
+        elif species_selection == "te_atcc35865":
+            script_dependents = self.dependents_dir + "/bi/taylorella/vsnp/te_atcc35865/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "qual_gatk_threshold": 300,
+                "N_gatk_threshold": 350,
+                "gbk_file": [script_dependents + "/NC_018108.gbk"],
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script2",
             }
         elif species_selection == "typhimurium-14028S":
             script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents"

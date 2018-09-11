@@ -54,9 +54,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus1/data",
                 "spoligo_db": None,
-                "reference": script_dependents + "/NC_00693c.fasta",
+                "reference": script_dependents + "/NC_006932-NC_006933.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": [script_dependents + "/NC_006932-NC_006933.gbk"],
+                "gbk_file": [script_dependents + "/NC_006932.gbk", script_dependents + "/NC_006933.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -453,7 +453,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": [script_dependents + "/NC_006932-NC_006933.gbk"],
+                "gbk_file": [script_dependents + "/NC_006932.gbk", script_dependents + "/NC_006933.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",

@@ -174,6 +174,7 @@ if fastq_check:
             print("See files, vSNP has finished alignments")
 elif vcf_check:
     #fix files
+    malformed = []
     vcf_list = glob.glob('*vcf')
     print("Fixing files...\n")
     if arg_options['debug_call'] and not arg_options['get']:

@@ -76,9 +76,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/canis/data",
                 "spoligo_db": None,
-                "reference": script_dependents + "/BcanisATCC23365.fasta",
+                "reference": script_dependents + "/NC_010103-NC_010104.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": [script_dependents + "/NC_010103-NC_010104.gbk"],
+                "gbk_file": [script_dependents + "/NC_010103.gbk", script_dependents + "/NC_010104.gbk"],
                 "species": species_selection,
             }
             return(parameters)
@@ -525,7 +525,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": [script_dependents + "/NC_010103-NC_010104.gbk"],
+                "gbk_file": [script_dependents + "/NC_010103.gbk", script_dependents + "/NC_010104.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",

@@ -1430,50 +1430,6 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
     smtp.quit()
 
 
-def fix_vcf(each_vcf, arg_options):
-    mal = []
-    # Fix common VCF errors
-    temp_file = each_vcf + ".temp"
-    write_out = open(temp_file, 'w') #r+ used for reading and writing to the same file
-    with open(each_vcf, 'r') as file:
-        try:
-            for line in file:
-                if line.rstrip(): # true if not empty line'^$'
-                    line = line.rstrip() #remove right white space
-                    line = re.sub('"AC=', 'AC=', line)
-                    line = re.sub('""', '"', line)
-                    line = re.sub('""', '"', line)
-                    line = re.sub('""', '"', line)
-                    line = re.sub('"$', '', line)
-                    line = re.sub('GQ:PL\t"', 'GQ:PL\t', line)
-                    line = re.sub('[0-9]+\tGT\t.\/.$', '999\tGT:AD:DP:GQ:PL\t1/1:0,80:80:99:2352,239,0', line)
-                    line = re.sub('^"', '', line)
-                    if line.startswith('##') and line.endswith('"'):
-                        line = re.sub('"$', '', line)
-                    if line.startswith('##'):
-                        line = line.split('\t')
-                        line = ''.join(line[0])
-                    if not line.startswith('##'):
-                        line = re.sub('"', '', line)
-                        line = line.split('\t')
-                        line = "\t".join(line[0:10])
-                        print(line, file=write_out)
-                    else:
-                        print(line, file=write_out)
-        except IndexError:
-            print("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
-            mal.append("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
-            os.remove(each_vcf)
-        except UnicodeDecodeError:
-            print("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
-            mal.append("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
-            os.remove(each_vcf)
-
-    write_out.close()
-    os.rename(temp_file, each_vcf)
-    return mal
-
-
 def get_species(arg_options):
 
     #species = corresponding NCBI accession
@@ -2145,22 +2101,6 @@ def change_names(arg_options, genotype_codes):
         for each_vcf in list_of_files:
             shutil.copy(each_vcf, arg_options['root_dir'])
         print(file_number)
-    #fix files
-    vcf_list = glob.glob('*vcf')
-    print("Fixing files...\n")
-    if arg_options['debug_call'] and not arg_options['get']:
-        for each_vcf in vcf_list:
-            print(each_vcf)
-            mal = fix_vcf(each_vcf, arg_options)
-            malformed = list(mal)
-    else:
-        with futures.ProcessPoolExecutor() as pool:
-            mal = pool.map(fix_vcf, vcf_list, itertools_repeat(arg_options))
-            malformed = malformed + list(mal)
-    malformed = [x for x in malformed if x] # remove blanks
-    print("done fixing")
-    arg_options['malformed'] = malformed
-    arg_options['names_not_changed'] = names_not_changed
     return arg_options
 
 

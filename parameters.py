@@ -102,9 +102,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1/data",
                 "spoligo_db": None,
-                "reference": script_dependents + "/mel-bv1-NC003317.fasta",
+                "reference": script_dependents + "/NC_003317-NC_003318.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": [script_dependents + "/NC_003317-NC_003318.gbk"],
+                "gbk_file": [script_dependents + "/NC_003317.gbk", script_dependents + "/NC_003318.gbk"],
                 "species": species_selection,
             }
         elif species_selection == "mel1b":
@@ -112,9 +112,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1b/data",
                 "spoligo_db": None,
-                "reference": script_dependents + "/mel-bv1b-CP018508.fasta",
+                "reference": script_dependents + "/NZ_CP018508-NZ_CP018509.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": [script_dependents + "/mel-bv1b-CP018508.gbk"],
+                "gbk_file": [script_dependents + "/NZ_CP018508.gbk", script_dependents + "/NZ_CP018509.gbk"],
                 "species": species_selection,
             }
         elif species_selection == "mel2":
@@ -122,9 +122,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv2/data",
                 "spoligo_db": None,
-                "reference": script_dependents + "/mel-bv2-NC012441.fasta",
+                "reference": script_dependents + "/NC_012441-NC_012442.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": [script_dependents + "/NC_012441-NC_012442.gbk"],
+                "gbk_file": [script_dependents + "/NC_012441.gbk", script_dependents + "/NC_012442.gbk"],
                 "species": species_selection,
             }
         elif species_selection == "mel3":
@@ -132,9 +132,9 @@ class Get_Specie_Parameters_Step1():
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv3/data",
                 "spoligo_db": None,
-                "reference": script_dependents + "/mel-bv3-NZCP007760.fasta",
+                "reference": script_dependents + "/NZ_CP007760-NZ_CP007761.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
-                "gbk_file": [script_dependents + "/NZ_CP007760-NZ_CP007761.gbk"],
+                "gbk_file": [script_dependents + "/NZ_CP007760.gbk", script_dependents + "/NZ_CP007761.gbk"],
                 "species": species_selection,
             }
         elif species_selection == "suis1":
@@ -457,7 +457,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": [script_dependents + "/NC_003317-NC_003318.gbk"],
+                "gbk_file": [script_dependents + "/NC_003317.gbk", script_dependents + "/NC_003318.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -469,7 +469,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": [script_dependents + "/mel-bv1b-CP018508.gbk"],
+                "gbk_file": [script_dependents + "/NZ_CP018508.gbk", script_dependents + "/NZ_CP018509.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -481,7 +481,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": [script_dependents + "/NC_012441-NC_012442.gbk"],
+                "gbk_file": [script_dependents + "/NC_012441.gbk", script_dependents + "/NC_012442.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
@@ -493,7 +493,7 @@ class Get_Specie_Parameters_Step2():
             parameters = {
                 "qual_gatk_threshold": 300,
                 "N_gatk_threshold": 350,
-                "gbk_file": [script_dependents + "/NZ_CP007760-NZ_CP007761.gbk"],
+                "gbk_file": [script_dependents + "/NZ_CP007760.gbk", script_dependents + "/NZ_CP007761.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",

@@ -1454,6 +1454,12 @@ def get_species(arg_options):
     species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
     species_cross_reference["suis3"] = ["007719", "007718"]
     species_cross_reference["suis4"] = ["B-REF-BS4-40"]
+    species_cross_reference["te_09-0932"] = ["CP021201"]
+    species_cross_reference["te_89-0490"] = ["CP021199"]
+    species_cross_reference["te_92-0972"] = ["CP021060"]
+    species_cross_reference["te_98-0554"] = ["CP021246"]
+    species_cross_reference["te_atcc35865"] = ["NC_018108"]
+    species_cross_reference["te_mce9"] = ["NC_014914"]
     vcf_list = glob.glob('*vcf')
     for each_vcf in vcf_list:
         print(each_vcf)

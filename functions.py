@@ -2063,7 +2063,8 @@ def change_names(arg_options, genotype_codes):
             names_not_changed.append(each_vcf)
             print("File NOT Changed: {} --> {}" .format(filename, each_vcf))
     names_not_changed = set(names_not_changed) # remove duplicates
-
+    arg_options['names_not_changed'] = names_not_changed
+    
     if arg_options['elite']:
         list_of_files = []
         list_of_files = glob.glob('*vcf')
@@ -2101,6 +2102,7 @@ def change_names(arg_options, genotype_codes):
         for each_vcf in list_of_files:
             shutil.copy(each_vcf, arg_options['root_dir'])
         print(file_number)
+    
     return arg_options
 
 

@@ -7,6 +7,8 @@ import argparse
 import textwrap
 import glob
 import random
+from concurrent import futures
+from itertools import repeat as itertools_repeat
 
 import functions
 
@@ -186,7 +188,7 @@ elif vcf_check:
     malformed = [x for x in malformed if x] # remove blanks
     print("done fixing")
     arg_options['malformed'] = malformed
-    arg_options['names_not_changed'] = names_not_changed
+    
     if not arg_options['species']:
         species = functions.get_species(arg_options)
         if species is None:

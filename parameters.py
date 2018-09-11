@@ -40,7 +40,7 @@ class Get_Specie_Parameters_Step1():
         elif species_selection == "te_atcc35865":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/vsnp/te_atcc35865/script_dependents"
             parameters = {
-                "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script1",
+                "upload_to": str(self.upload_to) + "/bi/taylorella/te_atcc35865/script1",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_018108.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
@@ -362,7 +362,7 @@ class Get_Specie_Parameters_Step2():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script2",
+                "step2_upload": str(self.upload_to) + "/bi/taylorella/te_atcc35865/script2",
             }
         elif species_selection == "typhimurium-14028S":
             script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents"

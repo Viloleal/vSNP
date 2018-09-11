@@ -2718,9 +2718,8 @@ def get_snps(directory, arg_options):
 
     try:
         os.remove(ordered_list_from_tree)
-        os.remove('map_quality.txt')
         if arg_options['gbk_file']:
-            os.remove("annotations.txt")
+            os.remove("annotations.csv")
         os.remove("outfile.txt")
         os.remove(out_sort)
         os.remove(out_org) # organized.txt table

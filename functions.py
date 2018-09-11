@@ -2663,6 +2663,7 @@ def get_snps(directory, arg_options):
         if arg_options['gbk_file']:
             os.remove("annotations.csv")
         os.remove("outfile.txt")
+        os.remove("map_quality.txt")
         os.remove(out_sort)
         os.remove(out_org) # organized.txt table
         os.remove(table_location) # unorganized table

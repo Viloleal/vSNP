@@ -308,8 +308,8 @@ def species_selection_step1(arg_options):
         arg_options.update(parameters)
         return arg_options
     elif parameters:
-        shutil.copy2(parameters["reference"], arg_options['root_dir'])
-        shutil.copy2(parameters["hqs"], arg_options['root_dir'])
+        #shutil.copy2(parameters["reference"], arg_options['root_dir'])
+        #shutil.copy2(parameters["hqs"], arg_options['root_dir'])
         arg_options.update(parameters)
         return arg_options
     else:

@@ -278,7 +278,7 @@ class Get_Specie_Parameters_Step1():
                 "species": species_selection,
             }
         elif species_selection == "para":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/vsnp/NC_002944/script_dependents"
+            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/NC_002944/script_dependents"
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
                 "spoligo_db": None,
@@ -705,7 +705,7 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/h37/script2",
             }
         elif species_selection == "para":
-            script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/vsnp/NC_002944/script_dependents"
+            script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/NC_002944/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,

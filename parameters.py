@@ -278,9 +278,9 @@ class Get_Specie_Parameters_Step1():
                 "species": species_selection,
             }
         elif species_selection == "para":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/para_cattle-bison/script_dependents"
+            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/vsnp/NC_002944/script_dependents"
             parameters = {
-                "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/data",
+                "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
                 "spoligo_db": None,
                 "reference": script_dependents + "/NC_002944.fasta",
                 "hqs": script_dependents + "/highqualitysnps.vcf",
@@ -705,12 +705,12 @@ class Get_Specie_Parameters_Step2():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/h37/script2",
             }
         elif species_selection == "para":
-            script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/para_cattle-bison/script_dependents"
+            script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/vsnp/NC_002944/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,
                 "N_gatk_threshold": 150,
-                "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_genotyping_codes.xlsx",
+                "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx",
                 "gbk_file": [script_dependents + "/NC_002944.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",

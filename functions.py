@@ -14,6 +14,7 @@ import pandas as pd
 import zipfile
 import xlsxwriter
 import xlrd
+import pysam
 import vcf
 import smtplib
 from multiprocessing import Pool
@@ -652,15 +653,21 @@ def align_reads(arg_options):
         os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
         os.system("samtools index {}" .format(qualitybam))
 
-        print("\n@@@ Depth of coverage using GATK")
-        os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+        print("\n@@@ Depth of coverage using pysam")
+        #os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+        coverage_dict = {}
+        coverage_list = pysam.depth(prebam, split_lines=True)
+        for line in coverage_list:
+            chrom, position, depth = line.split('\t')
+            coverage_dict[chrom + "-" + position] = depth
+        coverage_df = pd.DataFrame.from_dict(coverage_dict, orient='index', columns=["depth"])
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
         os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
         try:
             print("Getting Zero Coverage...\n")
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_df, hapall, loc_sam)
         except FileNotFoundError:
             print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
             text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
@@ -1306,7 +1313,7 @@ def spoligo(arg_options):
     os.chdir(sample_directory)
 
 
-def add_zero_coverage(coverage_in, vcf_file, loc_sam):
+def add_zero_coverage(coverage_df, vcf_file, loc_sam):
     temp_vcf = loc_sam + "-temp.vcf"
     zero_coverage_vcf = loc_sam + "_zc.vcf"
     zero_position = []

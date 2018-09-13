@@ -1373,8 +1373,8 @@ def add_zero_coverage(coverage_df, hapall, loc_sam):
         for cf in cat_files:
             with open(cf, "rb") as infile:
                 outfile.write(infile.read())
-    return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-
+    return (zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
+    
 
 def send_email_step1(email_list, runtime, path_found, summary_file):
     text = "See attached:  "

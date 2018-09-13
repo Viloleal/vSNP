@@ -655,12 +655,29 @@ def align_reads(arg_options):
 
         print("\n@@@ Depth of coverage using pysam")
         #os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
+        print("Getting coveage...")
         coverage_dict = {}
-        coverage_list = pysam.depth(prebam, split_lines=True)
+        coverage_list = pysam.depth(qualitybam, split_lines=True)
         for line in coverage_list:
             chrom, position, depth = line.split('\t')
             coverage_dict[chrom + "-" + position] = depth
         coverage_df = pd.DataFrame.from_dict(coverage_dict, orient='index', columns=["depth"])
+        zero_dict = {}
+        for record in SeqIO.parse(sample_reference, "fasta"):
+            chrom = record.id
+            total_len = len(record.seq)
+            for pos in list(range(1, total_len + 1)):
+                zero_dict[str(chrom) + "-" + str(pos)] = 0
+        zero_df = pd.DataFrame.from_dict(zero_dict, orient='index', columns=["depth"])
+        #df with depth_x and depth_y columns, depth_y index is NaN
+        coverage_df = zero_df.merge(coverage_df, left_index=True, right_index=True, how='outer')
+        #depth_x "0" column no longer needed
+        coverage_df = coverage_df.drop(columns=['depth_x'])
+        coverage_df = coverage_df.rename(columns = {'depth_y':'depth'})
+        #covert the NaN to 0 coverage
+        coverage_df = coverage_df.fillna(0)
+        coverage_df['depth'] = coverage_df['depth'].apply(int)
+        print("...coverage found")
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
         os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))

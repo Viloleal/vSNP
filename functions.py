@@ -1350,10 +1350,7 @@ def add_zero_coverage(coverage_df, hapall, loc_sam):
 
     vcf_df = pd.read_csv(hapall, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
 
-    good_snps = vcf_df
-    good_snps['ALT'] = good_snps[good_snps['ALT'].str.len() == 1]
-    good_snps['REF'] = good_snps[good_snps['REF'].str.len() == 1]
-    good_snp_count = len(good_snps[good_snps['QUAL'] > 150])
+    good_snp_count = len(vcf_df[(vcf_df['ALT'].str.len() == 1) & (vcf_df['REF'].str.len() == 1) & (vcf_df['QUAL'] > 150)])
 
     vcf_df_snp = vcf_df[vcf_df['REF'].str.len() == 1]
     vcf_df_snp = vcf_df_snp[vcf_df_snp['ALT'].str.len() == 1]

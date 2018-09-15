@@ -749,7 +749,6 @@ def align_reads(arg_options):
         os.remove('temp.csv')
         os.remove('v_header.csv')
         os.remove('v_annotated_body.csv')
-        os.remove(coverage_file)
         os.remove(samfile)
         os.remove(allbam)
         os.remove(nodupbam)
@@ -1306,8 +1305,6 @@ def spoligo(arg_options):
 
 def add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf):
     print("\n@@@ Depth of coverage using pysam")
-    #os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
-    print("Getting coveage...")
     coverage_dict = {}
     coverage_list = pysam.depth(qualitybam, split_lines=True)
     for line in coverage_list:

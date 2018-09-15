@@ -2,3 +2,4 @@ _site
 __pycache__
 *.DS_Store
 .sass-cache
+dependencies/bi/salmonella/heidelberg-SL476/script_dependents/Thumbs.db

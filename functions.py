@@ -1614,7 +1614,7 @@ def run_script2(arg_options):
             write_out = open('temp.csv', 'w+')
             for key, value in gbk_dict.items():
                 for feature in value.features:
-                    if "CDS" in feature.type:
+                    if "CDS" in feature.type or "rRNA" in feature.type:
                         myproduct = None
                         mylocus = None
                         mygene = None
@@ -1631,7 +1631,7 @@ def run_script2(arg_options):
             write_out.close()
             
             df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
-            os.remove('temp.csv')
+            #os.remove('temp.csv')
             df = df.sort_values(['start', 'gene'], ascending=[True, False])
             df = df.drop_duplicates('start')
             pro = df.reset_index(drop=True)

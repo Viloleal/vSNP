@@ -14,7 +14,6 @@ dependencies:
   - pyvcf
   - xlrd
   - xlsxwriter
-  - gitpython
   - bwa
   - samtools
   - picard

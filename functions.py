@@ -1762,7 +1762,11 @@ def run_script2(arg_options):
         print("\n<h2>Program versions:</h2>", file=htmlfile)
         versions = os.popen('conda list biopython | grep -v "^#"; \
         conda list numpy | egrep -v "^#|numpydoc"; \
-        conda list pandas | grep -v "^#"; \
+        conda list pandas | grep - v "^#"; \
+        conda list pysam | grep - v "^#"; \
+        conda list pyvcf | grep - v "^#"; \
+        conda list xlrd | grep - v "^#"; \
+        conda list xlsxwriter | grep - v "^#"; \
         conda list raxml | grep -v "^#"').read()
         versions = versions.split('\n')
         for i in versions:

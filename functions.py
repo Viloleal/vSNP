@@ -1660,6 +1660,7 @@ def run_script2(arg_options):
             write_out.close()
             
             df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
+            os.remove('temp.csv')
             df = df.sort_values(['start', 'gene'], ascending=[True, False])
             df = df.drop_duplicates('start')
             pro = df.reset_index(drop=True)

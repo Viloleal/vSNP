@@ -685,7 +685,7 @@ def align_reads(arg_options):
                 gbk_chrome = list(gbk_dict.keys())[0]
                 for key, value in gbk_dict.items():
                     for feature in value.features:
-                        if "CDS" in feature.type:
+                        if "CDS" in feature.type or "rRNA" in feature.type:
                             myproduct = None
                             mylocus = None
                             mygene = None
@@ -946,7 +946,7 @@ def get_annotations(line, in_annotation_as_dict):
                 for feature in each_value.features:
                     position = int(position)
                     #print(position)
-                    if position in feature and "CDS" in feature.type:
+                    if position in feature and ("CDS" in feature.type or "rRNA" in feature.type):
                         myproduct = "none list"
                         mylocus = "none list"
                         mygene = "none list"

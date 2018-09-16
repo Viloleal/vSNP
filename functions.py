@@ -14,6 +14,7 @@ import pandas as pd
 import zipfile
 import xlsxwriter
 import xlrd
+import pysam
 import vcf
 import smtplib
 from multiprocessing import Pool
@@ -568,6 +569,7 @@ def align_reads(arg_options):
         coverage_file = loc_sam + "-coverage.txt"
         hapall = loc_sam + "-hapall.vcf"
         bamout = loc_sam + "-bamout.bam"
+        zero_coverage_vcf = loc_sam + "_zc.vcf"
         print("\n@@@ BWA mem")
         os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
 
@@ -652,15 +654,11 @@ def align_reads(arg_options):
         os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
         os.system("samtools index {}" .format(qualitybam))
 
-        print("\n@@@ Depth of coverage using GATK")
-        os.system("gatk -T DepthOfCoverage -R {} -I {} -o {} -omitIntervals --omitLocusTable --omitPerSampleStats -nt 8" .format(sample_reference, prebam, coverage_file))
-
         print("\n@@@ Calling SNPs with HaplotypeCaller")
         os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
         try:
-            print("Getting Zero Coverage...\n")
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(coverage_file, hapall, loc_sam)
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf)
         except FileNotFoundError:
             print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
             text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
@@ -751,7 +749,6 @@ def align_reads(arg_options):
         os.remove('temp.csv')
         os.remove('v_header.csv')
         os.remove('v_annotated_body.csv')
-        os.remove(coverage_file)
         os.remove(samfile)
         os.remove(allbam)
         os.remove(nodupbam)
@@ -1306,100 +1303,74 @@ def spoligo(arg_options):
     os.chdir(sample_directory)
 
 
-def add_zero_coverage(coverage_in, vcf_file, loc_sam):
-    temp_vcf = loc_sam + "-temp.vcf"
-    zero_coverage_vcf = loc_sam + "_zc.vcf"
-    zero_position = []
-    total_length = 0
-    total_zero_coverage = 0
-    with open(coverage_in) as f:
-        for line in f:
-            total_length = total_length + 1
-            line.rstrip()
-            line = re.split(':|\t', line)
-            chromosome = line[0]
-            position = line[1]
-            abs_pos = chromosome + "-" + position
-            depth = line[2]
-            if depth == "0":
-                zero_position.append(abs_pos) #positions with zero coverage in coverage file
-                total_zero_coverage = total_zero_coverage + 1
-        print(len(zero_position))
-    genome_coverage = 0
-    total_coverage = total_length - total_zero_coverage
+def add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf):
+    print("\n@@@ Depth of coverage using pysam")
+    coverage_dict = {}
+    coverage_list = pysam.depth(qualitybam, split_lines=True)
+    for line in coverage_list:
+        chrom, position, depth = line.split('\t')
+        coverage_dict[chrom + "-" + position] = depth
+    coverage_df = pd.DataFrame.from_dict(coverage_dict, orient='index', columns=["depth"])
+    zero_dict = {}
+    for record in SeqIO.parse(sample_reference, "fasta"):
+        chrom = record.id
+        total_len = len(record.seq)
+        for pos in list(range(1, total_len + 1)):
+            zero_dict[str(chrom) + "-" + str(pos)] = 0
+    zero_df = pd.DataFrame.from_dict(zero_dict, orient='index', columns=["depth"])
+    #df with depth_x and depth_y columns, depth_y index is NaN
+    coverage_df = zero_df.merge(coverage_df, left_index=True, right_index=True, how='outer')
+    #depth_x "0" column no longer needed
+    coverage_df = coverage_df.drop(columns=['depth_x'])
+    coverage_df = coverage_df.rename(columns={'depth_y': 'depth'})
+    #covert the NaN to 0 coverage
+    coverage_df = coverage_df.fillna(0)
+    coverage_df['depth'] = coverage_df['depth'].apply(int)
 
+    print("...coverage found")
+    total_length = len(coverage_df)
+    ave_coverage = coverage_df['depth'].mean()
+
+    zero_df = coverage_df[coverage_df['depth'] == 0]
+    total_zero_coverage = len(zero_df)
+    print("Total zero coverage positions: {:,}" .format(total_zero_coverage))
+    total_coverage = total_length - total_zero_coverage
     genome_coverage = "{:.2%}".format(total_coverage / total_length)
 
-    average_list = []
-    with open(coverage_in) as f:
-        for line in f:
-            line.rstrip()
-            line = re.split(':|\t', line)
-            depth = str(line[2])
-            if depth.isdigit():
-                depth = int(depth)
-                average_list.append(depth)
-        ave_coverage = mean(average_list)
+    header_out = open('v_header.csv', 'w+')
+    with open(hapall) as fff:
+        for line in fff:
+            if re.search('^#', line):
+                print(line.strip(), file=header_out)
+    header_out.close()
 
-    zero_position_found = []
-    write_out = open(temp_vcf, 'w')
-    with open(vcf_file) as f:
-        for line in f:
-            line = line.rstrip()
-            if line.startswith("#"): # save headers to file
-                print(line, file=write_out)
-            elif not line.startswith("#"): # position rows
-                split_line = line.split('\t')
-                chromosome = split_line[0] # get chromosome
-                position = split_line[1] # get position
-                abs_pos = chromosome + "-" + position
-                ref = split_line[3] # REF
-                alt = split_line[4] # ALT
-                ref_len = len(ref)
-                alt_len = len(alt)
-                if abs_pos in zero_position: # if a position has zero coverage
-                    print("%s is in zeropostions" % position)
-                    zero_position_found.append(position)
-                    print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line
-                elif ref_len == 1 and alt_len == 1:
-                    print(line, file=write_out)
-        print("##### Chromosome: %s" % chromosome)
-        #zero_position = list(map(int, zero_position)) # change list items from string to numbers
-        #zero_position_found = list(map(int, zero_position_found))
+    vcf_df = pd.read_csv(hapall, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
 
-        print("using list comprehension")
-        zero_not_added = [x for x in zero_position if x not in zero_position_found] # use list comprehension to subtract one list from the other
-        for abs_position in zero_not_added:
-            split_line = abs_position.rsplit('-', 1)
-            chromosome = split_line[0]
-            position = split_line[1]
-            print("%s\t%s\t.\tN\t.\t.\t.\t.\tGT\t./." % (chromosome, position), file=write_out) # print a zero coverage line
-    write_out.close()
+    good_snp_count = len(vcf_df[(vcf_df['ALT'].str.len() == 1) & (vcf_df['REF'].str.len() == 1) & (vcf_df['QUAL'] > 150)])
 
-    os.system("picard SortVcf INPUT={} OUTPUT={}" .format(temp_vcf, zero_coverage_vcf))
-    #os.system("vcf-sort {} > {}" .format(temp_vcf, zero_coverage_vcf))
-    os.remove(temp_vcf)
-    vcf_reader = vcf.Reader(open(zero_coverage_vcf, 'r'))
-    good_snp_count = 0
-    for record in vcf_reader:
-        try:
-            position = record.POS
-            try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > 150:
-                    good_snp_count = good_snp_count + 1
-            except KeyError:
-                pass
-        except ZeroDivisionError:
-            print("ZeroDivisionError error found")
-        except ValueError:
-            print("ValueError error found")
-        except UnboundLocalError:
-            print("UnboundLocalError error found")
-        except TypeError:
-            print("TypeError error found")
-
-    return(zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-
+    vcf_df_snp = vcf_df[vcf_df['REF'].str.len() == 1]
+    vcf_df_snp = vcf_df_snp[vcf_df_snp['ALT'].str.len() == 1]
+    vcf_df_snp['ABS_VALUE'] = vcf_df_snp['CHROM'].map(str) + '-' + vcf_df_snp['POS'].map(str)
+    vcf_df_snp = vcf_df_snp.set_index('ABS_VALUE')    
+    cat_df = pd.concat([vcf_df_snp, zero_df], axis=1, sort=False)
+    cat_df = cat_df.drop(columns=['CHROM', 'POS', 'depth'])
+    cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']] = cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']].fillna('.')
+    cat_df['REF'] = cat_df['REF'].fillna('N')
+    cat_df['FORMAT'] = cat_df['FORMAT'].fillna('GT')
+    cat_df['Sample'] = cat_df['Sample'].fillna('./.')
+    cat_df['temp'] = cat_df.index.str.split('-')
+    cat_df[['CHROM', 'POS']] = pd.DataFrame(cat_df.temp.values.tolist(), index=cat_df.index)
+    cat_df = cat_df[['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'Sample']]
+    cat_df['POS'] = cat_df['POS'].astype(int)
+    cat_df = cat_df.sort_values(['CHROM', 'POS'])
+    cat_df.to_csv('v_annotated_body.csv', sep='\t', header=False, index=False)
+    cat_files = ['v_header.csv', 'v_annotated_body.csv']
+    with open(zero_coverage_vcf, "wb") as outfile:
+        for cf in cat_files:
+            with open(cf, "rb") as infile:
+                outfile.write(infile.read())
+    return (zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
+    
 
 def send_email_step1(email_list, runtime, path_found, summary_file):
     text = "See attached:  "

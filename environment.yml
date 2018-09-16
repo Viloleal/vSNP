@@ -8,6 +8,7 @@ dependencies:
   - python=3.6
   - biopython
   - dask
+  - pysam
   - regex
   - pandas
   - pyvcf

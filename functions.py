@@ -543,7 +543,7 @@ def align_reads(arg_options):
 
         loc_sam = working_directory + "/" + sample_name
         os.system("samtools faidx {}" .format(sample_reference))
-        os.system("gatk-launch CreateSequenceDictionary -R {}" .format(sample_reference))
+        os.system("gatk CreateSequenceDictionary -R {}" .format(sample_reference))
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
         allbam = loc_sam + "-all.bam"
@@ -563,7 +563,7 @@ def align_reads(arg_options):
         analysis_ready_bam = loc_sam + "-analysis-ready.bam"
         hapall_informative = loc_sam + "-hapall_informative.vcf"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
-        hapall_gvcf = loc_sam + "-hapall.gvcf"
+        hapall = loc_sam + "-hapall.vcf"
         annotation_vcf = loc_sam + "-nozero.vcf"
         bamout = loc_sam + "-bamout.bam"
 
@@ -610,7 +610,7 @@ def align_reads(arg_options):
             #allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
 
         print("\n@@@ Find duplicate reads")
-        os.system("gatk-launch MarkDuplicatesGATK --input={} --output {} --METRICS_FILE {}" .format(sortedbam, nodupbam, metrics))
+        os.system("gatk MarkDuplicates --INPUT={} --OUTPUT={} --METRICS_FILE={}" .format(sortedbam, nodupbam, metrics))
         os.system("samtools index {}" .format(nodupbam))
         duplicate_stat_file = "duplicate_stat_align.txt"
         duplicate_stat_out = open(duplicate_stat_file, 'w')
@@ -631,48 +631,49 @@ def align_reads(arg_options):
         print(unmapped_reads)
 
         # print("\n@@@ Base recalibration")
-        # os.system("gatk-launch IndexFeatureFile -F {}" .format(hqs))
-        # os.system("gatk-launch BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
+        # os.system("gatk IndexFeatureFile -F {}" .format(hqs))
+        # os.system("gatk BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
 
         # print("\n@@@ Make realigned BAM")
-        # os.system("gatk-launch ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, analysis_ready_bam))
+        # os.system("gatk ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, analysis_ready_bam))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
+        # os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
+        os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall, bamout))
+        os.system("gatk GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall, 'hapall-temp.vcf'))
 
-        os.system("gatk-launch HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
+        # vcf_reader = vcf.Reader(open(hapall_gvcf), 'r')
+        # vcf_hapall_informative_writer = vcf.Writer(open(hapall_informative, 'w'), vcf_reader)
 
-        vcf_reader = vcf.Reader(open(hapall_gvcf), 'r')
-        vcf_hapall_informative_writer = vcf.Writer(open(hapall_informative, 'w'), vcf_reader)
+        # print("Cutting GVCF to informative positions...\n")
+        # genome_length = 0
+        # total_bases = 0
+        # zero_coverage = 0
+        # good_snp_count = 0
+        # for record in vcf_reader:
+        #     try:
+        #         genome_length += 1
+        #         total_bases += record.genotype(vcf_reader.samples[0])['DP']
+        #         if record.genotype(vcf_reader.samples[0])['GT'] != '0/0':
+        #             vcf_hapall_informative_writer.write_record(record)
+        #             if record.QUAL >= 300:
+        #                 good_snp_count += 1
+        #         elif int(record.genotype(vcf_reader.samples[0])['DP']) == int(0):
+        #             vcf_hapall_informative_writer.write_record(record)
+        #             zero_coverage += 1
+        #     except:
+        #         pass
+        # vcf_hapall_informative_writer.close()
 
-        print("Cutting GVCF to informative positions...\n")
-        genome_length = 0
-        total_bases = 0
-        zero_coverage = 0
-        good_snp_count = 0
-        for record in vcf_reader:
-            try:
-                genome_length += 1
-                total_bases += record.genotype(vcf_reader.samples[0])['DP']
-                if record.genotype(vcf_reader.samples[0])['GT'] != '0/0':
-                    vcf_hapall_informative_writer.write_record(record)
-                    if record.QUAL >= 300:
-                        good_snp_count += 1
-                elif int(record.genotype(vcf_reader.samples[0])['DP']) == int(0):
-                    vcf_hapall_informative_writer.write_record(record)
-                    zero_coverage += 1
-            except:
-                pass
-        vcf_hapall_informative_writer.close()
+        # with open(hapall_informative, 'r') as file:
+        #     entire_file = file.read()
+        # #trick GenotypeGVCF into keeping the zero coverage position
+        # entire_file = re.sub(r'<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0:0:0:0,0,0', r'N,<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0,0:1000:0:1000,0,0,0,0,0', entire_file)
+        # with open(hapall_informative, 'w') as file:
+        #     file.write(entire_file)
 
-        with open(hapall_informative, 'r') as file:
-            entire_file = file.read()
-        #trick GenotypeGVCF into keeping the zero coverage position
-        entire_file = re.sub(r'<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0:0:0:0,0,0', r'N,<NON_REF>\t.\t.\t.\tGT:AD:DP:GQ:PL\t0/0:0,0,0:1000:0:1000,0,0,0,0,0', entire_file)
-        with open(hapall_informative, 'w') as file:
-            file.write(entire_file)
-
-        os.system("gatk-launch GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall_informative, 'hapall-temp'))
-        os.rename('hapall-temp', hapall)
+        # os.system("gatk GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall_informative, 'hapall-temp'))
+        # os.rename('hapall-temp', hapall)
 
         with open(hapall_informative, 'r') as file:
             entire_file = file.read()

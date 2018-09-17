@@ -548,7 +548,7 @@ def align_reads(arg_options):
 
         loc_sam = working_directory + "/" + sample_name
         os.system("samtools faidx {}" .format(sample_reference))
-        os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
+        os.system("gatk CreateSequenceDictionary -R {}" .format(sample_reference))
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
         allbam = loc_sam + "-all.bam"
@@ -564,9 +564,11 @@ def align_reads(arg_options):
         indel_realigner = loc_sam + ".intervals"
         realignedbam = loc_sam + "-realigned.bam"
         recal_group = loc_sam + "-recal_group"
-        prebam = loc_sam + "-pre.bam"
-        qualitybam = loc_sam + "-quality.bam"
-        coverage_file = loc_sam + "-coverage.txt"
+        #prebam=loc_sam + "-pre.bam"
+        analysis_ready_bam = loc_sam + "-analysis-ready.bam"
+        hapall_informative = loc_sam + "-hapall_informative.vcf"
+        zero_coverage_vcf = loc_sam + "_zc.vcf"
+        prehapall = loc_sam + "-prehapall.vcf"
         hapall = loc_sam + "-hapall.vcf"
         bamout = loc_sam + "-bamout.bam"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
@@ -607,16 +609,13 @@ def align_reads(arg_options):
             first_line = first_line.rstrip()
             first_line = re.split(':|\t', first_line)
             reference_sequence_name = str(first_line[0])
-            #sequence_length = "{:,}".format(int(first_line[1]))
             allbam_mapped_reads = int(first_line[2])
-            #allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
 
         print("\n@@@ Find duplicate reads")
-        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
+        os.system("gatk MarkDuplicates --INPUT={} --OUTPUT={} --METRICS_FILE={}" .format(sortedbam, nodupbam, metrics))
         os.system("samtools index {}" .format(nodupbam))
         duplicate_stat_file = "duplicate_stat_align.txt"
         duplicate_stat_out = open(duplicate_stat_file, 'w')
-        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
         duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
         duplicate_stat_out.close()
         with open(duplicate_stat_file) as f:
@@ -624,7 +623,6 @@ def align_reads(arg_options):
             dup_first_line = dup_first_line.rstrip()
             dup_first_line = re.split(':|\t', dup_first_line)
             nodupbam_mapped_reads = int(dup_first_line[2])
-            #nodupbam_unmapped_reads = int(dup_first_line[3])
         try:
             unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
         except:
@@ -632,33 +630,14 @@ def align_reads(arg_options):
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
         print(unmapped_reads)
 
-        print("\n@@@  Realign indels")
-        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        if not os.path.isfile(indel_realigner):
-            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
 
-        print("\n@@@ Base recalibration")
-        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
 
-        print("\n@@@ Make realigned BAM")
-        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-        if not os.path.isfile(prebam):
-            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-
-        print("\n@@@ Clip reads")
-        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
-        os.system("samtools index {}" .format(qualitybam))
-
-        print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+        print("\n@@@ Calling SNPs with GATK 4 HaplotypeCaller")
+        os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, prehapall, bamout))
+        os.system("gatk GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, prehapall, hapall))
 
         try:
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf)
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_reference, nodupbam, hapall, zero_coverage_vcf)
         except FileNotFoundError:
             print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
             text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
@@ -749,27 +728,17 @@ def align_reads(arg_options):
         os.remove('temp.csv')
         os.remove('v_header.csv')
         os.remove('v_annotated_body.csv')
+        os.remove(prehapall)
         os.remove(samfile)
         os.remove(allbam)
-        os.remove(nodupbam)
-        os.remove(nodupbam + ".bai")
         os.remove(unmapsam)
         os.remove(sortedbam)
         os.remove(sortedbam + ".bai")
-        os.remove(indel_realigner)
-        os.remove(realignedbam)
-        os.remove(loc_sam + "-realigned.bai")
-        os.remove(recal_group)
-        os.remove(prebam)
-        os.remove(loc_sam + "-pre.bai")
-        os.remove(hqs)
-        os.remove(hqs + ".idx")
         os.remove(sample_reference + ".amb")
         os.remove(sample_reference + ".ann")
         os.remove(sample_reference + ".bwt")
         os.remove(sample_reference + ".pac")
         os.remove(sample_reference + ".sa")
-        os.remove(ref + ".dict")
         os.remove(duplicate_stat_file)
         os.remove(stat_file)
 
@@ -1022,8 +991,11 @@ def mlst(arg_options):
     os.system("samtools index {}" .format(sortedbam))
 
     print("\n@@@ Calling SNPs with UnifiedGenotyper")
+    vcf_mlst = directory + "/" + sample_name + "_premlst" + ".vcf"
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
-    os.system("gatk -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
+    #os.system("gatk -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
+    os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference_mlst_location, sortedbam, prevcf_mlst, bamout))
+    os.system("gatk GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference_mlst_location, prevcf_mlst, vcf_mlst))
 
     # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
 
@@ -1229,11 +1201,6 @@ def spoligo(arg_options):
         #if < 100 then search all reads, not just those with repeat regions.
         seq_string = "".join(sequence_list)
 
-    # for spacer_id, spacer_sequence in spoligo_dictionary.items():
-    #     count = finding_sp(spacer_sequence)
-    #     count_summary.update({spacer_id: count})
-    # count_summary = OrderedDict(sorted(count_summary.items()))
-    # print("count_summary {}" .format(count_summary))
 
     for spacer_id, spacer_sequence in spoligo_dictionary.items():
         count = delayed(finding_sp)(spacer_sequence)

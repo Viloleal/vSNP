@@ -561,12 +561,8 @@ def align_reads(arg_options):
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
         metrics = loc_sam + "-metrics.txt"
-        indel_realigner = loc_sam + ".intervals"
-        realignedbam = loc_sam + "-realigned.bam"
         recal_group = loc_sam + "-recal_group"
-        #prebam=loc_sam + "-pre.bam"
-        analysis_ready_bam = loc_sam + "-analysis-ready.bam"
-        hapall_informative = loc_sam + "-hapall_informative.vcf"
+        realignedbam = loc_sam + "-realigned.bam"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
         prehapall = loc_sam + "-prehapall.vcf"
         hapall = loc_sam + "-hapall.vcf"
@@ -630,7 +626,11 @@ def align_reads(arg_options):
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
         print(unmapped_reads)
 
+        print("\n@@@ Base Quality Score Recalibration")
+        os.system("gatk BaseRecalibrator --reference= {} --input={} --known-sites={} --output={}" .format(sample_reference, nodupbam, hqs, recal_group))
 
+        print("\n@@@ Apply ApplyBQSR")
+        os.system("gatk ApplyBQSR --input={} --bqsr-recal-file={} --output={}" .format(nodupbam, recal_group, realignedbam))
 
         print("\n@@@ Calling SNPs with GATK 4 HaplotypeCaller")
         os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, prehapall, bamout))
@@ -991,10 +991,10 @@ def mlst(arg_options):
     os.system("samtools index {}" .format(sortedbam))
 
     print("\n@@@ Calling SNPs with UnifiedGenotyper")
-    vcf_mlst = directory + "/" + sample_name + "_premlst" + ".vcf"
+    prevcf_mlst = directory + "/" + sample_name + "_premlst" + ".vcf"
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
     #os.system("gatk -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
-    os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference_mlst_location, sortedbam, prevcf_mlst, bamout))
+    os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {}" .format(sample_reference_mlst_location, sortedbam, prevcf_mlst))
     os.system("gatk GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference_mlst_location, prevcf_mlst, vcf_mlst))
 
     # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.

@@ -551,8 +551,9 @@ def align_reads(arg_options):
         os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
-        allbam = loc_sam + "-all.bam"
+        bamfile = loc_sam + ".bam"
         unmapsam = loc_sam + "-unmapped.sam"
+        metrics = loc_sam + "-metrics.txt"
         unmapped_read1 = loc_sam + "-unmapped_R1.fastq"
         unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
         unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
@@ -560,105 +561,66 @@ def align_reads(arg_options):
         spades_output = loc_sam + "-unmapped_contigs.fasta"
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
-        metrics = loc_sam + "-metrics.txt"
-        indel_realigner = loc_sam + ".intervals"
-        realignedbam = loc_sam + "-realigned.bam"
-        recal_group = loc_sam + "-recal_group"
-        prebam = loc_sam + "-pre.bam"
-        qualitybam = loc_sam + "-quality.bam"
-        coverage_file = loc_sam + "-coverage.txt"
+        unfiltered_hapall = loc_sam + "-unfiltered_hapall.vcf"
         hapall = loc_sam + "-hapall.vcf"
-        bamout = loc_sam + "-bamout.bam"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
 
         #########################################################
-        print("\n@@@ BWA mem")
+        print("\n@@@ BWA mem: {}" .format(sample_name))
         os.system(r'bwa mem -M -R "@RG\tID:%s\tSM:%s\tPL:ILLUMINA\tPI:250" -t 16 %s %s %s > %s' % (sample_name, sample_name, sample_reference, R1, R2, samfile))
-        
-        # pysam.view()  #sam to bam
-        # bamtools sort -in <BAM> -out <BAM> #sort
-        # pysam.rmdup() #remove duplicates
-       
-        # print("\n@@@ Assemblying unmapped reads")
-        # pysam.view()
-        # os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, allbam, unmapsam))
-        # print("\n@@@ Unmapped to FASTQ")
-        # os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
-        # spades_contig_count = None
-        # try:
-        #     os.system("spades.py -k 127 --careful -1 ${read1} -2 ${read2} -o spades_output &> /dev/null" .format(unmapped_read1, unmapped_read2))
-        #     with open(spades_output) as f:
-        #         for line in f:
-        #             spades_contig_count += line.count(">")
-        # except FileNotFoundError:
-        #     spades_contig_count = None
+        os.system("samtools view -Sb {} -o {}" .format(samfile, bamfile))
+        os.system("samtools sort {} -o {}" .format(bamfile, sortedbam))
+        os.system("samtools index {}" .format(sortedbam))
 
-        # os.system("samtools sort {} -o {}".format(allbam, sortedbam))
-        # pysam.index()
-        # os.system("samtools index {}" .format(sortedbam))
-        # print("\n@@@ Write stats to file")
-        # stat_file = "stat_align.txt"
-        # stat_out = open(stat_file, 'w')
-        # pysam.IndexStats()
-        # stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
-        # stat_out.close()
-        # duplicate_stat_file = "duplicate_stat_align.txt"
-        # duplicate_stat_out = open(duplicate_stat_file, 'w')
+        print("\n@@@ Remove Duplicate Reads: {}" .format(sample_name))
+        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
+        os.system("samtools index {}" .format(nodupbam))
 
-        # with open(stat_file) as f:
-        #     first_line = f.readline()
-        #     first_line = first_line.rstrip()
-        #     first_line = re.split(':|\t', first_line)
-        #     reference_sequence_name = str(first_line[0])
-        #     allbam_mapped_reads = int(first_line[2])
+        print("\n@@@ Calling SNPs with FreeBayes: {}" .format(sample_name))
+        os.system("freebayes -f {} {} > {}" .format(sample_reference, nodupbam, unfiltered_hapall))
+        os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (unfiltered_hapall, hapall))
 
-        # duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
-        # duplicate_stat_out.close()
-        # with open(duplicate_stat_file) as f:
-        #     dup_first_line = f.readline()
-        #     dup_first_line = dup_first_line.rstrip()
-        #     dup_first_line = re.split(':|\t', dup_first_line)
-        #     nodupbam_mapped_reads = int(dup_first_line[2])
-        # try:
-        #     unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
-        # except:
-        #     unmapped_reads = "none_found"
-        # allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
-        # print(unmapped_reads)
+        print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
+        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))
+        os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
+        spades_contig_count = None
+        try:
+            os.system("spades.py -k 127 --cov-cutoff 3 --careful -1 {} -2 {} -o spades_output &> /dev/null" .format(unmapped_read1, unmapped_read2))
+            with open("spades_output/scaffolds.fasta") as f:
+                for line in f:
+                    spades_contig_count += line.count(">")
+        except FileNotFoundError:
+            spades_contig_count = None
 
-        # print("\n@@@ Calling SNPs with FreeBayes")
-        # freebayes - f ref.fa aln.bam | vcffilter - f "QUAL > 20" > var.qvcf
-        # freebayes-parallel <(fasta_generate_regions.py ref.fa.fai 100000) 36 -f ref.fa aln.bam >pvar.vcf
-
-
-
-        # print("\n@@@  Realign indels")
-        # os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        # if not os.path.isfile(indel_realigner):
-        #     os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        # os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-        # if not os.path.isfile(realignedbam):
-        #     os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-
-        # print("\n@@@ Base recalibration")
-        # os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-        # if not os.path.isfile(realignedbam):
-        #     os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-
-        # print("\n@@@ Make realigned BAM")
-        # os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-        # if not os.path.isfile(prebam):
-        #     os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-
-        # print("\n@@@ Clip reads")
-        # os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
-        # os.system("samtools index {}" .format(qualitybam))
-
-        # print("\n@@@ Calling SNPs with HaplotypeCaller")
-        # os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+        # Full bam stats
+        stat_out = open("stat_align.txt", 'w')
+        stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
+        stat_out.close()
+        with open("stat_align.txt") as f:
+            first_line = f.readline()
+            first_line = first_line.rstrip()
+            first_line = re.split(':|\t', first_line)
+            reference_sequence_name = str(first_line[0])
+            allbam_mapped_reads = int(first_line[2])
+        # Duplicate bam stats
+        duplicate_stat_file = "duplicate_stat_align.txt"
+        duplicate_stat_out = open(duplicate_stat_file, 'w')
+        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
+        duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
+        duplicate_stat_out.close()
+        with open(duplicate_stat_file) as f:
+            dup_first_line = f.readline()
+            dup_first_line = dup_first_line.rstrip()
+            dup_first_line = re.split(':|\t', dup_first_line)
+            nodupbam_mapped_reads = int(dup_first_line[2])
+        try:
+            unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
+        except:
+            unmapped_reads = "none_found"
+        allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
 
         try:
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf)
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_coverage_vcf)
         except FileNotFoundError:
             print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
             text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
@@ -679,7 +641,7 @@ def align_reads(arg_options):
             print("Putting gbk into indexed dataframe...")
             annotation_dict = {}
             for gbk in gbk_file:
-                print("gbk %s" % gbk)
+                print("gbk file: %s" % gbk)
                 write_out = open('temp.csv', 'w+')
                 gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
                 gbk_chrome = list(gbk_dict.keys())[0]
@@ -705,7 +667,6 @@ def align_reads(arg_options):
                 df = df.drop_duplicates('start')
                 pro = df.reset_index(drop=True)
                 pro.index = pd.IntervalIndex.from_arrays(pro['start'], pro['stop'], closed='both')
-                print(gbk_chrome)
                 annotation_dict[gbk_chrome] = pro
 
             header_out = open('v_header.csv', 'w+')
@@ -721,7 +682,6 @@ def align_reads(arg_options):
 
             annotate_condense_dict = {}
             for gbk_chrome, pro in annotation_dict.items():
-                print("gbk_chrome: %s" % gbk_chrome)
                 matching_chrom_df = vcf_df[vcf_df['CHROM'] == gbk_chrome]
                 for index, row in matching_chrom_df.iterrows():
                     pos = row.POS
@@ -750,19 +710,13 @@ def align_reads(arg_options):
         os.remove('v_header.csv')
         os.remove('v_annotated_body.csv')
         os.remove(samfile)
-        os.remove(allbam)
         os.remove(nodupbam)
         os.remove(nodupbam + ".bai")
         os.remove(unmapsam)
         os.remove(sortedbam)
         os.remove(sortedbam + ".bai")
-        os.remove(indel_realigner)
-        os.remove(realignedbam)
-        os.remove(loc_sam + "-realigned.bai")
-        os.remove(recal_group)
-        os.remove(prebam)
-        os.remove(loc_sam + "-pre.bai")
         os.remove(hqs)
+        os.remove(unfiltered_hapall)
         os.remove(hqs + ".idx")
         os.remove(sample_reference + ".amb")
         os.remove(sample_reference + ".ann")
@@ -771,7 +725,6 @@ def align_reads(arg_options):
         os.remove(sample_reference + ".sa")
         os.remove(ref + ".dict")
         os.remove(duplicate_stat_file)
-        os.remove(stat_file)
 
         unmapped = working_directory + "/unmapped"
         os.makedirs(unmapped)
@@ -1303,8 +1256,8 @@ def spoligo(arg_options):
     os.chdir(sample_directory)
 
 
-def add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf):
-    print("\n@@@ Depth of coverage using pysam")
+def add_zero_coverage(sample_name, sample_reference, qualitybam, hapall, zero_coverage_vcf):
+    print("\n@@@ Depth of coverage using pysam: {}"  .format(sample_name))
     coverage_dict = {}
     coverage_list = pysam.depth(qualitybam, split_lines=True)
     for line in coverage_list:

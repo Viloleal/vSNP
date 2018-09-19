@@ -552,13 +552,13 @@ def align_reads(arg_options):
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
         bamfile = loc_sam + ".bam"
+        abyss_out = loc_sam + "-unmapped_contigs.fasta"
         unmapsam = loc_sam + "-unmapped.sam"
         metrics = loc_sam + "-metrics.txt"
         unmapped_read1 = loc_sam + "-unmapped_R1.fastq"
         unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
         unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
         unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
-        spades_output = loc_sam + "-unmapped_contigs.fasta"
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
         unfiltered_hapall = loc_sam + "-unfiltered_hapall.vcf"
@@ -594,14 +594,15 @@ def align_reads(arg_options):
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
         os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))
         os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
-        spades_contig_count = None
+
+        abyss_contig_count = None
+        os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
         try:
-            os.system("spades.py -k 127 --cov-cutoff 3 --careful -1 {} -2 {} -o spades_output &> /dev/null" .format(unmapped_read1, unmapped_read2))
-            with open("spades_output/scaffolds.fasta") as f:
+            with open(abyss_out) as f:
                 for line in f:
-                    spades_contig_count += line.count(">")
+                    abyss_contig_count += line.count(">")
         except FileNotFoundError:
-            spades_contig_count = None
+            abyss_contig_count = None
 
         # Full bam stats
         stat_out = open("stat_align.txt", 'w')
@@ -749,7 +750,7 @@ def align_reads(arg_options):
         try:
             shutil.move(unmapped_read1gz, unmapped)
             shutil.move(unmapped_read2gz, unmapped)
-            shutil.move(spades_output, unmapped)
+            shutil.move(abyss_out, unmapped)
         except FileNotFoundError:
             pass
         alignment = working_directory + "/alignment"
@@ -803,7 +804,7 @@ def align_reads(arg_options):
         try:
             verison_out = open("version_capture.txt", 'w')
             print(os.popen('conda list bwa | grep -v "^#"; \
-                conda list spades | grep -v "^#"; \
+                conda list abyss | grep -v "^#"; \
                 conda list picard | grep -v "^#"; \
                 conda list samtools | grep -v "^#"; \
                 conda list gatk | grep -v "^#"; \
@@ -836,7 +837,7 @@ def align_reads(arg_options):
         stat_summary["ave_coverage"] = ave_coverage
         stat_summary["ave_read_length"] = ave_read_length
         stat_summary["unmapped_reads"] = unmapped_reads
-        stat_summary["unmapped_assembled_contigs"] = spades_contig_count
+        stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
         stat_summary["good_snp_count"] = good_snp_count
         stat_summary["mlst_type"] = mlst_type
         stat_summary["octalcode"] = octalcode

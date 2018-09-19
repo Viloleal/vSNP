@@ -557,7 +557,7 @@ def align_reads(arg_options):
         unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
         unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
         unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
-        abyss_out = loc_sam + "-unmapped_contigs.fasta"
+        spades_output = loc_sam + "-unmapped_contigs.fasta"
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
         metrics = loc_sam + "-metrics.txt"
@@ -570,92 +570,92 @@ def align_reads(arg_options):
         hapall = loc_sam + "-hapall.vcf"
         bamout = loc_sam + "-bamout.bam"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
+
+        #########################################################
         print("\n@@@ BWA mem")
-        os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
+        os.system(r'bwa mem -M -R "@RG\tID:%s\tSM:%s\tPL:ILLUMINA\tPI:250" -t 16 %s %s %s > %s' % (sample_name, sample_name, sample_reference, R1, R2, samfile))
+        
+        # pysam.view()  #sam to bam
+        # bamtools sort -in <BAM> -out <BAM> #sort
+        # pysam.rmdup() #remove duplicates
+       
+        # print("\n@@@ Assemblying unmapped reads")
+        # pysam.view()
+        # os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, allbam, unmapsam))
+        # print("\n@@@ Unmapped to FASTQ")
+        # os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
+        # spades_contig_count = None
+        # try:
+        #     os.system("spades.py -k 127 --careful -1 ${read1} -2 ${read2} -o spades_output &> /dev/null" .format(unmapped_read1, unmapped_read2))
+        #     with open(spades_output) as f:
+        #         for line in f:
+        #             spades_contig_count += line.count(">")
+        # except FileNotFoundError:
+        #     spades_contig_count = None
 
-        print("\nAdd read group and out all BAM")
-        os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile, allbam, sample_name))
-        os.system("samtools index {}" .format(allbam))
+        # os.system("samtools sort {} -o {}".format(allbam, sortedbam))
+        # pysam.index()
+        # os.system("samtools index {}" .format(sortedbam))
+        # print("\n@@@ Write stats to file")
+        # stat_file = "stat_align.txt"
+        # stat_out = open(stat_file, 'w')
+        # pysam.IndexStats()
+        # stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
+        # stat_out.close()
+        # duplicate_stat_file = "duplicate_stat_align.txt"
+        # duplicate_stat_out = open(duplicate_stat_file, 'w')
 
-        print("\n@@@ Samtools unmapped")
-        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, allbam, unmapsam))
+        # with open(stat_file) as f:
+        #     first_line = f.readline()
+        #     first_line = first_line.rstrip()
+        #     first_line = re.split(':|\t', first_line)
+        #     reference_sequence_name = str(first_line[0])
+        #     allbam_mapped_reads = int(first_line[2])
 
-        print("\n@@@ Unmapped to FASTQ")
-        os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
-        print("\n@@@ Abyss")
-        abyss_contig_count = 0
+        # duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
+        # duplicate_stat_out.close()
+        # with open(duplicate_stat_file) as f:
+        #     dup_first_line = f.readline()
+        #     dup_first_line = dup_first_line.rstrip()
+        #     dup_first_line = re.split(':|\t', dup_first_line)
+        #     nodupbam_mapped_reads = int(dup_first_line[2])
+        # try:
+        #     unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
+        # except:
+        #     unmapped_reads = "none_found"
+        # allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
+        # print(unmapped_reads)
 
-        os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
-        try:
-            with open(abyss_out) as f:
-                for line in f:
-                    abyss_contig_count += line.count(">")
-        except FileNotFoundError:
-            abyss_contig_count = 0
+        # print("\n@@@ Calling SNPs with FreeBayes")
+        # freebayes - f ref.fa aln.bam | vcffilter - f "QUAL > 20" > var.qvcf
+        # freebayes-parallel <(fasta_generate_regions.py ref.fa.fai 100000) 36 -f ref.fa aln.bam >pvar.vcf
 
-        print("\n@@@ Sort BAM")
-        os.system("samtools sort {} -o {}" .format(allbam, sortedbam))
-        os.system("samtools index {}" .format(sortedbam))
-        print("\n@@@ Write stats to file")
-        stat_file = "stat_align.txt"
-        stat_out = open(stat_file, 'w')
-        stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
-        stat_out.close()
 
-        with open(stat_file) as f:
-            first_line = f.readline()
-            first_line = first_line.rstrip()
-            first_line = re.split(':|\t', first_line)
-            reference_sequence_name = str(first_line[0])
-            #sequence_length = "{:,}".format(int(first_line[1]))
-            allbam_mapped_reads = int(first_line[2])
-            #allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
 
-        print("\n@@@ Find duplicate reads")
-        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
-        os.system("samtools index {}" .format(nodupbam))
-        duplicate_stat_file = "duplicate_stat_align.txt"
-        duplicate_stat_out = open(duplicate_stat_file, 'w')
-        #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
-        duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
-        duplicate_stat_out.close()
-        with open(duplicate_stat_file) as f:
-            dup_first_line = f.readline()
-            dup_first_line = dup_first_line.rstrip()
-            dup_first_line = re.split(':|\t', dup_first_line)
-            nodupbam_mapped_reads = int(dup_first_line[2])
-            #nodupbam_unmapped_reads = int(dup_first_line[3])
-        try:
-            unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
-        except:
-            unmapped_reads = "none_found"
-        allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
-        print(unmapped_reads)
+        # print("\n@@@  Realign indels")
+        # os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        # if not os.path.isfile(indel_realigner):
+        #     os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
+        # os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+        # if not os.path.isfile(realignedbam):
+        #     os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
 
-        print("\n@@@  Realign indels")
-        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        if not os.path.isfile(indel_realigner):
-            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
+        # print("\n@@@ Base recalibration")
+        # os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+        # if not os.path.isfile(realignedbam):
+        #     os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
 
-        print("\n@@@ Base recalibration")
-        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
+        # print("\n@@@ Make realigned BAM")
+        # os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
+        # if not os.path.isfile(prebam):
+        #     os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
 
-        print("\n@@@ Make realigned BAM")
-        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-        if not os.path.isfile(prebam):
-            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
+        # print("\n@@@ Clip reads")
+        # os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
+        # os.system("samtools index {}" .format(qualitybam))
 
-        print("\n@@@ Clip reads")
-        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
-        os.system("samtools index {}" .format(qualitybam))
-
-        print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
+        # print("\n@@@ Calling SNPs with HaplotypeCaller")
+        # os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
         try:
             zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf)
@@ -787,7 +787,7 @@ def align_reads(arg_options):
         try:
             shutil.move(unmapped_read1gz, unmapped)
             shutil.move(unmapped_read2gz, unmapped)
-            shutil.move(abyss_out, unmapped)
+            shutil.move(spades_output, unmapped)
         except FileNotFoundError:
             pass
         alignment = working_directory + "/alignment"
@@ -841,7 +841,7 @@ def align_reads(arg_options):
         try:
             verison_out = open("version_capture.txt", 'w')
             print(os.popen('conda list bwa | grep -v "^#"; \
-                conda list abyss | grep -v "^#"; \
+                conda list spades | grep -v "^#"; \
                 conda list picard | grep -v "^#"; \
                 conda list samtools | grep -v "^#"; \
                 conda list gatk | grep -v "^#"; \
@@ -874,7 +874,7 @@ def align_reads(arg_options):
         stat_summary["ave_coverage"] = ave_coverage
         stat_summary["ave_read_length"] = ave_read_length
         stat_summary["unmapped_reads"] = unmapped_reads
-        stat_summary["unmapped_assembled_contigs"] = abyss_contig_count
+        stat_summary["unmapped_assembled_contigs"] = spades_contig_count
         stat_summary["good_snp_count"] = good_snp_count
         stat_summary["mlst_type"] = mlst_type
         stat_summary["octalcode"] = octalcode

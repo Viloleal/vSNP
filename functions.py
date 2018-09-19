@@ -595,14 +595,14 @@ def align_reads(arg_options):
         os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))
         os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
 
-        abyss_contig_count = None
+        abyss_contig_count = 0
         try:
             os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
             with open(abyss_out) as f:
                 for line in f:
                     abyss_contig_count += line.count(">")
         except FileNotFoundError:
-            abyss_contig_count = None
+            abyss_contig_count = 0
 
         # Full bam stats
         stat_out = open("stat_align.txt", 'w')

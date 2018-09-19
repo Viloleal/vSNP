@@ -576,11 +576,19 @@ def align_reads(arg_options):
         os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
         os.system("samtools index {}" .format(nodupbam))
 
-        print("\n@@@ Calling SNPs with FreeBayes: {}" .format(sample_name))
-        os.system("freebayes -f {} {} > {}" .format(sample_reference, nodupbam, unfiltered_hapall))
-        # freebayes-parallel <(fasta_generate_regions.py NC_002945v4.fasta.fai 100000) 4 -f NC_002945v4.fasta 01-3941.bam > p.vcf
-        os.system(r'freebayes-parallel <(fasta_generate_regions.py %s 100000) 4 -f %s %s > %s' % (sample_reference + ".fai", sample_reference, nodupbam, unfiltered_hapall))
-
+        print("\n@@@ Calling SNPs with FreeBayes Parallel: {}" .format(sample_name))
+        #os.system("freebayes -f {} {} > {}" .format(sample_reference, nodupbam, unfiltered_hapall))
+        chrom_ranges = open("chrom_ranges.txt", 'w')
+        for record in SeqIO.parse(sample_reference, "fasta"):
+            chrom = record.id
+            total_len = len(record.seq)
+            last_number = 0
+            for pos in list(range(last_number, total_len, 100000))[1:]:
+                print("{}:{}-{}" .format(chrom, last_number, pos), file=chrom_ranges)
+                last_number = pos
+            print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
+        chrom_ranges.close()
+        os.system(r'freebayes-parallel chrom_ranges.txt 8 -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
         os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (unfiltered_hapall, hapall))
 
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))

@@ -596,8 +596,8 @@ def align_reads(arg_options):
         os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
 
         abyss_contig_count = None
-        os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
         try:
+            os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
             with open(abyss_out) as f:
                 for line in f:
                     abyss_contig_count += line.count(">")
@@ -807,7 +807,6 @@ def align_reads(arg_options):
                 conda list abyss | grep -v "^#"; \
                 conda list picard | grep -v "^#"; \
                 conda list samtools | grep -v "^#"; \
-                conda list gatk | grep -v "^#"; \
                 conda list biopython | grep -v "^#"').read(), file=verison_out)
             verison_out.close()
         except:

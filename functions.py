@@ -1256,10 +1256,10 @@ def spoligo(arg_options):
     os.chdir(sample_directory)
 
 
-def add_zero_coverage(sample_name, sample_reference, qualitybam, hapall, zero_coverage_vcf):
+def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_coverage_vcf):
     print("\n@@@ Depth of coverage using pysam: {}"  .format(sample_name))
     coverage_dict = {}
-    coverage_list = pysam.depth(qualitybam, split_lines=True)
+    coverage_list = pysam.depth(nodupbam, split_lines=True)
     for line in coverage_list:
         chrom, position, depth = line.split('\t')
         coverage_dict[chrom + "-" + position] = depth

@@ -200,7 +200,7 @@ def run_loop(arg_options):  #calls read_aligner
                     shutil.move(summary_cumulative_file, '{}' .format(temp_folder + '/stat_backup' + st + '.xlsx'))
                     sorter = list(df_all_trans.index) #list of original column order
                     frames.insert(0, df_all_trans) #put as first item in list
-                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     df_sorted.T.to_excel(summary_cumulative_file, index=False) # transpose before writing to excel, numerical index not needed
                 except BlockingIOError:
@@ -578,6 +578,9 @@ def align_reads(arg_options):
 
         print("\n@@@ Calling SNPs with FreeBayes: {}" .format(sample_name))
         os.system("freebayes -f {} {} > {}" .format(sample_reference, nodupbam, unfiltered_hapall))
+        # freebayes-parallel <(fasta_generate_regions.py NC_002945v4.fasta.fai 100000) 4 -f NC_002945v4.fasta 01-3941.bam > p.vcf
+        os.system(r'freebayes-parallel <(fasta_generate_regions.py %s 100000) 4 -f %s %s > %s' % (sample_reference + ".fai", sample_reference, nodupbam, unfiltered_hapall))
+
         os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (unfiltered_hapall, hapall))
 
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
@@ -715,9 +718,7 @@ def align_reads(arg_options):
         os.remove(unmapsam)
         os.remove(sortedbam)
         os.remove(sortedbam + ".bai")
-        os.remove(hqs)
         os.remove(unfiltered_hapall)
-        os.remove(hqs + ".idx")
         os.remove(sample_reference + ".amb")
         os.remove(sample_reference + ".ann")
         os.remove(sample_reference + ".bwt")

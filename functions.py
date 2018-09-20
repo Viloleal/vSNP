@@ -1805,6 +1805,11 @@ def group_files(each_vcf, arg_options):
         group_calls.append(each_vcf)
         # for each single vcf getting passing position
         for record in vcf_reader:
+            try:
+                # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+                record.INFO['MQ'] = record.INFO['MQ'][0]
+            except TypeError:
+                pass
             chrom = record.CHROM
             position = record.POS
             absolute_positon = str(chrom) + "-" + str(position)

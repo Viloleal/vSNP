@@ -2093,6 +2093,13 @@ def find_filter_dict(each_vcf):
     dict_map = {}
     vcf_reader = vcf.Reader(open(each_vcf, 'r'))
     for record in vcf_reader:
+        try:
+            # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+            record.INFO['MQ'] = record.INFO['MQ'][0]
+        except TypeError:
+            pass
+        except KeyError:
+            pass
         absolute_positon = str(record.CHROM) + "-" + str(record.POS)
         try:
             returned_qual = []
@@ -2314,6 +2321,13 @@ def get_snps(directory, arg_options):
         vcf_reader = vcf.Reader(open(file_name, 'r'))
         sample_dict = {}
         for record in vcf_reader:
+            try:
+                # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+                record.INFO['MQ'] = record.INFO['MQ'][0]
+            except TypeError:
+                pass
+            except KeyError:
+                pass
             record_position = str(record.CHROM) + "-" + str(record.POS)
             if record_position in all_positions:
                 #print("############, %s, %s" % (file_name, record_position))

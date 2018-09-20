@@ -1810,6 +1810,8 @@ def group_files(each_vcf, arg_options):
                 record.INFO['MQ'] = record.INFO['MQ'][0]
             except TypeError:
                 pass
+            except KeyError:
+                pass
             chrom = record.CHROM
             position = record.POS
             absolute_positon = str(chrom) + "-" + str(position)

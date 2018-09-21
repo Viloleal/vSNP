@@ -722,8 +722,6 @@ def align_reads(arg_options):
         os.remove('v_header.csv')
         os.remove('v_annotated_body.csv')
         os.remove(samfile)
-        os.remove(nodupbam)
-        os.remove(nodupbam + ".bai")
         os.remove(unmapsam)
         os.remove(sortedbam)
         os.remove(sortedbam + ".bai")

@@ -588,7 +588,7 @@ def align_reads(arg_options):
                 last_number = pos
             print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
         chrom_ranges.close()
-        os.system(r'freebayes-parallel chrom_ranges.txt 8 --no-complex -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
+        os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 --strict-vcf -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
         os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (unfiltered_hapall, hapall))
 
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))

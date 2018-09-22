@@ -562,6 +562,7 @@ def align_reads(arg_options):
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
         unfiltered_hapall = loc_sam + "-unfiltered_hapall.vcf"
+        mapq_fix = loc_sam + "-mapq_fix_hapall.vcf"
         hapall = loc_sam + "-hapall.vcf"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
 
@@ -589,7 +590,16 @@ def align_reads(arg_options):
             print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
         chrom_ranges.close()
         os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 --strict-vcf -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
-        os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (unfiltered_hapall, hapall))
+        # "fix" MQ notation in VCF to match GATK output
+        write_fix = open(mapq_fix, 'w+')
+        with open(unfiltered_hapall, 'r') as unfiltered:
+            for line in unfiltered:
+                line = line.strip()
+                new_line = re.sub(r';MQM=', r';MQ=', line)
+                print(new_line, file=write_fix)
+            write_fix.close()
+        # remove clearly poor positions
+        os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (mapq_fix, hapall))
 
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
         os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))

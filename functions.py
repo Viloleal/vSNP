@@ -630,16 +630,16 @@ def align_reads(arg_options):
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
         print(unmapped_reads)
 
-        # print("\n@@@ Base recalibration")
-        # os.system("gatk IndexFeatureFile -F {}" .format(hqs))
-        # os.system("gatk BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
+        print("\n@@@ Base recalibration")
+        os.system("gatk IndexFeatureFile -F {}" .format(hqs))
+        os.system("gatk BaseRecalibrator -I {} -R {} --known-sites {} -O {}". format(nodupbam, sample_reference, hqs, recal_group))
 
-        # print("\n@@@ Make realigned BAM")
-        # os.system("gatk ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, analysis_ready_bam))
+        print("\n@@@ Make realigned BAM")
+        os.system("gatk ApplyBQSR -R {} -I {} --bqsr-recal-file {} -O {}" .format(sample_reference, nodupbam, recal_group, analysis_ready_bam))
 
         print("\n@@@ Calling SNPs with HaplotypeCaller")
         # os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall_bp, bamout))
-        os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, nodupbam, hapall, bamout))
+        os.system("gatk HaplotypeCaller -ERC BP_RESOLUTION -R {} -I {} -O {} -bamout {}" .format(sample_reference, analysis_ready_bam, hapall, bamout))
         os.system("gatk GenotypeGVCFs -R {} -V {} -O {}" .format(sample_reference, hapall, 'hapall-temp.vcf'))
 
         # vcf_reader = vcf.Reader(open(hapall_gvcf), 'r')

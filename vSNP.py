@@ -125,7 +125,7 @@ elif args.email == "suelee-":
 elif args.email == "tyler-":
     email_list = "tod.p.stuber@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov"
 elif args.email == "chris":
-    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov"
+    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov"
 elif args.email == "chris-":
     email_list = "tod.p.stuber@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov"
 elif args.email == "doris":

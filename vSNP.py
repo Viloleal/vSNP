@@ -20,6 +20,7 @@ def fix_vcf(each_vcf, arg_options):
     # Fix common VCF errors
     temp_file = each_vcf + ".temp"
     write_out = open(temp_file, 'w') #r+ used for reading and writing to the same file
+    initial_file_time_stats = os.stat(each_vcf)
     with open(each_vcf, 'r') as file:
         try:
             for line in file:
@@ -56,6 +57,8 @@ def fix_vcf(each_vcf, arg_options):
 
     write_out.close()
     os.rename(temp_file, each_vcf)
+    # revert timestamp to original allows elites to properly sort on file modification time
+    os.utime(each_vcf, times=(initial_file_time_stats.st_mtime, initial_file_time_stats.st_mtime))
     return mal
 
 #set cpu usage

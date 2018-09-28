@@ -993,9 +993,9 @@ def mlst(arg_options):
     print("\n@@@ Index BAM")
     os.system("samtools index {}" .format(sortedbam))
 
-    print("\n@@@ Calling SNPs with UnifiedGenotyper")
+    print("\n@@@ Calling SNPs with freebayes")
     unfiltered_vcf_mlst = directory + "/" + sample_name + "unfiltered_mlst" + ".vcf"
-    mapq_fix = loc_sam + "-mapq_fix_mlst.vcf"
+    mapq_fix = loc_sam_mlst + "-mapq_fix_mlst.vcf"
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
 
     os.system("freebayes -f {} {} > {}" .format(sample_reference_mlst_location, sortedbam, unfiltered_vcf_mlst))
@@ -1009,7 +1009,7 @@ def mlst(arg_options):
         write_fix.close()
     # remove clearly poor positions
     os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (mapq_fix, vcf_mlst))
-    
+
     # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
 
     target_vcf_positions = [231, 297, 363, 398, 429, 523, 631, 730, 1247, 1296, 1342, 1381, 1648, 1685, 1741, 1754, 2165, 2224, 2227, 2297, 2300, 2344, 2352, 2403, 2530, 2557, 2578, 2629, 3045, 3054, 3118, 3295, 3328, 3388, 3966, 3969, 4167, 4271, 4296, 4893, 4996, 4998, 5058, 5248, 5672, 5737, 5928, 5963, 5984, 5987, 6025, 6045, 6498, 6499, 6572, 6627, 6715, 6735, 6745, 6785, 6810, 6828, 6845, 6864, 6875, 7382, 7432, 7464, 7594, 7660, 7756]

@@ -394,7 +394,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/mycobacterium/tbc/af2122/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
-                "qual_gatk_threshold": 150,
+                "qual_threshold": 150,
                 "N_threshold": 150,
                 "gbk_file": [script_dependents + "/NC_002945v4.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -406,7 +406,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/taylorella/te_atcc35865/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_018108.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -418,7 +418,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/taylorella/te_09-0932/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021201.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -430,7 +430,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/taylorella/te_89-0490/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021199.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -442,7 +442,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/taylorella/te_92-0972/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021060.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -454,7 +454,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/taylorella/te_98-0554/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021246.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -466,7 +466,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/taylorella/te_mce9/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_014914.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -478,7 +478,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-14028S/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_016856.gbk", script_dependents + "/NC_016855.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -490,7 +490,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/salmonella/typhimurium-LT2/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/AE006468.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -502,7 +502,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/bi/salmonella/heidelberg-SL476/script_dependents"
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_011083.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -514,7 +514,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/suis1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_017251.gbk", script_dependents + "/NC_017250.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -527,7 +527,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/suis2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_010169.gbk", script_dependents + "/NC_010167.gbk"],
                 "definingSNPs": script_dependents + "/Defining_SNPs.xlsx",
@@ -539,7 +539,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/suis3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP007719.gbk", script_dependents + "/NZ_CP007718.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -551,7 +551,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/suis4/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": None,
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -563,7 +563,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/abortus1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_006932.gbk", script_dependents + "/NC_006933.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -575,7 +575,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/abortus3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP007682.gbk", script_dependents + "/NZ_CP007683.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -587,7 +587,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/melitensis-bv1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_003317.gbk", script_dependents + "/NC_003318.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -599,7 +599,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/melitensis-bv1b/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP018508.gbk", script_dependents + "/NZ_CP018509.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -611,7 +611,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/melitensis-bv2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_012441.gbk", script_dependents + "/NC_012442.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -623,7 +623,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/melitensis-bv3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP007760.gbk", script_dependents + "/NZ_CP007761.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -635,7 +635,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/canis/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_010103.gbk", script_dependents + "/NC_010104.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -647,7 +647,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/ceti1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": None,
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -659,7 +659,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/ceti2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_022905.gbk", script_dependents + "/NC_022906.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -671,7 +671,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/ovis/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_009505.gbk", script_dependents + "/NC_009504.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -683,7 +683,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/brucella/neotomae/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
-                "qual_gatk_threshold": 300,
+                "qual_threshold": 300,
                 "N_threshold": 350,
                 "gbk_file": [script_dependents + "/KN046827.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -695,7 +695,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/mycobacterium/tbc/h37/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
-                "qual_gatk_threshold": 150,
+                "qual_threshold": 150,
                 "N_threshold": 150,
                 "genotypingcodes": str(self.upload_to) + "/mycobacterium/genotyping_codes.xlsx",
                 "gbk_file": [script_dependents + "/NC_000962.gbk"],
@@ -708,7 +708,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = self.dependents_dir + "/mycobacterium/avium_complex/NC_002944/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
-                "qual_gatk_threshold": 150,
+                "qual_threshold": 150,
                 "N_threshold": 150,
                 "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx",
                 "gbk_file": [script_dependents + "/NC_002944.gbk"],
@@ -721,7 +721,7 @@ class Get_Specie_Parameters_Step2():
             script_dependents = None
             genotype_codes = None
             parameters = {
-                "qual_gatk_threshold": None,
+                "qual_threshold": None,
                 "N_threshold": None,
                 "gbk_file": None,
                 "definingSNPs": None,

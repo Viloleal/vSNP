@@ -994,9 +994,22 @@ def mlst(arg_options):
     os.system("samtools index {}" .format(sortedbam))
 
     print("\n@@@ Calling SNPs with UnifiedGenotyper")
+    unfiltered_vcf_mlst = directory + "/" + sample_name + "unfiltered_mlst" + ".vcf"
+    mapq_fix = loc_sam + "-mapq_fix_mlst.vcf"
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
-    os.system("gatk -R {} -T UnifiedGenotyper -glm BOTH -out_mode EMIT_ALL_SITES -I {} -o {} -nct 8" .format(sample_reference_mlst_location, sortedbam, vcf_mlst))
 
+    os.system("freebayes -f {} {} > {}" .format(sample_reference_mlst_location, sortedbam, unfiltered_vcf_mlst))
+    # "fix" MQ notation in VCF to match GATK output
+    write_fix = open(mapq_fix, 'w+')
+    with open(unfiltered_vcf_mlst, 'r') as unfiltered:
+        for line in unfiltered:
+            line = line.strip()
+            new_line = re.sub(r';MQM=', r';MQ=', line)
+            print(new_line, file=write_fix)
+        write_fix.close()
+    # remove clearly poor positions
+    os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (mapq_fix, vcf_mlst))
+    
     # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
 
     target_vcf_positions = [231, 297, 363, 398, 429, 523, 631, 730, 1247, 1296, 1342, 1381, 1648, 1685, 1741, 1754, 2165, 2224, 2227, 2297, 2300, 2344, 2352, 2403, 2530, 2557, 2578, 2629, 3045, 3054, 3118, 3295, 3328, 3388, 3966, 3969, 4167, 4271, 4296, 4893, 4996, 4998, 5058, 5248, 5672, 5737, 5928, 5963, 5984, 5987, 6025, 6045, 6498, 6499, 6572, 6627, 6715, 6735, 6745, 6785, 6810, 6828, 6845, 6864, 6875, 7382, 7432, 7464, 7594, 7660, 7756]
@@ -1056,6 +1069,8 @@ def mlst(arg_options):
     remove_files = glob.glob('*_mlst.vcf.idx')
     for i in remove_files:
         os.remove(i)
+    os.remove(mapq_fix)
+    os.remove(unfiltered_vcf_mlst)
 
     write_out = open("mlst.txt", 'w')
     if mlst_join in mlst_dictionary:
@@ -1455,7 +1470,7 @@ def run_script2(arg_options):
     all_parameters = Get_Specie_Parameters_Step2() # Class of possible parameters
     print("Sample will be ran as {}" .format(arg_options['species']))
     parameters, genotype_codes = all_parameters.choose(arg_options['species'])
-    if parameters['qual_gatk_threshold'] is None:
+    if parameters['qual_threshold'] is None:
         print("### See species_selection_step2 function")
         sys.exit(0)
     arg_options.update(parameters)
@@ -1835,7 +1850,7 @@ def group_files(each_vcf, arg_options):
             except TypeError:
                 record_alt_length = 0
             try:
-                if str(record.ALT[0]) != "None" and record_ref_length == 1 and record_alt_length == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['qual_gatk_threshold'] and record.INFO['MQ'] > 45:
+                if str(record.ALT[0]) != "None" and record_ref_length == 1 and record_alt_length == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['qual_threshold'] and record.INFO['MQ'] > 45:
                     list_pass.append(absolute_positon)
                 # capture ambigous defining SNPs in htmlfile
                 elif str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 1:
@@ -2143,7 +2158,7 @@ def find_positions(filename, arg_options):
             # record.QUAL > 150 --> filter poor quality
             # record.INFO['MQ'] --> filter low map quality
             try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_gatk_threshold']:
+                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
                     found_positions.update({absolute_positon: record.REF})
             except KeyError:
                 pass

@@ -2352,9 +2352,9 @@ def get_snps(directory, arg_options):
                 # not record.FILTER, or rather PASSED.
                 # check record.QUAL
                 # In GATK VCFs "!= None" not used.
-                if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['N_gatk_threshold']:
+                if str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['N_threshold']:
                     sample_dict.update({record_position: record.ALT[0]})
-                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > arg_options['N_gatk_threshold']:
+                elif str(record.ALT[0]) != "None" and len(record.ALT[0]) == 1 and record.INFO['AC'][0] == 1 and int(record.QUAL) > arg_options['N_threshold']:
                     ref_alt = str(record.ALT[0]) + str(record.REF[0])
                     if ref_alt == "AG":
                         sample_dict.update({record_position: "R"})
@@ -2385,7 +2385,7 @@ def get_snps(directory, arg_options):
                     # Poor calls
                 elif str(record.ALT[0]) != "None" and int(record.QUAL) <= 50:
                     sample_dict.update({record_position: record.REF[0]})
-                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= arg_options['N_gatk_threshold']:
+                elif str(record.ALT[0]) != "None" and int(record.QUAL) <= arg_options['N_threshold']:
                     sample_dict.update({record_position: "N"})
                 elif str(record.ALT[0]) != "None": #Insurance -- Will still report on a possible SNP even if missed with above statement
                     sample_dict.update({record_position: str(record.REF[0])})

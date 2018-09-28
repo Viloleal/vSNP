@@ -395,7 +395,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,
-                "N_gatk_threshold": 150,
+                "N_threshold": 150,
                 "gbk_file": [script_dependents + "/NC_002945v4.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -407,7 +407,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_018108.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -419,7 +419,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021201.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -431,7 +431,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021199.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -443,7 +443,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021060.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -455,7 +455,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP021246.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -467,7 +467,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_014914.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -479,7 +479,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_016856.gbk", script_dependents + "/NC_016855.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -491,7 +491,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/AE006468.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -503,7 +503,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_011083.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -515,7 +515,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_017251.gbk", script_dependents + "/NC_017250.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -528,7 +528,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_010169.gbk", script_dependents + "/NC_010167.gbk"],
                 "definingSNPs": script_dependents + "/Defining_SNPs.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -540,7 +540,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP007719.gbk", script_dependents + "/NZ_CP007718.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -552,7 +552,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": None,
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -564,7 +564,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_006932.gbk", script_dependents + "/NC_006933.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -576,7 +576,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP007682.gbk", script_dependents + "/NZ_CP007683.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -588,7 +588,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_003317.gbk", script_dependents + "/NC_003318.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -600,7 +600,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP018508.gbk", script_dependents + "/NZ_CP018509.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -612,7 +612,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_012441.gbk", script_dependents + "/NC_012442.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -624,7 +624,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NZ_CP007760.gbk", script_dependents + "/NZ_CP007761.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -636,7 +636,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_010103.gbk", script_dependents + "/NC_010104.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -648,7 +648,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": None,
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -660,7 +660,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_022905.gbk", script_dependents + "/NC_022906.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -672,7 +672,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/NC_009505.gbk", script_dependents + "/NC_009504.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -684,7 +684,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_brucella_codes()
             parameters = {
                 "qual_gatk_threshold": 300,
-                "N_gatk_threshold": 350,
+                "N_threshold": 350,
                 "gbk_file": [script_dependents + "/KN046827.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
@@ -696,7 +696,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,
-                "N_gatk_threshold": 150,
+                "N_threshold": 150,
                 "genotypingcodes": str(self.upload_to) + "/mycobacterium/genotyping_codes.xlsx",
                 "gbk_file": [script_dependents + "/NC_000962.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -709,7 +709,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = get_tb_codes()
             parameters = {
                 "qual_gatk_threshold": 150,
-                "N_gatk_threshold": 150,
+                "N_threshold": 150,
                 "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx",
                 "gbk_file": [script_dependents + "/NC_002944.gbk"],
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
@@ -722,7 +722,7 @@ class Get_Specie_Parameters_Step2():
             genotype_codes = None
             parameters = {
                 "qual_gatk_threshold": None,
-                "N_gatk_threshold": None,
+                "N_threshold": None,
                 "gbk_file": None,
                 "definingSNPs": None,
                 "remove_from_analysis": None,

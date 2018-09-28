@@ -200,7 +200,7 @@ def run_loop(arg_options):  #calls read_aligner
                     shutil.move(summary_cumulative_file, '{}' .format(temp_folder + '/stat_backup' + st + '.xlsx'))
                     sorter = list(df_all_trans.index) #list of original column order
                     frames.insert(0, df_all_trans) #put as first item in list
-                    df_concat = pd.concat(frames, axis=1) #cat frames
+                    df_concat = pd.concat(frames, axis=1, sort=True) #cat frames
                     df_sorted = df_concat.loc[sorter] #sort based on sorter order
                     df_sorted.T.to_excel(summary_cumulative_file, index=False) # transpose before writing to excel, numerical index not needed
                 except BlockingIOError:
@@ -551,69 +551,80 @@ def align_reads(arg_options):
         os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
-        allbam = loc_sam + "-all.bam"
+        bamfile = loc_sam + ".bam"
+        abyss_out = loc_sam + "-unmapped_contigs.fasta"
         unmapsam = loc_sam + "-unmapped.sam"
+        metrics = loc_sam + "-metrics.txt"
         unmapped_read1 = loc_sam + "-unmapped_R1.fastq"
         unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
         unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
         unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
-        abyss_out = loc_sam + "-unmapped_contigs.fasta"
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
-        metrics = loc_sam + "-metrics.txt"
-        indel_realigner = loc_sam + ".intervals"
-        realignedbam = loc_sam + "-realigned.bam"
-        recal_group = loc_sam + "-recal_group"
-        prebam = loc_sam + "-pre.bam"
-        qualitybam = loc_sam + "-quality.bam"
-        coverage_file = loc_sam + "-coverage.txt"
+        unfiltered_hapall = loc_sam + "-unfiltered_hapall.vcf"
+        mapq_fix = loc_sam + "-mapq_fix_hapall.vcf"
         hapall = loc_sam + "-hapall.vcf"
-        bamout = loc_sam + "-bamout.bam"
         zero_coverage_vcf = loc_sam + "_zc.vcf"
-        print("\n@@@ BWA mem")
-        os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference, R1, R2, samfile))
 
-        print("\nAdd read group and out all BAM")
-        os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile, allbam, sample_name))
-        os.system("samtools index {}" .format(allbam))
+        #########################################################
+        print("\n@@@ BWA mem: {}" .format(sample_name))
+        os.system(r'bwa mem -M -R "@RG\tID:%s\tSM:%s\tPL:ILLUMINA\tPI:250" -t 16 %s %s %s > %s' % (sample_name, sample_name, sample_reference, R1, R2, samfile))
+        os.system("samtools view -Sb {} -o {}" .format(samfile, bamfile))
+        os.system("samtools sort {} -o {}" .format(bamfile, sortedbam))
+        os.system("samtools index {}" .format(sortedbam))
 
-        print("\n@@@ Samtools unmapped")
-        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, allbam, unmapsam))
+        print("\n@@@ Remove Duplicate Reads: {}" .format(sample_name))
+        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
+        os.system("samtools index {}" .format(nodupbam))
 
-        print("\n@@@ Unmapped to FASTQ")
+        print("\n@@@ Calling SNPs with FreeBayes Parallel: {}" .format(sample_name))
+        #os.system("freebayes -f {} {} > {}" .format(sample_reference, nodupbam, unfiltered_hapall))
+        chrom_ranges = open("chrom_ranges.txt", 'w')
+        for record in SeqIO.parse(sample_reference, "fasta"):
+            chrom = record.id
+            total_len = len(record.seq)
+            last_number = 0
+            for pos in list(range(last_number, total_len, 100000))[1:]:
+                print("{}:{}-{}" .format(chrom, last_number, pos), file=chrom_ranges)
+                last_number = pos
+            print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
+        chrom_ranges.close()
+        os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 --strict-vcf -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
+        # "fix" MQ notation in VCF to match GATK output
+        write_fix = open(mapq_fix, 'w+')
+        with open(unfiltered_hapall, 'r') as unfiltered:
+            for line in unfiltered:
+                line = line.strip()
+                new_line = re.sub(r';MQM=', r';MQ=', line)
+                print(new_line, file=write_fix)
+            write_fix.close()
+        # remove clearly poor positions
+        os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (mapq_fix, hapall))
+
+        print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
+        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))
         os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
-        print("\n@@@ Abyss")
-        abyss_contig_count = 0
 
-        os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
+        abyss_contig_count = 0
         try:
+            os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
             with open(abyss_out) as f:
                 for line in f:
                     abyss_contig_count += line.count(">")
         except FileNotFoundError:
             abyss_contig_count = 0
 
-        print("\n@@@ Sort BAM")
-        os.system("samtools sort {} -o {}" .format(allbam, sortedbam))
-        os.system("samtools index {}" .format(sortedbam))
-        print("\n@@@ Write stats to file")
-        stat_file = "stat_align.txt"
-        stat_out = open(stat_file, 'w')
+        # Full bam stats
+        stat_out = open("stat_align.txt", 'w')
         stat_out.write(os.popen("samtools idxstats {} " .format(sortedbam)).read())
         stat_out.close()
-
-        with open(stat_file) as f:
+        with open("stat_align.txt") as f:
             first_line = f.readline()
             first_line = first_line.rstrip()
             first_line = re.split(':|\t', first_line)
             reference_sequence_name = str(first_line[0])
-            #sequence_length = "{:,}".format(int(first_line[1]))
             allbam_mapped_reads = int(first_line[2])
-            #allbam_unmapped_reads = "{:,}".format(int(first_line[3]))
-
-        print("\n@@@ Find duplicate reads")
-        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
-        os.system("samtools index {}" .format(nodupbam))
+        # Duplicate bam stats
         duplicate_stat_file = "duplicate_stat_align.txt"
         duplicate_stat_out = open(duplicate_stat_file, 'w')
         #os.system("samtools idxstats {} > {}" .format(sortedbam, stat_out)) Doesn't work when needing to std out.
@@ -624,41 +635,14 @@ def align_reads(arg_options):
             dup_first_line = dup_first_line.rstrip()
             dup_first_line = re.split(':|\t', dup_first_line)
             nodupbam_mapped_reads = int(dup_first_line[2])
-            #nodupbam_unmapped_reads = int(dup_first_line[3])
         try:
             unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
         except:
             unmapped_reads = "none_found"
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
-        print(unmapped_reads)
-
-        print("\n@@@  Realign indels")
-        os.system("gatk -T RealignerTargetCreator -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        if not os.path.isfile(indel_realigner):
-            os.system("gatk -T RealignerTargetCreator --fix_misencoded_quality_scores -I {} -R {} -o {}" .format(nodupbam, sample_reference, indel_realigner))
-        os.system("gatk -T IndelRealigner -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T IndelRealigner --fix_misencoded_quality_scores -I {} -R {} -targetIntervals {} -o {}" .format(nodupbam, sample_reference, indel_realigner, realignedbam))
-
-        print("\n@@@ Base recalibration")
-        os.system("gatk -T BaseRecalibrator -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-        if not os.path.isfile(realignedbam):
-            os.system("gatk -T BaseRecalibrator  --fix_misencoded_quality_scores -I {} -R {} -knownSites {} -o {}". format(realignedbam, sample_reference, hqs, recal_group))
-
-        print("\n@@@ Make realigned BAM")
-        os.system("gatk -T PrintReads -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-        if not os.path.isfile(prebam):
-            os.system("gatk -T PrintReads  --fix_misencoded_quality_scores -R {} -I {} -BQSR {} -o {}" .format(sample_reference, realignedbam, recal_group, prebam))
-
-        print("\n@@@ Clip reads")
-        os.system("gatk -T ClipReads -R {} -I {} -o {} -filterNoBases -dcov 10" .format(sample_reference, prebam, qualitybam))
-        os.system("samtools index {}" .format(qualitybam))
-
-        print("\n@@@ Calling SNPs with HaplotypeCaller")
-        os.system("gatk -R {} -T HaplotypeCaller -I {} -o {} -bamout {} -dontUseSoftClippedBases -allowNonUniqueKmersInRef" .format(sample_reference, qualitybam, hapall, bamout))
 
         try:
-            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf)
+            zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage = add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_coverage_vcf)
         except FileNotFoundError:
             print("#### ALIGNMENT ERROR, NO COVERAGE FILE: %s" % sample_name)
             text = "ALIGNMENT ERROR, NO COVERAGE FILE " + sample_name
@@ -679,7 +663,7 @@ def align_reads(arg_options):
             print("Putting gbk into indexed dataframe...")
             annotation_dict = {}
             for gbk in gbk_file:
-                print("gbk %s" % gbk)
+                print("gbk file: %s" % gbk)
                 write_out = open('temp.csv', 'w+')
                 gbk_dict = SeqIO.to_dict(SeqIO.parse(gbk, "genbank"))
                 gbk_chrome = list(gbk_dict.keys())[0]
@@ -705,7 +689,6 @@ def align_reads(arg_options):
                 df = df.drop_duplicates('start')
                 pro = df.reset_index(drop=True)
                 pro.index = pd.IntervalIndex.from_arrays(pro['start'], pro['stop'], closed='both')
-                print(gbk_chrome)
                 annotation_dict[gbk_chrome] = pro
 
             header_out = open('v_header.csv', 'w+')
@@ -721,7 +704,6 @@ def align_reads(arg_options):
 
             annotate_condense_dict = {}
             for gbk_chrome, pro in annotation_dict.items():
-                print("gbk_chrome: %s" % gbk_chrome)
                 matching_chrom_df = vcf_df[vcf_df['CHROM'] == gbk_chrome]
                 for index, row in matching_chrom_df.iterrows():
                     pos = row.POS
@@ -750,20 +732,11 @@ def align_reads(arg_options):
         os.remove('v_header.csv')
         os.remove('v_annotated_body.csv')
         os.remove(samfile)
-        os.remove(allbam)
-        os.remove(nodupbam)
-        os.remove(nodupbam + ".bai")
+        os.remove(bamfile)
         os.remove(unmapsam)
         os.remove(sortedbam)
         os.remove(sortedbam + ".bai")
-        os.remove(indel_realigner)
-        os.remove(realignedbam)
-        os.remove(loc_sam + "-realigned.bai")
-        os.remove(recal_group)
-        os.remove(prebam)
-        os.remove(loc_sam + "-pre.bai")
-        os.remove(hqs)
-        os.remove(hqs + ".idx")
+        os.remove(unfiltered_hapall)
         os.remove(sample_reference + ".amb")
         os.remove(sample_reference + ".ann")
         os.remove(sample_reference + ".bwt")
@@ -771,7 +744,6 @@ def align_reads(arg_options):
         os.remove(sample_reference + ".sa")
         os.remove(ref + ".dict")
         os.remove(duplicate_stat_file)
-        os.remove(stat_file)
 
         unmapped = working_directory + "/unmapped"
         os.makedirs(unmapped)
@@ -844,7 +816,7 @@ def align_reads(arg_options):
                 conda list abyss | grep -v "^#"; \
                 conda list picard | grep -v "^#"; \
                 conda list samtools | grep -v "^#"; \
-                conda list gatk | grep -v "^#"; \
+                conda list freebayes | grep -v "^#"; \
                 conda list biopython | grep -v "^#"').read(), file=verison_out)
             verison_out.close()
         except:
@@ -1303,10 +1275,10 @@ def spoligo(arg_options):
     os.chdir(sample_directory)
 
 
-def add_zero_coverage(sample_reference, qualitybam, hapall, zero_coverage_vcf):
-    print("\n@@@ Depth of coverage using pysam")
+def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_coverage_vcf):
+    print("\n@@@ Depth of coverage using pysam: {}"  .format(sample_name))
     coverage_dict = {}
-    coverage_list = pysam.depth(qualitybam, split_lines=True)
+    coverage_list = pysam.depth(nodupbam, split_lines=True)
     for line in coverage_list:
         chrom, position, depth = line.split('\t')
         coverage_dict[chrom + "-" + position] = depth
@@ -1843,6 +1815,13 @@ def group_files(each_vcf, arg_options):
         group_calls.append(each_vcf)
         # for each single vcf getting passing position
         for record in vcf_reader:
+            try:
+                # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+                record.INFO['MQ'] = record.INFO['MQ'][0]
+            except TypeError:
+                pass
+            except KeyError:
+                pass
             chrom = record.CHROM
             position = record.POS
             absolute_positon = str(chrom) + "-" + str(position)
@@ -2124,6 +2103,13 @@ def find_filter_dict(each_vcf):
     dict_map = {}
     vcf_reader = vcf.Reader(open(each_vcf, 'r'))
     for record in vcf_reader:
+        try:
+            # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+            record.INFO['MQ'] = record.INFO['MQ'][0]
+        except TypeError:
+            pass
+        except KeyError:
+            pass
         absolute_positon = str(record.CHROM) + "-" + str(record.POS)
         try:
             returned_qual = []
@@ -2345,6 +2331,13 @@ def get_snps(directory, arg_options):
         vcf_reader = vcf.Reader(open(file_name, 'r'))
         sample_dict = {}
         for record in vcf_reader:
+            try:
+                # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+                record.INFO['MQ'] = record.INFO['MQ'][0]
+            except TypeError:
+                pass
+            except KeyError:
+                pass
             record_position = str(record.CHROM) + "-" + str(record.POS)
             if record_position in all_positions:
                 #print("############, %s, %s" % (file_name, record_position))

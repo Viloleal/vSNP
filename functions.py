@@ -548,7 +548,7 @@ def align_reads(arg_options):
 
         loc_sam = working_directory + "/" + sample_name
         os.system("samtools faidx {}" .format(sample_reference))
-        os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
+        os.system("picard CreateSequenceDictionary -REFERENCE {} -OUTPUT {}" .format(sample_reference, working_directory + "/" + ref + ".dict"))
         os.system("bwa index {}" .format(sample_reference))
         samfile = loc_sam + ".sam"
         bamfile = loc_sam + ".bam"
@@ -574,7 +574,7 @@ def align_reads(arg_options):
         os.system("samtools index {}" .format(sortedbam))
 
         print("\n@@@ Remove Duplicate Reads: {}" .format(sample_name))
-        os.system("picard MarkDuplicates INPUT={} OUTPUT={} METRICS_FILE={} ASSUME_SORTED=true REMOVE_DUPLICATES=true" .format(sortedbam, nodupbam, metrics))
+        os.system("picard MarkDuplicates -INPUT {} -OUTPUT {} -METRICS_FILE {} -ASSUME_SORTED true -REMOVE_DUPLICATES true" .format(sortedbam, nodupbam, metrics))
         os.system("samtools index {}" .format(nodupbam))
 
         print("\n@@@ Calling SNPs with FreeBayes Parallel: {}" .format(sample_name))
@@ -603,7 +603,7 @@ def align_reads(arg_options):
 
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
         os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))
-        os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
+        os.system("picard SamToFastq -INPUT {} -FASTQ {} -SECOND_END_FASTQ {}" .format(unmapsam, unmapped_read1, unmapped_read2))
 
         abyss_contig_count = 0
         try:
@@ -973,14 +973,14 @@ def mlst(arg_options):
     print("--\n")
 
     os.system("samtools faidx {}" .format(sample_reference_mlst_location))
-    os.system("picard CreateSequenceDictionary REFERENCE={} OUTPUT={}" .format(sample_reference_mlst_location, directory + "/" + ref + ".dict"))
+    os.system("picard CreateSequenceDictionary -REFERENCE {} -OUTPUT {}" .format(sample_reference_mlst_location, directory + "/" + ref + ".dict"))
     os.system("bwa index {}" .format(sample_reference_mlst_location))
     print("\n@@@ BWA mem")
     samfile_mlst = loc_sam_mlst + ".sam"
     os.system("bwa mem -M -t 16 {} {} {} > {}" .format(sample_reference_mlst_location, R1, R2, samfile_mlst))
     print("\nAdd read group and out all BAM")
     all_bam_mlst = loc_sam_mlst + "-all.bam"
-    os.system("picard AddOrReplaceReadGroups INPUT={} OUTPUT={} RGLB=lib1 RGPU=unit1 RGSM={} RGPL=illumina" .format(samfile_mlst, all_bam_mlst, sample_name_mlst))
+    os.system("picard AddOrReplaceReadGroups -INPUT {} -OUTPUT {} -RGLB lib1 -RGPU unit1 -RGSM {} -RGPL illumina" .format(samfile_mlst, all_bam_mlst, sample_name_mlst))
 
     print("\n@@@ Samtools mapped")
     mapbam = loc_sam_mlst + "-unmapped.bam"

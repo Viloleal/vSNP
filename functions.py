@@ -942,6 +942,13 @@ def get_annotations(line, in_annotation_as_dict):
 
 def mlst(arg_options):
 
+    if arg_options['debug_call']:
+        with open("mlst-arg_options.json", 'w') as outfile:
+                json.dump(arg_options, outfile)
+
+    # with open("mlst-arg_options.json") as infile:
+    #     arg_options = json.load(infile)
+
     sample_directory = str(os.getcwd())
     R1 = arg_options['R1']
     R2 = arg_options['R2']
@@ -1010,24 +1017,20 @@ def mlst(arg_options):
     # remove clearly poor positions
     os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (mapq_fix, vcf_mlst))
 
-    # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
-
-    target_vcf_positions = [231, 297, 363, 398, 429, 523, 631, 730, 1247, 1296, 1342, 1381, 1648, 1685, 1741, 1754, 2165, 2224, 2227, 2297, 2300, 2344, 2352, 2403, 2530, 2557, 2578, 2629, 3045, 3054, 3118, 3295, 3328, 3388, 3966, 3969, 4167, 4271, 4296, 4893, 4996, 4998, 5058, 5248, 5672, 5737, 5928, 5963, 5984, 5987, 6025, 6045, 6498, 6499, 6572, 6627, 6715, 6735, 6745, 6785, 6810, 6828, 6845, 6864, 6875, 7382, 7432, 7464, 7594, 7660, 7756]
-
     pos_call_dict = {}
     vcf_reader = vcf.Reader(open(vcf_mlst, 'r'))
     for record in vcf_reader:
         if record.ALT[0]:
-            pos_call_dict.update({record.POS: record.ALT[0]})
-        else:
-            pos_call_dict.update({record.POS: record.REF})
+            pos_call_dict.update({record.POS: str(record.ALT[0])})
 
-    mlst_string = []
-    for i in target_vcf_positions:
-        if i in pos_call_dict:
-            mlst_string.append(pos_call_dict[i]) #if number in list then get value
-    mlst_join = ''.join(map(str, mlst_string))
-    print(mlst_join)
+    # Position 1629 was too close to the end of glk sequence.  Reads would not assemble properly to call possilbe SNP, therefore 100 bases of the gene were added.  Because of this all positions beyond this point are 100 more.  Same with position 1645 and 2693.
+
+    target_pos_ref = {231: 'C', 297: 'T', 363: 'C', 398: 'C', 429: 'C', 523: 'G', 631: 'G', 730: 'G', 1247: 'G', 1296: 'C', 1342: 'G', 1381: 'A', 1648: 'C', 1685: 'C', 1741: 'C', 1754: 'G', 2165: 'A', 2224: 'T', 2227: 'C', 2297: 'G', 2300: 'A', 2344: 'A', 2352: 'G', 2403: 'C', 2530: 'G', 2557: 'G', 2578: 'G', 2629: 'A', 3045: 'A', 3054: 'G', 3118: 'G', 3295: 'C', 3328: 'C', 3388: 'A', 3966: 'C', 3969: 'G', 4167: 'G', 4271: 'C', 4296: 'G', 4893: 'C', 4996: 'G', 4998: 'T', 5058: 'G', 5248: 'A', 5672: 'G', 5737: 'C', 5928: 'A', 5963: 'G', 5984: 'C', 5987: 'C', 6025: 'G', 6045: 'G', 6498: 'G', 6499: 'C', 6572: 'A', 6627: 'T', 6715: 'C', 6735: 'T', 6745: 'G', 6785: 'T', 6810: 'C', 6828: 'C', 6845: 'C', 6864: 'G', 6875: 'C', 7382: 'G', 7432: 'G', 7464: 'G', 7594: 'G', 7660: 'T', 7756: 'A'}
+
+    #pos_call_dict will replace target_pos_ref
+    combined_dict = {**target_pos_ref, **pos_call_dict}
+    combined_value_list = list(combined_dict.values())
+    mlst_join = ''.join(combined_value_list)
 
     mlst_dictionary = {}
     mlst_dictionary["CTCCCGGGGCGACCCGATCGAAGCGGGAAGGCCACGGCGCGTGAGCAGCCGGGCATCTGTCCCGCGGGGTA"] = "MLST type 01"

@@ -1029,7 +1029,8 @@ def mlst(arg_options):
 
     #pos_call_dict will replace target_pos_ref
     combined_dict = {**target_pos_ref, **pos_call_dict}
-    combined_value_list = list(combined_dict.values())
+    ordered_combined_dict = collections.OrderedDict(sorted(combined_dict.items()))
+    combined_value_list = list(ordered_combined_dict.values())
     mlst_join = ''.join(combined_value_list)
 
     mlst_dictionary = {}

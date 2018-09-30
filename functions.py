@@ -1001,7 +1001,7 @@ def mlst(arg_options):
     os.system("samtools index {}" .format(sortedbam))
 
     print("\n@@@ Calling SNPs with freebayes")
-    unfiltered_vcf_mlst = directory + "/" + sample_name + "unfiltered_mlst" + ".vcf"
+    unfiltered_vcf_mlst = directory + "/" + sample_name + "-unfiltered_mlst" + ".vcf"
     mapq_fix = loc_sam_mlst + "-mapq_fix_mlst.vcf"
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
 
@@ -1072,7 +1072,6 @@ def mlst(arg_options):
     remove_files = glob.glob('*_mlst.vcf.idx')
     for i in remove_files:
         os.remove(i)
-    os.remove(mapq_fix)
     os.remove(unfiltered_vcf_mlst)
 
     write_out = open("mlst.txt", 'w')

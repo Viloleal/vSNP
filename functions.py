@@ -1028,8 +1028,10 @@ def mlst(arg_options):
     target_pos_ref = {231: 'C', 297: 'T', 363: 'C', 398: 'C', 429: 'C', 523: 'G', 631: 'G', 730: 'G', 1247: 'G', 1296: 'C', 1342: 'G', 1381: 'A', 1648: 'C', 1685: 'C', 1741: 'C', 1754: 'G', 2165: 'A', 2224: 'T', 2227: 'C', 2297: 'G', 2300: 'A', 2344: 'A', 2352: 'G', 2403: 'C', 2530: 'G', 2557: 'G', 2578: 'G', 2629: 'A', 3045: 'A', 3054: 'G', 3118: 'G', 3295: 'C', 3328: 'C', 3388: 'A', 3966: 'C', 3969: 'G', 4167: 'G', 4271: 'C', 4296: 'G', 4893: 'C', 4996: 'G', 4998: 'T', 5058: 'G', 5248: 'A', 5672: 'G', 5737: 'C', 5928: 'A', 5963: 'G', 5984: 'C', 5987: 'C', 6025: 'G', 6045: 'G', 6498: 'G', 6499: 'C', 6572: 'A', 6627: 'T', 6715: 'C', 6735: 'T', 6745: 'G', 6785: 'T', 6810: 'C', 6828: 'C', 6845: 'C', 6864: 'G', 6875: 'C', 7382: 'G', 7432: 'G', 7464: 'G', 7594: 'G', 7660: 'T', 7756: 'A'}
 
     #pos_call_dict will replace target_pos_ref
-    combined_dict = {**target_pos_ref, **pos_call_dict}
-    ordered_combined_dict = collections.OrderedDict(sorted(combined_dict.items()))
+    for key, value in pos_call_dict.items():
+        if key in target_pos_ref.keys():
+            target_pos_ref[key] = value
+    ordered_combined_dict = OrderedDict(sorted(target_pos_ref.items()))
     combined_value_list = list(ordered_combined_dict.values())
     mlst_join = ''.join(combined_value_list)
 

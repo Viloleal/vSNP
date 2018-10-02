@@ -9,6 +9,7 @@ dependencies:
   - biopython
   - dask
   - pysam
+  - freebayes
   - regex
   - pandas
   - pyvcf

@@ -15,6 +15,7 @@ import functions
 
 root_dir = str(os.getcwd())
 
+
 def fix_vcf(each_vcf, arg_options):
     mal = []
     # Fix common VCF errors
@@ -61,7 +62,7 @@ def fix_vcf(each_vcf, arg_options):
     os.utime(each_vcf, times=(initial_file_time_stats.st_mtime, initial_file_time_stats.st_mtime))
     return mal
 
-#set cpu usage
+
 cpu_count = multiprocessing.cpu_count()
 limited_cpu_count = int(cpu_count / 4)
 if limited_cpu_count == 0:

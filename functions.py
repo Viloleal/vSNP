@@ -310,7 +310,6 @@ def species_selection_step1(arg_options):
         return arg_options
     elif parameters:
         #shutil.copy2(parameters["reference"], arg_options['root_dir'])
-        #shutil.copy2(parameters["hqs"], arg_options['root_dir'])
         arg_options.update(parameters)
         return arg_options
     else:
@@ -524,20 +523,15 @@ def align_reads(arg_options):
             spoligo(arg_options)
         os.chdir(working_directory)
         shutil.copy(arg_options["reference"], working_directory)
-        shutil.copy(arg_options["hqs"], working_directory)
         sample_reference = glob.glob(working_directory + '/*fasta')
-        hqs = glob.glob(working_directory + '/*vcf')
 
         print("reference: %s" % sample_reference)
         ref = re.sub('\.fasta', '', os.path.basename(sample_reference[0]))
         if len(sample_reference) != 1:
             print("### ERROR reference not available or too many")
             sys.exit(0)
-        if len(hqs) != 1:
-            print("### ERROR high quality snps not available or too many")
-            sys.exit(0)
         sample_reference = sample_reference[0]
-        hqs = hqs[0]
+
         print("--")
         print("sample name: %s" % sample_name)
         print("sample reference: %s" % sample_reference)

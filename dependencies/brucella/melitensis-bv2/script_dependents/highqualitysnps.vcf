@@ -1,5 +1,0 @@
-##fileformat=VCFv4.1
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	rsIDs
-NC_012441.1	531329	.	C	.	.	.	.	.	.	.
-NC_012441.1	1069165	.	T	.	.	.	.	.	.	.
-NC_012442.1	175743	.	A	.	.	.	.	.	.	.

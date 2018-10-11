@@ -25,8 +25,6 @@ If Anaconda is not yet installed follow the Anaconda instructions to install on 
 
     https://www.anaconda.com/download/     
     
-When installing from the command line use Anaconda's default installation except... when asked to, "prepend to PATH", choose yes.
-    
 Once Anaconda is installed close and reopen your terminal.
 
 Clone script to home directory: 
@@ -37,27 +35,7 @@ Clone script to home directory:
     $ conda env create
     $ conda activate vsnp
 
-Follow instructions to configure 'conda activate' if requested.
-
-Close and reopen terminal, and again `$ conda activate vsnp`.
-
-Check gatk is in your $PATH.  `$ which gatk`.  If not found run the following:
-
-    $ ln -s ~/anaconda3/envs/vsnp/bin/gatk3 ~/anaconda3/envs/vsnp/bin/gatk
-
-This will allow GATK to be accessed using either `gatk` or `gatk3`.
-
-When GATK 3.8 is downloaded from Anacoda it still needs to be registered.  GATK has a way to do this.  Go to GATK's website, download the GATK package: https://software.broadinstitute.org/gatk/download/archive
-
-unzip it:  
-
-    $ tar -vxjf GenomeAnalysisTK-3.8*
-
-and run:
-
-    $ gatk-register /path/to/Downloads/GenomeAnalysisTK*/GenomeAnalysisTK.jar
-    
-Finally, put `vSNP` in your $PATH, or easier run lines below to put script in your anaconda PATH.
+Put `vSNP` in your $PATH, or easier run lines below to put script in your anaconda PATH.
 
     $ ln -s {FULL PATH TO}/vSNP/vSNP.py ~/anaconda*/bin/
 

@@ -10,10 +10,6 @@ permalink: /faq/
 -----
 <br>
 
-## GATK fails
-
-Did `gatk-register` run successfully?  See setup instructions.  After running command a message similar to "jar file specified matches expected version" should be output.
-
 ## Samtools unable to access libraries
 
 `samtools: error while loading shared libraries: libbz2.so.1.0: cannot open shared object file: No such file or directory`
@@ -37,17 +33,7 @@ This should output the Picard command line usage.  If an error occurs check Java
 
 `~$ java -version`
 
-Both Picard and GATK require Java 1.8 (aka version 8).
-
-Anaconda should have taken care of the your Java version.  There are different reasons which can cause Java to fail.  In my experience it has been caused by a previously set .bashrc (Linux) /.bash_profile (macOS) profile setting.  I recommend going into your profile and commenting out PATH settings that may no longer be needed.  Remember to restart your terminal to update profile befor testing again with: `~$ picard`
-
-## Do I have to use Anaconda package manager?
-
-No, the Anaconda package manager is not need, but it does make the setup much easier.  
-
-System programs such as: bwa, samtools, abyss, and raxml will be usable if they are in your PATH with the exact same name (remember Linux is case sensitive meaning capitalization counts).  This is why samtools above can be removed from your conda environment and replaced with the standard install.  Either way `samtools` is being found in your PATH.  However Picard and GATK are Java programs.  If running from a standard installation the call within vSNP.py needs to be changed.  For example, when ran from a standard installation the call is: `java -Xmx1g -jar ${picard} CreateSequenceDictionary ...`.  The `java -Xmx1g -jar` must be included.  However, Anaconda takes care of this, which allows vSNP to use only `picard CreateSequenceDictionary ...` when Picard and GATK are install using it.
-
-Also, the Anaconda package manager is not needed to install specific Python modules.  These can be installed using other tools such as pip or easy_install.  What is important is getting the correct version, i.e. Python 3.5 and pandas=0.18.1.
+Picard requires Java 1.8 (aka version 8).
 
 ## How do I start over with the Anaconda installation?
 

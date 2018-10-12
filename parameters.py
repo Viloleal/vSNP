@@ -527,6 +527,23 @@ class Get_Specie_Parameters():
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
             }
+        elif species_selection == "flu":
+            script_dependents = str(self.dependents_dir) + "/virus/h7n3/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/H7N3-reference.fasta",
+                "gbk_file": [script_dependents + "/H7N3-Seq1.gbk", script_dependents + "/H7N3-Seq2.gbk", script_dependents + "/H7N3-Seq3.gbk", script_dependents + "/H7N3-Seq4.gbk", script_dependents + "/H7N3-Seq5.gbk", script_dependents + "/H7N3-Seq6.gbk", script_dependents + "/H7N3-Seq7.gbk", script_dependents + "/H7N3-Seq8.gbk", ],
+                "species": species_selection,
+                "qual_threshold": 300,
+                "N_threshold": 300,
+                # "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx",
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+            }
         else:
             genotype_codes = None
             parameters = {

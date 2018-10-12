@@ -16,83 +16,85 @@ class Get_Specie_Parameters():
         else:
             self.upload_to = None
 
-    def get_tb_codes():
-        if os.path.isfile("./Volumes/Results/mycobacterium/genotyping_codes.xlsx"):
-            tb_geno_codes = ("/Volumes/Results/mycobacterium/genotyping_codes.xlsx")
-        elif os.path.isfile("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx"):
-            tb_geno_codes = ("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx")
-        # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx"):
-        #     tb_geno_codes = ("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx")
-        else:
-            return None
-        wb = xlrd.open_workbook(tb_geno_codes)
-        ws = wb.sheet_by_index(0)
-        genotype_codes = {}
-        for rownum in range(ws.nrows):
-            new_name = str(ws.row_values(rownum)[0])
-            new_name = new_name.rstrip()
-            new_name = re.sub('[\/() ]', '_', new_name)
-            new_name = re.sub('#', 'num', new_name)
-            new_name = re.sub('_-', '_', new_name)
-            new_name = re.sub('-_', '_', new_name)
-            new_name = re.sub('__+', '_', new_name)
-            new_name = re.sub('_$', '', new_name)
-            new_name = re.sub('-$', '', new_name)
-            new_name = re.sub(',', '', new_name)
-            try:
-                elite_test = ws.row_values(rownum)[1]
-            except IndexError:
-                #print("except IndexError: when changing names")
-                elite_test = ""
-            #print("newname %s" % new_name)
-            try:
-                if new_name[-1] != "_":
-                    new_name = new_name + "_"
-            except IndexError:
-                pass
-            genotype_codes.update({new_name: elite_test})
-        return genotype_codes
-
-    def get_brucella_codes():
-        if os.path.isfile("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
-            bruc_geno_codes = ("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx")
-        elif os.path.isfile("/fdrive/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
-            bruc_geno_codes = ("/fdrive/Brucella/Brucella Logsheets/ALL_WGS.xlsx")
-        # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx"):
-        #     bruc_geno_codes = ("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx")
-        else:
-            return None
-        print("Pulling in the Brucella genotype codes...")
-        wb_in = xlrd.open_workbook(bruc_geno_codes)
-        sheet_in = wb_in.sheet_by_index(1)
-        genotype_codes = {}
-        for row_data in sheet_in.col(32):
-            row_data = row_data.value
-            row_data = re.sub("/", "_", row_data)
-            row_data = re.sub("\.", "_", row_data)
-            row_data = re.sub("\*", "_", row_data)
-            row_data = re.sub("\?", "_", row_data)
-            row_data = re.sub("\(", "_", row_data)
-            row_data = re.sub("\)", "_", row_data)
-            row_data = re.sub("\[", "_", row_data)
-            row_data = re.sub("\]", "_", row_data)
-            row_data = re.sub(" ", "_", row_data)
-            row_data = re.sub("{", "_", row_data)
-            row_data = re.sub("}", "_", row_data)
-            row_data = re.sub("\'", "_", row_data)
-            row_data = re.sub("-_", "_", row_data)
-            row_data = re.sub("_-", "_", row_data)
-            row_data = re.sub("--", "_", row_data)
-            row_data = re.sub("_$", "", row_data)
-            row_data = re.sub("-$", "", row_data)
-            row_data = re.sub("\'", "", row_data)
-            row_data = str(row_data)
-            genotype_codes[row_data] = "" #the empty value can be used for elites
-        return genotype_codes
-
     def choose(self, species_selection):
+
+        def get_tb_codes():
+            if os.path.isfile("./Volumes/Results/mycobacterium/genotyping_codes.xlsx"):
+                tb_geno_codes = ("/Volumes/Results/mycobacterium/genotyping_codes.xlsx")
+            elif os.path.isfile("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx"):
+                tb_geno_codes = ("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx")
+            # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx"):
+            #     tb_geno_codes = ("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx")
+            else:
+                return None
+            wb = xlrd.open_workbook(tb_geno_codes)
+            ws = wb.sheet_by_index(0)
+            genotype_codes = {}
+            for rownum in range(ws.nrows):
+                new_name = str(ws.row_values(rownum)[0])
+                new_name = new_name.rstrip()
+                new_name = re.sub('[\/() ]', '_', new_name)
+                new_name = re.sub('#', 'num', new_name)
+                new_name = re.sub('_-', '_', new_name)
+                new_name = re.sub('-_', '_', new_name)
+                new_name = re.sub('__+', '_', new_name)
+                new_name = re.sub('_$', '', new_name)
+                new_name = re.sub('-$', '', new_name)
+                new_name = re.sub(',', '', new_name)
+                try:
+                    elite_test = ws.row_values(rownum)[1]
+                except IndexError:
+                    #print("except IndexError: when changing names")
+                    elite_test = ""
+                #print("newname %s" % new_name)
+                try:
+                    if new_name[-1] != "_":
+                        new_name = new_name + "_"
+                except IndexError:
+                    pass
+                genotype_codes.update({new_name: elite_test})
+            return genotype_codes
+
+        def get_brucella_codes():
+            if os.path.isfile("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
+                bruc_geno_codes = ("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx")
+            elif os.path.isfile("/fdrive/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
+                bruc_geno_codes = ("/fdrive/Brucella/Brucella Logsheets/ALL_WGS.xlsx")
+            # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx"):
+            #     bruc_geno_codes = ("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx")
+            else:
+                return None
+            print("Pulling in the Brucella genotype codes...")
+            wb_in = xlrd.open_workbook(bruc_geno_codes)
+            sheet_in = wb_in.sheet_by_index(1)
+            genotype_codes = {}
+            for row_data in sheet_in.col(32):
+                row_data = row_data.value
+                row_data = re.sub("/", "_", row_data)
+                row_data = re.sub("\.", "_", row_data)
+                row_data = re.sub("\*", "_", row_data)
+                row_data = re.sub("\?", "_", row_data)
+                row_data = re.sub("\(", "_", row_data)
+                row_data = re.sub("\)", "_", row_data)
+                row_data = re.sub("\[", "_", row_data)
+                row_data = re.sub("\]", "_", row_data)
+                row_data = re.sub(" ", "_", row_data)
+                row_data = re.sub("{", "_", row_data)
+                row_data = re.sub("}", "_", row_data)
+                row_data = re.sub("\'", "_", row_data)
+                row_data = re.sub("-_", "_", row_data)
+                row_data = re.sub("_-", "_", row_data)
+                row_data = re.sub("--", "_", row_data)
+                row_data = re.sub("_$", "", row_data)
+                row_data = re.sub("-$", "", row_data)
+                row_data = re.sub("\'", "", row_data)
+                row_data = str(row_data)
+                genotype_codes[row_data] = "" #the empty value can be used for elites
+            return genotype_codes
+
         if species_selection == "typhimurium-14028S":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to),
                 "spoligo_db": None,
@@ -109,6 +111,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "typhimurium-LT2":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
                 "spoligo_db": None,
@@ -124,6 +127,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "te_atcc35865":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_atcc35865/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script1",
                 "spoligo_db": None,
@@ -139,6 +143,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "te_09-0932":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_09-0932/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_09-0932/script1",
                 "spoligo_db": None,
@@ -154,6 +159,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "te_89-0490":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_89-0490/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_89-0490/script1",
                 "spoligo_db": None,
@@ -169,6 +175,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "te_92-0972":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_92-0972/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_92-0972/script1",
                 "spoligo_db": None,
@@ -184,6 +191,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "te_98-0554":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_98-0554/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_98-0554/script1",
                 "spoligo_db": None,
@@ -199,6 +207,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "te_mce9":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_mce9/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script1",
                 "spoligo_db": None,
@@ -214,6 +223,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "heidelberg-SL476":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",
                 "spoligo_db": None,
@@ -229,6 +239,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "ab1":
             script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus1/data",
                 "spoligo_db": None,
@@ -244,6 +255,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "ab3":
             script_dependents = str(self.dependents_dir) + "/brucella/abortus3/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus3/data",
                 "spoligo_db": None,
@@ -259,6 +271,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "canis":
             script_dependents = str(self.dependents_dir) + "/brucella/canis/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/canis/data",
                 "spoligo_db": None,
@@ -274,6 +287,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "ceti1":
             script_dependents = str(self.dependents_dir) + "/brucella/ceti1/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ceti1/data",
                 "spoligo_db": None,
@@ -289,6 +303,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "ceti2":
             script_dependents = str(self.dependents_dir) + "/brucella/ceti2/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ceti2/data",
                 "spoligo_db": None,
@@ -304,6 +319,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "mel1":
             script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1/data",
                 "spoligo_db": None,
@@ -319,6 +335,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "mel1b":
             script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1b/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1b/data",
                 "spoligo_db": None,
@@ -334,6 +351,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "mel2":
             script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv2/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv2/data",
                 "spoligo_db": None,
@@ -349,6 +367,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "mel3":
             script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv3/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv3/data",
                 "spoligo_db": None,
@@ -364,6 +383,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "suis1":
             script_dependents = str(self.dependents_dir) + "/brucella/suis1/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis1/data",
                 "spoligo_db": None,
@@ -379,6 +399,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "suis2":
             script_dependents = str(self.dependents_dir) + "/brucella/suis2/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis2/data",
                 "spoligo_db": None,
@@ -394,6 +415,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "suis3":
             script_dependents = str(self.dependents_dir) + "/brucella/suis3/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis3/data",
                 "spoligo_db": None,
@@ -409,6 +431,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "suis4":
             script_dependents = str(self.dependents_dir) + "/brucella/suis4/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis4/data",
                 "spoligo_db": None,
@@ -424,6 +447,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "ovis":
             script_dependents = str(self.dependents_dir) + "/brucella/ovis/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ovis/data",
                 "spoligo_db": None,
@@ -439,6 +463,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "neo":
             script_dependents = str(self.dependents_dir) + "/brucella/neotomae/script_dependents"
+            genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/neotomae/data",
                 "spoligo_db": None,
@@ -454,6 +479,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "af":
             script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/af2122/script_dependents"
+            genotype_codes = get_tb_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/af2122/script1",
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
@@ -469,6 +495,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "h37":
             script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/h37/script_dependents"
+            genotype_codes = get_tb_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/h37/script1",
                 "spoligo_db": script_dependents + "/spoligotype_db.txt",
@@ -485,6 +512,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "para":
             script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/NC_002944/script_dependents"
+            genotype_codes = get_tb_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
                 "spoligo_db": None,
@@ -500,6 +528,7 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
             }
         else:
+            genotype_codes = None
             parameters = {
                 "upload_to": None,
                 "spoligo_db": None,
@@ -513,9 +542,5 @@ class Get_Specie_Parameters():
                 "filter_file": None,
                 "step2_upload": None,
             }
-
-        if self.upload_to is None:
-            genotype_codes = None # This should be on during normal usage, turned off for testing
-            parameters["step2_upload"] = None
 
         return (parameters, genotype_codes)

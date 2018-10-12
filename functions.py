@@ -295,12 +295,12 @@ def species_selection_step1(arg_options):
     if arg_options['species']:
         species_selection = arg_options['species']
         print("Sample will be ran as:  {}" .format(species_selection))
-        parameters = all_parameters.choose(species_selection)
+        parameters, genotype_codes = all_parameters.choose(species_selection)
     else:
         best_ref_found = best_reference([arg_options['R1'], arg_options['R2']])
         arg_options['species'] = best_ref_found
         print("Sample will be ran as {}" .format(best_ref_found))
-        parameters = all_parameters.choose(best_ref_found)
+        parameters, genotype_codes = all_parameters.choose(best_ref_found)
 
     if parameters['species'] is None:
         print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(arg_options['R1'], arg_options['R2']))

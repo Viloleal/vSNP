@@ -6,7 +6,6 @@ import multiprocessing
 import argparse
 import textwrap
 import glob
-import random
 from concurrent import futures
 import re
 from itertools import repeat as itertools_repeat
@@ -81,7 +80,7 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
         Step 2: VCFs --> Tables & Trees
 
--s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, typhimurium-14028S, typhimurium-LT2, heidelberg-SL476, te_atcc35865, te_09-0932, te_89-0490, te_92-0972, te_98-0554, te_mce9
+-s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, typhimurium-14028S, typhimurium-LT2, heidelberg-SL476, te_atcc35865, te_09-0932, te_89-0490, te_92-0972, te_98-0554, te_mce9, flu, newcaste
 
 '''), epilog='''---------------------------------------------------------''')
 
@@ -198,7 +197,7 @@ elif vcf_check:
     malformed = [x for x in malformed if x] # remove blanks
     print("done fixing")
     arg_options['malformed'] = malformed
-    
+
     if not arg_options['species']:
         species = functions.get_species(arg_options)
         if species is None:

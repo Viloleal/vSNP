@@ -36,8 +36,7 @@ from collections import defaultdict
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
-from parameters import Get_Specie_Parameters_Step1
-from parameters import Get_Specie_Parameters_Step2
+from parameters import Get_Specie_Parameters
 # import concurrent.futures as cf
 
 
@@ -291,7 +290,7 @@ def read_aligner(sample_name, arg_options):
 
 
 def species_selection_step1(arg_options):
-    all_parameters = Get_Specie_Parameters_Step1()
+    all_parameters = Get_Specie_Parameters()
 
     if arg_options['species']:
         species_selection = arg_options['species']
@@ -1337,7 +1336,7 @@ def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_cove
     vcf_df_snp = vcf_df[vcf_df['REF'].str.len() == 1]
     vcf_df_snp = vcf_df_snp[vcf_df_snp['ALT'].str.len() == 1]
     vcf_df_snp['ABS_VALUE'] = vcf_df_snp['CHROM'].map(str) + '-' + vcf_df_snp['POS'].map(str)
-    vcf_df_snp = vcf_df_snp.set_index('ABS_VALUE')    
+    vcf_df_snp = vcf_df_snp.set_index('ABS_VALUE')
     cat_df = pd.concat([vcf_df_snp, zero_df], axis=1, sort=False)
     cat_df = cat_df.drop(columns=['CHROM', 'POS', 'depth'])
     cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']] = cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']].fillna('.')
@@ -1356,7 +1355,7 @@ def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_cove
             with open(cf, "rb") as infile:
                 outfile.write(infile.read())
     return (zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-    
+
 
 def send_email_step1(email_list, runtime, path_found, summary_file):
     text = "See attached:  "
@@ -1466,7 +1465,7 @@ def run_script2(arg_options):
         raxml_cpu = int(arg_options['cpu_count'] / 10)
     arg_options['raxml_cpu'] = raxml_cpu
 
-    all_parameters = Get_Specie_Parameters_Step2() # Class of possible parameters
+    all_parameters = Get_Specie_Parameters() # Class of possible parameters
     print("Sample will be ran as {}" .format(arg_options['species']))
     parameters, genotype_codes = all_parameters.choose(arg_options['species'])
     if parameters['qual_threshold'] is None:
@@ -1615,7 +1614,7 @@ def run_script2(arg_options):
                             pass
                         print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
             write_out.close()
-            
+
             df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
             #os.remove('temp.csv')
             df = df.sort_values(['start', 'gene'], ascending=[True, False])
@@ -2015,7 +2014,6 @@ def test_duplicate():
 
 
 def change_names(arg_options, genotype_codes):
-    malformed = []
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
     name_found = False
@@ -2077,7 +2075,7 @@ def change_names(arg_options, genotype_codes):
         for each_vcf in list_of_files:
             shutil.copy(each_vcf, arg_options['root_dir'])
         print(file_number)
-    
+
     return arg_options
 
 
@@ -2571,7 +2569,7 @@ def get_snps(directory, arg_options):
                 ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
                 ref_pos = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values, columns=['reference', 'position'])
                 ref_pos = ref_pos[ref_pos['reference'] == gbk_chrome]
-                
+
                 write_out = open('annotations.csv', 'a')
                 positions = ref_pos.position.to_frame()
                 for index, row in positions.iterrows():
@@ -2583,7 +2581,7 @@ def get_snps(directory, arg_options):
                     except KeyError:
                         print("{}-{}\tNo annotated product" .format(gbk_chrome, pos), file=write_out)
                 write_out.close()
-                
+
                 annotations_df = pd.read_csv('annotations.csv', sep='\t', header=None, names=['index', 'annotations'], index_col='index')
 
             annotations_df.index.names = ['reference_pos']

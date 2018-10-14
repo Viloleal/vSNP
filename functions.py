@@ -2165,7 +2165,7 @@ def find_positions(filename, arg_options):
             # Usable positins are those that:
             # ADD PARAMETERS HERE TO CHANGE WHAT'S SNP WILL BE USED
             # IF NOT FOUND HERE THE SNP WILL BE IGNORED.  WILL NOT BE REPRESENTED.  HARD REMOVAL
-            # GATK parameters
+            # parameters
             # str(record.ALT[0]) != "None" --> filter deletions
             # len(record.REF) == 1 --> filter bad ref call with 2 nt present
             # len(record.ALT[0]) == 1 --> filter bad alt call with 2 nt present

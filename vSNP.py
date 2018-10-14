@@ -157,29 +157,35 @@ arg_options['limited_cpu_count'] = limited_cpu_count
 
 # Check that there an equal number of both R1 and R2 reads
 if fastq_check:
-    R1 = glob.glob('*_R1*fastq.gz')
-    R2 = glob.glob('*_R2*fastq.gz')
-    R1count = len(R1)
-    R2count = len(R2)
-    fastq_count = R1count + R2count
-    if (fastq_count % 2 != 0):
-        print("\n#####Check paired files.  Unpaired files seen by odd number of counted FASTQs\n\n")
+    # Pair check
+    pair_check = len(glob.glob('*_R2*fastq.gz'))
+    if pair_check > 0:
+        R1 = glob.glob('*_R1*fastq.gz')
+        R2 = glob.glob('*_R2*fastq.gz')
+        R1count = len(R1)
+        R2count = len(R2)
+    else:
+        R1 = glob.glob('*_R1*fastq.gz')
+        R2 = None
+    # fastq_count = R1count + R2count
+    # if (fastq_count % 2 != 0):
+    #     print("\n#####Check paired files.  Unpaired files seen by odd number of counted FASTQs\n\n")
+    #     sys.exit(0)
+    # if (R1count != R2count):
+    #     print("\n#####Check paired files.  R1 files do not equal R2\n\n")
+    #     sys.exit(0)
+    # if (all_file_types_count != fastq_count):
+    #     print("\n#####Only zipped FASTQ files are allowed in directory\n\n")
+    #     sys.exit(0)
+    # elif (fastq_count > 1):
+    if arg_options['all_vcf'] or arg_options['elite'] or arg_options['upload'] or arg_options['filter_finder']:
+        print("#####Incorrect use of options when running loop/script 1")
         sys.exit(0)
-    if (R1count != R2count):
-        print("\n#####Check paired files.  R1 files do not equal R2\n\n")
-        sys.exit(0)
-    if (all_file_types_count != fastq_count):
-        print("\n#####Only zipped FASTQ files are allowed in directory\n\n")
-        sys.exit(0)
-    elif (fastq_count > 1):
-        if arg_options['all_vcf'] or arg_options['elite'] or arg_options['upload'] or arg_options['filter_finder']:
-            print("#####Incorrect use of options when running loop/script 1")
-            sys.exit(0)
-        else:
-            print("\n--> RUNNING LOOP/SCRIPT 1\n")
-            #Enter script 1 -->
-            functions.run_loop(arg_options)
-            print("See files, vSNP has finished alignments")
+
+    print("\n--> RUNNING LOOP/SCRIPT 1\n")
+    #Enter script 1 -->
+    functions.run_loop(arg_options)
+    print("See files, vSNP has finished alignments")
 elif vcf_check:
     #fix files
     malformed = []

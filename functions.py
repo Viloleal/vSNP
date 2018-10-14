@@ -2173,8 +2173,13 @@ def find_positions(filename, arg_options):
             # record.QUAL > 150 --> filter poor quality
             # record.INFO['MQ'] --> filter low map quality
             try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
-                    found_positions.update({absolute_positon: record.REF})
+                if arg_options['species'] == 'flu':
+                    # use both AC=1 and AC=2 as valid position
+                    if str(record.ALT[0]) != "None" and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
+                        found_positions.update({absolute_positon: record.REF})
+                else:
+                    if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
+                        found_positions.update({absolute_positon: record.REF})
             except KeyError:
                 pass
     except ZeroDivisionError:

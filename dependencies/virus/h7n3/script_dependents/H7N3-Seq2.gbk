@@ -3,7 +3,7 @@ DEFINITION  Influenza A virus (A/mallard/Alberta/529/2017(H7N3)) segment 2
             polymerase PB1 (PB1) and PB1-F2 protein (PB1-F2) genes, complete
             cds.
 ACCESSION   MH932462
-VERSION     MH932462.1
+VERSION     H7N3Seq2
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus

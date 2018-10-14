@@ -2,7 +2,7 @@ LOCUS       MH932461                2202 bp    cRNA    linear   VRL 25-SEP-2018
 DEFINITION  Influenza A virus (A/mallard/Alberta/529/2017(H7N3)) segment 3
             polymerase PA (PA) and PA-X protein (PA-X) genes, complete cds.
 ACCESSION   MH932461
-VERSION     MH932461.1
+VERSION     H7N3Seq3
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus

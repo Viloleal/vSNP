@@ -2,7 +2,7 @@ LOCUS       MH637384                1425 bp    cRNA    linear   VRL 25-AUG-2018
 DEFINITION  Influenza A virus (A/mallard/Alberta/179/2017(mixed)) clone N3
             segment 6 neuraminidase (NA) gene, complete cds.
 ACCESSION   MH637384
-VERSION     MH637384.1
+VERSION     H7N3Seq6
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus

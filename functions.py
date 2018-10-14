@@ -576,11 +576,18 @@ def align_reads(arg_options):
         for record in SeqIO.parse(sample_reference, "fasta"):
             chrom = record.id
             total_len = len(record.seq)
-            last_number = 0
-            for pos in list(range(last_number, total_len, 100000))[1:]:
-                print("{}:{}-{}" .format(chrom, last_number, pos), file=chrom_ranges)
-                last_number = pos
-            print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
+            min_number = 0
+            step = 100000
+            if step < total_len:
+                for chunk in range(min_number, total_len, step)[1:]:
+                    print("{}:{}-{}".format(chrom, min_number, chunk), file=chrom_ranges)
+                    min_number = chunk
+            print("{}:{}-{}".format(chrom, min_number, total_len), file=chrom_ranges)
+
+            # for pos in list(range(last_number, total_len, 100000))[1:]:
+            #     print("{}:{}-{}" .format(chrom, last_number, pos), file=chrom_ranges)
+            #     last_number = pos
+            # print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
         chrom_ranges.close()
         os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 --strict-vcf -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
         # "fix" MQ notation in VCF to match GATK output
@@ -670,7 +677,10 @@ def align_reads(arg_options):
                                 myproduct = feature.qualifiers['product'][0]
                             except KeyError:
                                 pass
-                            mylocus = feature.qualifiers['locus_tag'][0]
+                            try:
+                                mylocus = feature.qualifiers['locus_tag'][0]
+                            except KeyError:
+                                pass
                             try:
                                 mygene = feature.qualifiers['gene'][0]
                             except KeyError:
@@ -701,9 +711,14 @@ def align_reads(arg_options):
                 for index, row in matching_chrom_df.iterrows():
                     pos = row.POS
                     try:
-                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
-                        chrom, name, locus, tag = a.values[0]
-                        annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}" .format(name, locus, tag)
+                        aaa = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+                        try:
+                            chrom, name, locus, tag = aaa.values[0]
+                            annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}".format(name, locus, tag)
+                        except ValueError:
+                            # if only one annotation entire chromosome (such with flu) then having [0] fails
+                            chrom, name, locus, tag = aaa.values
+                            annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}".format(name, locus, tag)
                     except KeyError:
                         annotate_condense_dict[str(gbk_chrome) + "-" + str(pos)] = "No annotated product"
 

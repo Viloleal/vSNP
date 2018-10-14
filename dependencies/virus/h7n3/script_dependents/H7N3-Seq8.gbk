@@ -3,7 +3,7 @@ DEFINITION  Influenza A virus (A/mallard/Alberta/529/2017(H7N3)) segment 8
             nuclear export protein (NEP) and nonstructural protein 1 (NS1)
             genes, complete cds.
 ACCESSION   MH932460
-VERSION     MH932460.1
+VERSION     H7N3Seq8
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus

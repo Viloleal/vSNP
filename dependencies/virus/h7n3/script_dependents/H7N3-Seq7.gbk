@@ -3,7 +3,7 @@ DEFINITION  Influenza A virus (A/mallard/Alberta/529/2017(H7N3)) segment 7
             matrix protein 2 (M2) and matrix protein 1 (M1) genes, complete
             cds.
 ACCESSION   MH932457
-VERSION     MH932457.1
+VERSION     H7N3Seq7
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus

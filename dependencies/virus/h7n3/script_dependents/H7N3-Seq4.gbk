@@ -2,7 +2,7 @@ LOCUS       KY551316                1699 bp    cRNA    linear   VRL 26-FEB-2017
 DEFINITION  Influenza A virus (A/mallard/Idaho/AH0011522/2015(H7N7)) segment 4
             hemagglutinin (HA) gene, complete cds.
 ACCESSION   KY551316
-VERSION     KY551316.1
+VERSION     H7N3Seq4
 KEYWORDS    .
 SOURCE      Influenza A virus (A/mallard/Idaho/AH0011522/2015(H7N7))
   ORGANISM  Influenza A virus (A/mallard/Idaho/AH0011522/2015(H7N7))

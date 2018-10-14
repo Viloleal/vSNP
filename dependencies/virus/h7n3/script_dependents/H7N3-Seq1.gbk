@@ -2,7 +2,7 @@ LOCUS       MF046515                2280 bp    cRNA    linear   VRL 27-NOV-2017
 DEFINITION  Influenza A virus (A/mallard/Alberta/477/2015(H10N7)) segment 1
             polymerase PB2 (PB2) gene, complete cds.
 ACCESSION   MF046515
-VERSION     MF046515.2
+VERSION     H7N3Seq1
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus (A/mallard/Alberta/477/2015(H10N7))

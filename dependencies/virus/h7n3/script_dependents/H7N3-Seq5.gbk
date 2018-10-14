@@ -2,7 +2,7 @@ LOCUS       MH932459                1537 bp    cRNA    linear   VRL 25-SEP-2018
 DEFINITION  Influenza A virus (A/mallard/Alberta/529/2017(H7N3)) segment 5
             nucleocapsid protein (NP) gene, complete cds.
 ACCESSION   MH932459
-VERSION     MH932459.1
+VERSION     H7N3Seq5
 DBLINK      BioProject: PRJNA297868
 KEYWORDS    .
 SOURCE      Influenza A virus

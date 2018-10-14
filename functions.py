@@ -1622,7 +1622,10 @@ def run_script2(arg_options):
                             myproduct = feature.qualifiers['product'][0]
                         except KeyError:
                             pass
-                        mylocus = feature.qualifiers['locus_tag'][0]
+                        try:
+                            mylocus = feature.qualifiers['locus_tag'][0]
+                        except KeyError:
+                            pass
                         try:
                             mygene = feature.qualifiers['gene'][0]
                         except KeyError:
@@ -2590,9 +2593,14 @@ def get_snps(directory, arg_options):
                 for index, row in positions.iterrows():
                     pos = row.position
                     try:
-                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
-                        chrom, name, locus, tag = a.values[0]
-                        print("{}-{}\t{}, {}, {}" .format(chrom, pos, locus, tag, name), file=write_out)
+                        aaa = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+                        try:
+                            chrom, name, locus, tag = aaa.values[0]
+                            print("{}-{}\t{}, {}, {}".format(chrom, pos, locus, tag, name), file=write_out)
+                        except ValueError:
+                            # if only one annotation entire chromosome (such with flu) then having [0] fails
+                            chrom, name, locus, tag = aaa.values
+                            print("{}-{}\t{}, {}, {}".format(chrom, pos, locus, tag, name), file=write_out)
                     except KeyError:
                         print("{}-{}\tNo annotated product" .format(gbk_chrome, pos), file=write_out)
                 write_out.close()

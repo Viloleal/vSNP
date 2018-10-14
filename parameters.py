@@ -544,6 +544,24 @@ class Get_Specie_Parameters():
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
             }
+
+        elif species_selection == "newcastle":
+            script_dependents = str(self.dependents_dir) + "/virus/newcastle/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/18-016505-001-fusion-HN.fasta",
+                "gbk_file": None
+                "species": species_selection,
+                "qual_threshold": 300,
+                "N_threshold": 300,
+                # "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx",
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+            }
         else:
             genotype_codes = None
             parameters = {

@@ -249,7 +249,7 @@ def read_aligner(sample_name, arg_options):
         R1 = glob.glob('*fastq.gz')
         R2 = None
         paired = False
-    arg_options['paired'] =  paired
+    arg_options['paired'] = paired
 
     if len(R1) > 1:
         print("#### Check for a duplicate file in {}" .format(sample_name))
@@ -273,7 +273,7 @@ def read_aligner(sample_name, arg_options):
     read_quality_stats["Q_ave_R1"] = "{:.1f}" .format(mean(mean_quality_list))
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
-
+    
     if paired:
         print("Getting mean for {}" .format(arg_options['R2']))
         handle = gzip.open(arg_options['R2'], "rt")
@@ -285,7 +285,7 @@ def read_aligner(sample_name, arg_options):
         read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
         thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
         read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
-        arg_options['read_quality_stats'] = read_quality_stats
+    arg_options['read_quality_stats'] = read_quality_stats
 
     arg_options['sample_name'] = sample_name
     arg_options = species_selection_step1(arg_options)
@@ -1412,7 +1412,7 @@ def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_cove
     else:
         shutil.copyfile(hapall, zero_coverage_vcf)
     return (zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-    
+
 
 def send_email_step1(email_list, runtime, path_found, summary_file):
     text = "See attached:  "

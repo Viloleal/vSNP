@@ -165,8 +165,9 @@ if fastq_check:
         R1count = len(R1)
         R2count = len(R2)
     else:
-        R1 = glob.glob('*_R1*fastq.gz')
+        R1 = glob.glob('*fastq.gz')
         R2 = None
+
     # fastq_count = R1count + R2count
     # if (fastq_count % 2 != 0):
     #     print("\n#####Check paired files.  Unpaired files seen by odd number of counted FASTQs\n\n")

@@ -1780,7 +1780,7 @@ def run_script2(arg_options):
     if arg_options['email_list'] is None:
         print("\n\tEmail not sent")
     elif arg_options['email_list']:
-        send_email_step2(arg_options, st)
+        send_email_step2(arg_options)
         print("\n\tEmail sent to: {}" .format(arg_options['email_list']))
     else:
         print("\n\tEmail not sent")
@@ -1949,7 +1949,7 @@ def group_files(each_vcf, arg_options):
     return dict_amb, group_calls, mal
 
 
-def send_email_step2(arg_options, st):
+def send_email_step2(arg_options):
     htmlfile_name = arg_options['htmlfile_name']
     email_list = arg_options['email_list']
 
@@ -1963,7 +1963,7 @@ def send_email_step2(arg_options, st):
     part = MIMEBase('application', "octet-stream")
     part.set_payload(open("summary_log.html", "r").read())
     encoders.encode_base64(part)
-    part.add_header('Content-Disposition', 'attachment; filename="stat_summary_{}.xlsx"' .format(st))
+    part.add_header('Content-Disposition', 'attachment; filename="summary_log.html"')
     msg.attach(part)
 
     smtp = smtplib.SMTP('10.10.8.12')

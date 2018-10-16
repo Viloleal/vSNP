@@ -229,7 +229,7 @@ def run_loop(arg_options):  #calls read_aligner
 
     if arg_options['email_list']:
         try:
-            send_email_step1(arg_options['email_list'], runtime, path_found, summary_file)
+            send_email_step1(arg_options['email_list'], runtime, path_found, summary_file, st)
         except TimeoutError:
             print("Unable to send email with current smtp setting\n")
             pass
@@ -1414,7 +1414,7 @@ def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_cove
     return (zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
 
 
-def send_email_step1(email_list, runtime, path_found, summary_file):
+def send_email_step1(email_list, runtime, path_found, summary_file, st):
     text = "See attached:  "
     send_from = "tod.p.stuber@aphis.usda.gov"
     send_to = email_list
@@ -1431,7 +1431,7 @@ def send_email_step1(email_list, runtime, path_found, summary_file):
     part = MIMEBase('application', "octet-stream")
     part.set_payload(open(summary_file, "rb").read())
     encoders.encode_base64(part)
-    part.add_header('Content-Disposition', 'attachment; filename="summary_file.xlsx"')
+    part.add_header('Content-Disposition', 'attachment; filename="stat_summary_{}.xlsx"' .format(st))
     msg.attach(part)
 
     #context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)

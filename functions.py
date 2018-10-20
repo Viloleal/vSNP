@@ -36,8 +36,7 @@ from collections import defaultdict
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
 
-from parameters import Get_Specie_Parameters_Step1
-from parameters import Get_Specie_Parameters_Step2
+from parameters import Get_Specie_Parameters
 # import concurrent.futures as cf
 
 
@@ -53,12 +52,13 @@ def run_loop(arg_options):  #calls read_aligner
 
     list_of_files = glob.glob('*gz')
     list_len = len(list_of_files)
-    if (list_len % 2 != 0):
-        print("\n#####Check paired files.  Unpaired files seen by odd number of counted FASTQs\n\n")
-        sys.exit(0)
+    # if (list_len % 2 != 0):
+    #     print("\n#####Check paired files.  Unpaired files seen by odd number of counted FASTQs\n\n")
+    #     sys.exit(0)
 
     for afile in list_of_files:
         prefix_name = re.sub('_.*', '', afile)
+        prefix_name = re.sub('\..*', '', prefix_name)
         print(prefix_name)
         if not os.path.exists(prefix_name):
             os.makedirs(prefix_name)
@@ -237,10 +237,18 @@ def run_loop(arg_options):  #calls read_aligner
 
 def read_aligner(sample_name, arg_options):
 
+    os.chdir(arg_options['root_dir'] + "/" + sample_name)
     sample_directory = str(os.getcwd())
-    os.chdir(sample_name)
-    R1 = glob.glob('*_R1*fastq.gz')
-    R2 = glob.glob('*_R2*fastq.gz')
+    pair_check = len(glob.glob('*_R2*fastq.gz'))
+    if pair_check > 0:
+        R1 = glob.glob('*_R1*fastq.gz')
+        R2 = glob.glob('*_R2*fastq.gz')
+        paired = True
+    else:
+        R1 = glob.glob('*fastq.gz')
+        R2 = None
+        paired = False
+    arg_options['paired'] = paired
 
     if len(R1) > 1:
         print("#### Check for a duplicate file in {}" .format(sample_name))
@@ -248,9 +256,10 @@ def read_aligner(sample_name, arg_options):
 
     os.makedirs("zips")
     shutil.move(R1[0], "zips")
-    shutil.move(R2[0], "zips")
-    arg_options['R1'] = sample_directory + "/" + sample_name + "/zips/" + R1[0]
-    arg_options['R2'] = sample_directory + "/" + sample_name + "/zips/" + R2[0]
+    arg_options['R1'] = sample_directory + "/zips/" + R1[0]
+    if paired:
+        shutil.move(R2[0], "zips")
+        arg_options['R2'] = sample_directory + "/zips/" + R2[0]
 
     read_quality_stats = {}
     print("Getting mean for {}" .format(arg_options['R1']))
@@ -264,16 +273,17 @@ def read_aligner(sample_name, arg_options):
     thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
     read_quality_stats["Q30_R1"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
 
-    print("Getting mean for {}" .format(arg_options['R2']))
-    handle = gzip.open(arg_options['R2'], "rt")
-    mean_quality_list = []
-    for rec in SeqIO.parse(handle, "fastq"):
-        mean_q = get_read_mean(rec)
-        mean_quality_list.append(mean_q)
+    if paired:
+        print("Getting mean for {}" .format(arg_options['R2']))
+        handle = gzip.open(arg_options['R2'], "rt")
+        mean_quality_list = []
+        for rec in SeqIO.parse(handle, "fastq"):
+            mean_q = get_read_mean(rec)
+            mean_quality_list.append(mean_q)
 
-    read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
-    thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
-    read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
+        read_quality_stats["Q_ave_R2"] = "{:.1f}" .format(mean(mean_quality_list))
+        thirty_or_greater_count = sum(i > 29 for i in mean_quality_list)
+        read_quality_stats["Q30_R2"] = "{:.1%}" .format(thirty_or_greater_count / len(mean_quality_list))
     arg_options['read_quality_stats'] = read_quality_stats
 
     arg_options['sample_name'] = sample_name
@@ -291,17 +301,17 @@ def read_aligner(sample_name, arg_options):
 
 
 def species_selection_step1(arg_options):
-    all_parameters = Get_Specie_Parameters_Step1()
+    all_parameters = Get_Specie_Parameters()
 
     if arg_options['species']:
         species_selection = arg_options['species']
         print("Sample will be ran as:  {}" .format(species_selection))
-        parameters = all_parameters.choose(species_selection)
+        parameters, genotype_codes = all_parameters.choose(species_selection)
     else:
         best_ref_found = best_reference([arg_options['R1'], arg_options['R2']])
         arg_options['species'] = best_ref_found
         print("Sample will be ran as {}" .format(best_ref_found))
-        parameters = all_parameters.choose(best_ref_found)
+        parameters, genotype_codes = all_parameters.choose(best_ref_found)
 
     if parameters['species'] is None:
         print("\n#### ERROR #####\nNo specie parameters found for: \n\t{} \n\t{}\n\n" .format(arg_options['R1'], arg_options['R2']))
@@ -490,22 +500,25 @@ def finding_best_ref(v, fastq_list):
 
 
 def align_reads(arg_options):
+    paired = arg_options['paired']
     working_directory = os.getcwd()
     print("Working on: {}" .format(working_directory))
     ts = time.time()
     st = datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H-%M-%S')
     R1 = arg_options['R1']
-    R2 = arg_options['R2']
+    if paired:
+        R2 = arg_options['R2']
     if arg_options["species"] is None:
-        R1size = sizeof_fmt(os.path.getsize(R1))
-        R2size = sizeof_fmt(os.path.getsize(R2))
         stat_summary = {}
+        R1size = sizeof_fmt(os.path.getsize(R1))
+        if paired:
+            R2size = sizeof_fmt(os.path.getsize(R2))
+            stat_summary["R2size"] = R2size
         stat_summary["time_stamp"] = st
         stat_summary["sample_name"] = arg_options["sample_name"]
         stat_summary["species"] = "NOT_FOUND"
         stat_summary["reference_sequence_name"] = "N/A"
         stat_summary["R1size"] = R1size
-        stat_summary["R2size"] = R2size
         stat_summary["allbam_mapped_reads"] = "CHECK SAMPLE *****************************************"
         stat_summary.update(arg_options['read_quality_stats'])
         return(stat_summary)
@@ -536,7 +549,8 @@ def align_reads(arg_options):
         print("sample name: %s" % sample_name)
         print("sample reference: %s" % sample_reference)
         print("Read 1: %s" % R1)
-        print("Read 2: %s\n" % R2)
+        if paired:
+            print("Read 2: %s\n" % R2)
         print("working_directory: %s" % working_directory)
         print("--")
 
@@ -550,9 +564,10 @@ def align_reads(arg_options):
         unmapsam = loc_sam + "-unmapped.sam"
         metrics = loc_sam + "-metrics.txt"
         unmapped_read1 = loc_sam + "-unmapped_R1.fastq"
-        unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
         unmapped_read1gz = loc_sam + "-unmapped_R1.fastq.gz"
-        unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
+        if paired:
+            unmapped_read2 = loc_sam + "-unmapped_R2.fastq"
+            unmapped_read2gz = loc_sam + "-unmapped_R2.fastq.gz"
         sortedbam = loc_sam + "-sorted.bam"
         nodupbam = loc_sam + "-nodup.bam"
         unfiltered_hapall = loc_sam + "-unfiltered_hapall.vcf"
@@ -561,8 +576,11 @@ def align_reads(arg_options):
         zero_coverage_vcf = loc_sam + "_zc.vcf"
 
         #########################################################
-        print("\n@@@ BWA mem: {}" .format(sample_name))
-        os.system(r'bwa mem -M -R "@RG\tID:%s\tSM:%s\tPL:ILLUMINA\tPI:250" -t 16 %s %s %s > %s' % (sample_name, sample_name, sample_reference, R1, R2, samfile))
+        print("\n@@@ BWA mem: {}".format(sample_name))
+        if paired:
+            os.system(r'bwa mem -M -R "@RG\tID:%s\tSM:%s\tPL:ILLUMINA\tPI:250" -t 16 %s %s %s > %s' % (sample_name, sample_name, sample_reference, R1, R2, samfile))
+        else:
+            os.system(r'bwa mem -M -R "@RG\tID:%s\tSM:%s\tPL:ILLUMINA\tPI:250" -t 16 %s %s > %s' % (sample_name, sample_name, sample_reference, R1, samfile))
         os.system("samtools view -Sb {} -o {}" .format(samfile, bamfile))
         os.system("samtools sort {} -o {}" .format(bamfile, sortedbam))
         os.system("samtools index {}" .format(sortedbam))
@@ -577,11 +595,18 @@ def align_reads(arg_options):
         for record in SeqIO.parse(sample_reference, "fasta"):
             chrom = record.id
             total_len = len(record.seq)
-            last_number = 0
-            for pos in list(range(last_number, total_len, 100000))[1:]:
-                print("{}:{}-{}" .format(chrom, last_number, pos), file=chrom_ranges)
-                last_number = pos
-            print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
+            min_number = 0
+            step = 100000
+            if step < total_len:
+                for chunk in range(min_number, total_len, step)[1:]:
+                    print("{}:{}-{}".format(chrom, min_number, chunk), file=chrom_ranges)
+                    min_number = chunk
+            print("{}:{}-{}".format(chrom, min_number, total_len), file=chrom_ranges)
+
+            # for pos in list(range(last_number, total_len, 100000))[1:]:
+            #     print("{}:{}-{}" .format(chrom, last_number, pos), file=chrom_ranges)
+            #     last_number = pos
+            # print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
         chrom_ranges.close()
         os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 --strict-vcf -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
         # "fix" MQ notation in VCF to match GATK output
@@ -596,15 +621,24 @@ def align_reads(arg_options):
         os.system(r'vcffilter -f "QUAL > 20" %s > %s' % (mapq_fix, hapall))
 
         print("\n@@@ Assemble Unmapped Reads: {}" .format(sample_name))
-        os.system("samtools view -h -f4 -T {} {} -o {}" .format(sample_reference, nodupbam, unmapsam))
-        os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}" .format(unmapsam, unmapped_read1, unmapped_read2))
+        os.system("samtools view -h -f4 -T {} {} -o {}".format(sample_reference, nodupbam, unmapsam))
+        if paired:
+            os.system("picard SamToFastq INPUT={} FASTQ={} SECOND_END_FASTQ={}".format(unmapsam, unmapped_read1, unmapped_read2))
+        else:
+            os.system("picard SamToFastq INPUT={} FASTQ={}".format(unmapsam, unmapped_read1))
 
         abyss_contig_count = 0
         try:
-            os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
-            with open(abyss_out) as f:
-                for line in f:
-                    abyss_contig_count += line.count(">")
+            if paired:
+                os.system("ABYSS --out {} --coverage 5 --kmer 64 {} {}" .format(abyss_out, unmapped_read1, unmapped_read2))
+                with open(abyss_out) as f:
+                    for line in f:
+                        abyss_contig_count += line.count(">")
+            else:
+                os.system("ABYSS --out {} --coverage 5 --kmer 64 {}" .format(abyss_out, unmapped_read1))
+                with open(abyss_out) as f:
+                    for line in f:
+                        abyss_contig_count += line.count(">")
         except FileNotFoundError:
             abyss_contig_count = 0
 
@@ -650,7 +684,7 @@ def align_reads(arg_options):
             smtp.send_message(msg)
             smtp.quit()
 
-        if arg_options["gbk_file"] is not "None" and not arg_options['no_annotation']:
+        if arg_options["gbk_file"] or arg_options['no_annotation']:
             annotated_vcf = loc_sam + "-annotated.vcf"
             gbk_file = arg_options['gbk_file']
 
@@ -671,7 +705,10 @@ def align_reads(arg_options):
                                 myproduct = feature.qualifiers['product'][0]
                             except KeyError:
                                 pass
-                            mylocus = feature.qualifiers['locus_tag'][0]
+                            try:
+                                mylocus = feature.qualifiers['locus_tag'][0]
+                            except KeyError:
+                                pass
                             try:
                                 mygene = feature.qualifiers['gene'][0]
                             except KeyError:
@@ -702,9 +739,14 @@ def align_reads(arg_options):
                 for index, row in matching_chrom_df.iterrows():
                     pos = row.POS
                     try:
-                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
-                        chrom, name, locus, tag = a.values[0]
-                        annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}" .format(name, locus, tag)
+                        aaa = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+                        try:
+                            chrom, name, locus, tag = aaa.values[0]
+                            annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}".format(name, locus, tag)
+                        except ValueError:
+                            # if only one annotation entire chromosome (such with flu) then having [0] fails
+                            chrom, name, locus, tag = aaa.values
+                            annotate_condense_dict[str(chrom) + "-" + str(pos)] = "{}, {}, {}".format(name, locus, tag)
                     except KeyError:
                         annotate_condense_dict[str(gbk_chrome) + "-" + str(pos)] = "No annotated product"
 
@@ -721,10 +763,12 @@ def align_reads(arg_options):
                 for cf in cat_files:
                     with open(cf, "rb") as infile:
                         outfile.write(infile.read())
-
-        os.remove('temp.csv')
-        os.remove('v_header.csv')
-        os.remove('v_annotated_body.csv')
+        try:
+            os.remove('temp.csv')
+            os.remove('v_header.csv')
+            os.remove('v_annotated_body.csv')
+        except FileNotFoundError:
+            pass
         os.remove(samfile)
         os.remove(bamfile)
         os.remove(unmapsam)
@@ -745,14 +789,17 @@ def align_reads(arg_options):
         newZip = zipfile.ZipFile(unmapped_read1gz, 'w')
         newZip.write(unmapped_read1, compress_type=zipfile.ZIP_DEFLATED)
         newZip.close()
-        newZip = zipfile.ZipFile(unmapped_read2gz, 'w')
-        newZip.write(unmapped_read2, compress_type=zipfile.ZIP_DEFLATED)
-        newZip.close()
         os.remove(unmapped_read1)
-        os.remove(unmapped_read2)
+        if paired:
+            newZip = zipfile.ZipFile(unmapped_read2gz, 'w')
+            newZip.write(unmapped_read2, compress_type=zipfile.ZIP_DEFLATED)
+            newZip.close()
+            os.remove(unmapped_read2)
+
         try:
             shutil.move(unmapped_read1gz, unmapped)
-            shutil.move(unmapped_read2gz, unmapped)
+            if paired:
+                shutil.move(unmapped_read2gz, unmapped)
             shutil.move(abyss_out, unmapped)
         except FileNotFoundError:
             pass
@@ -777,7 +824,8 @@ def align_reads(arg_options):
         print("average_coverage: %s" % ave_coverage)
 
         R1size = sizeof_fmt(os.path.getsize(R1))
-        R2size = sizeof_fmt(os.path.getsize(R2))
+        if paired:
+            R2size = sizeof_fmt(os.path.getsize(R2))
 
         try:
             with open("mlst/mlst.txt") as f:
@@ -818,7 +866,7 @@ def align_reads(arg_options):
 
         sequence_count = 0
         total_length = 0
-        with gzip.open(R2, "rt") as handle:
+        with gzip.open(R1, "rt") as handle:
             for r in SeqIO.parse(handle, "fastq"):
                 total_length = total_length + len(r.seq)
                 sequence_count = sequence_count + 1
@@ -834,7 +882,10 @@ def align_reads(arg_options):
         stat_summary["species"] = arg_options["species"]
         stat_summary["reference_sequence_name"] = reference_sequence_name
         stat_summary["R1size"] = R1size
-        stat_summary["R2size"] = R2size
+        if paired:
+            stat_summary["R2size"] = R2size
+        else:
+            stat_summary["R2size"] = None
         stat_summary["allbam_mapped_reads"] = allbam_mapped_reads
         stat_summary["genome_coverage"] = genome_coverage
         stat_summary["ave_coverage"] = ave_coverage
@@ -860,7 +911,10 @@ def align_reads(arg_options):
             worksheet.write(row, col, header)
             col += 1
             # worksheet.write(row, col, v)
-        stat_summary.update(arg_options['read_quality_stats'])
+        try:
+            stat_summary.update(arg_options['read_quality_stats'])
+        except KeyError:
+            pass
         worksheet.write(1, 0, stat_summary.get('time_stamp', 'n/a'))
         worksheet.write(1, 1, stat_summary.get('sample_name', 'n/a'))
         worksheet.write(1, 2, stat_summary.get('species', 'n/a'))
@@ -1323,40 +1377,41 @@ def add_zero_coverage(sample_name, sample_reference, nodupbam, hapall, zero_cove
     total_coverage = total_length - total_zero_coverage
     genome_coverage = "{:.2%}".format(total_coverage / total_length)
 
-    header_out = open('v_header.csv', 'w+')
-    with open(hapall) as fff:
-        for line in fff:
-            if re.search('^#', line):
-                print(line.strip(), file=header_out)
-    header_out.close()
-
     vcf_df = pd.read_csv(hapall, sep='\t', header=None, names=["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "Sample"], comment='#')
-
     good_snp_count = len(vcf_df[(vcf_df['ALT'].str.len() == 1) & (vcf_df['REF'].str.len() == 1) & (vcf_df['QUAL'] > 150)])
 
-    vcf_df_snp = vcf_df[vcf_df['REF'].str.len() == 1]
-    vcf_df_snp = vcf_df_snp[vcf_df_snp['ALT'].str.len() == 1]
-    vcf_df_snp['ABS_VALUE'] = vcf_df_snp['CHROM'].map(str) + '-' + vcf_df_snp['POS'].map(str)
-    vcf_df_snp = vcf_df_snp.set_index('ABS_VALUE')    
-    cat_df = pd.concat([vcf_df_snp, zero_df], axis=1, sort=False)
-    cat_df = cat_df.drop(columns=['CHROM', 'POS', 'depth'])
-    cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']] = cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']].fillna('.')
-    cat_df['REF'] = cat_df['REF'].fillna('N')
-    cat_df['FORMAT'] = cat_df['FORMAT'].fillna('GT')
-    cat_df['Sample'] = cat_df['Sample'].fillna('./.')
-    cat_df['temp'] = cat_df.index.str.split('-')
-    cat_df[['CHROM', 'POS']] = pd.DataFrame(cat_df.temp.values.tolist(), index=cat_df.index)
-    cat_df = cat_df[['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'Sample']]
-    cat_df['POS'] = cat_df['POS'].astype(int)
-    cat_df = cat_df.sort_values(['CHROM', 'POS'])
-    cat_df.to_csv('v_annotated_body.csv', sep='\t', header=False, index=False)
-    cat_files = ['v_header.csv', 'v_annotated_body.csv']
-    with open(zero_coverage_vcf, "wb") as outfile:
-        for cf in cat_files:
-            with open(cf, "rb") as infile:
-                outfile.write(infile.read())
+    if total_zero_coverage > 0:
+        header_out = open('v_header.csv', 'w+')
+        with open(hapall) as fff:
+            for line in fff:
+                if re.search('^#', line):
+                    print(line.strip(), file=header_out)
+        header_out.close()
+        vcf_df_snp = vcf_df[vcf_df['REF'].str.len() == 1]
+        vcf_df_snp = vcf_df_snp[vcf_df_snp['ALT'].str.len() == 1]
+        vcf_df_snp['ABS_VALUE'] = vcf_df_snp['CHROM'].map(str) + '-' + vcf_df_snp['POS'].map(str)
+        vcf_df_snp = vcf_df_snp.set_index('ABS_VALUE')
+        cat_df = pd.concat([vcf_df_snp, zero_df], axis=1, sort=False)
+        cat_df = cat_df.drop(columns=['CHROM', 'POS', 'depth'])
+        cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']] = cat_df[['ID', 'ALT', 'QUAL', 'FILTER', 'INFO']].fillna('.')
+        cat_df['REF'] = cat_df['REF'].fillna('N')
+        cat_df['FORMAT'] = cat_df['FORMAT'].fillna('GT')
+        cat_df['Sample'] = cat_df['Sample'].fillna('./.')
+        cat_df['temp'] = cat_df.index.str.split('-')
+        cat_df[['CHROM', 'POS']] = pd.DataFrame(cat_df.temp.values.tolist(), index=cat_df.index)
+        cat_df = cat_df[['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'Sample']]
+        cat_df['POS'] = cat_df['POS'].astype(int)
+        cat_df = cat_df.sort_values(['CHROM', 'POS'])
+        cat_df.to_csv('v_annotated_body.csv', sep='\t', header=False, index=False)
+        cat_files = ['v_header.csv', 'v_annotated_body.csv']
+        with open(zero_coverage_vcf, "wb") as outfile:
+            for cf in cat_files:
+                with open(cf, "rb") as infile:
+                    outfile.write(infile.read())
+    else:
+        shutil.copyfile(hapall, zero_coverage_vcf)
     return (zero_coverage_vcf, good_snp_count, ave_coverage, genome_coverage)
-    
+
 
 def send_email_step1(email_list, runtime, path_found, summary_file, st):
     text = "See attached:  "
@@ -1466,7 +1521,7 @@ def run_script2(arg_options):
         raxml_cpu = int(arg_options['cpu_count'] / 10)
     arg_options['raxml_cpu'] = raxml_cpu
 
-    all_parameters = Get_Specie_Parameters_Step2() # Class of possible parameters
+    all_parameters = Get_Specie_Parameters() # Class of possible parameters
     print("Sample will be ran as {}" .format(arg_options['species']))
     parameters, genotype_codes = all_parameters.choose(arg_options['species'])
     if parameters['qual_threshold'] is None:
@@ -1608,14 +1663,17 @@ def run_script2(arg_options):
                             myproduct = feature.qualifiers['product'][0]
                         except KeyError:
                             pass
-                        mylocus = feature.qualifiers['locus_tag'][0]
+                        try:
+                            mylocus = feature.qualifiers['locus_tag'][0]
+                        except KeyError:
+                            pass
                         try:
                             mygene = feature.qualifiers['gene'][0]
                         except KeyError:
                             pass
                         print(key, int(feature.location.start), int(feature.location.end), mylocus, myproduct, mygene, sep='\t', file=write_out)
             write_out.close()
-            
+
             df = pd.read_csv('temp.csv', sep='\t', names=["chrom", "start", "stop", "locus", "product", "gene"])
             #os.remove('temp.csv')
             df = df.sort_values(['start', 'gene'], ascending=[True, False])
@@ -2015,7 +2073,6 @@ def test_duplicate():
 
 
 def change_names(arg_options, genotype_codes):
-    malformed = []
     names_not_changed = []
     list_of_files = glob.glob('*vcf')
     name_found = False
@@ -2077,7 +2134,7 @@ def change_names(arg_options, genotype_codes):
         for each_vcf in list_of_files:
             shutil.copy(each_vcf, arg_options['root_dir'])
         print(file_number)
-    
+
     return arg_options
 
 
@@ -2149,7 +2206,7 @@ def find_positions(filename, arg_options):
             # Usable positins are those that:
             # ADD PARAMETERS HERE TO CHANGE WHAT'S SNP WILL BE USED
             # IF NOT FOUND HERE THE SNP WILL BE IGNORED.  WILL NOT BE REPRESENTED.  HARD REMOVAL
-            # GATK parameters
+            # parameters
             # str(record.ALT[0]) != "None" --> filter deletions
             # len(record.REF) == 1 --> filter bad ref call with 2 nt present
             # len(record.ALT[0]) == 1 --> filter bad alt call with 2 nt present
@@ -2157,8 +2214,13 @@ def find_positions(filename, arg_options):
             # record.QUAL > 150 --> filter poor quality
             # record.INFO['MQ'] --> filter low map quality
             try:
-                if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
-                    found_positions.update({absolute_positon: record.REF})
+                if arg_options['species'] == 'flu':
+                    # use both AC=1 and AC=2 as valid position
+                    if str(record.ALT[0]) != "None" and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
+                        found_positions.update({absolute_positon: record.REF})
+                else:
+                    if str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 2 and len(record.REF) == 1 and record.QUAL > arg_options['qual_threshold']:
+                        found_positions.update({absolute_positon: record.REF})
             except KeyError:
                 pass
     except ZeroDivisionError:
@@ -2571,19 +2633,24 @@ def get_snps(directory, arg_options):
                 ref_pos = ref_pos.rename(columns={'index': 'reference_pos'})
                 ref_pos = pd.DataFrame(ref_pos.reference_pos.str.split('-', expand=True).values, columns=['reference', 'position'])
                 ref_pos = ref_pos[ref_pos['reference'] == gbk_chrome]
-                
+
                 write_out = open('annotations.csv', 'a')
                 positions = ref_pos.position.to_frame()
                 for index, row in positions.iterrows():
                     pos = row.position
                     try:
-                        a = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
-                        chrom, name, locus, tag = a.values[0]
-                        print("{}-{}\t{}, {}, {}" .format(chrom, pos, locus, tag, name), file=write_out)
+                        aaa = pro.iloc[pro.index.get_loc(int(pos))][['chrom', 'locus', 'product', 'gene']]
+                        try:
+                            chrom, name, locus, tag = aaa.values[0]
+                            print("{}-{}\t{}, {}, {}".format(chrom, pos, locus, tag, name), file=write_out)
+                        except ValueError:
+                            # if only one annotation entire chromosome (such with flu) then having [0] fails
+                            chrom, name, locus, tag = aaa.values
+                            print("{}-{}\t{}, {}, {}".format(chrom, pos, locus, tag, name), file=write_out)
                     except KeyError:
                         print("{}-{}\tNo annotated product" .format(gbk_chrome, pos), file=write_out)
                 write_out.close()
-                
+
                 annotations_df = pd.read_csv('annotations.csv', sep='\t', header=None, names=['index', 'annotations'], index_col='index')
 
             annotations_df.index.names = ['reference_pos']

@@ -6,7 +6,6 @@ import multiprocessing
 import argparse
 import textwrap
 import glob
-import random
 from concurrent import futures
 import re
 from itertools import repeat as itertools_repeat

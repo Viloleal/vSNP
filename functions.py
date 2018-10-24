@@ -2088,14 +2088,13 @@ def change_names(arg_options, genotype_codes):
             foundname = genotype_codes[prename]
             name_found = True
         except KeyError:
-            pass
-        for key, value in genotype_codes.items():
-            try:
-                if myregex.search(key):
-                    name_found = True
-                    foundname = key.strip('_')
-            except TypeError:
-                pass
+            for key, value in genotype_codes.items():
+                try:
+                    if myregex.search(key):
+                        name_found = True
+                        foundname = key.strip('_')
+                except TypeError:
+                    pass
         if name_found:
             os.rename(filename, foundname + ".vcf")
             print("Name Changed {} --> {}" .format(filename, foundname + ".vcf"))

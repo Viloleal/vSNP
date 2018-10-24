@@ -1,6 +1,7 @@
 import os
 import re
 import xlrd
+import pandas as pd
 
 
 class Get_Specie_Parameters():
@@ -19,8 +20,8 @@ class Get_Specie_Parameters():
     def choose(self, species_selection):
 
         def get_tb_codes():
-            if os.path.isfile("./Volumes/Results/mycobacterium/genotyping_codes.xlsx"):
-                tb_geno_codes = ("/Volumes/Results/mycobacterium/genotyping_codes.xlsx")
+            if os.path.isfile("/Volumes/root/TStuber/Results/mycobacterium/genotyping_codes.xlsx"):
+                tb_geno_codes = ("/Volumes/root/TStuber/Results/mycobacterium/genotyping_codes.xlsx")
             elif os.path.isfile("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx"):
                 tb_geno_codes = ("/bioinfo11/TStuber/Results/mycobacterium/genotyping_codes.xlsx")
             # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx"):
@@ -94,39 +95,17 @@ class Get_Specie_Parameters():
 
         def get_heidelberg_codes():
             if os.path.isfile("/Volumes/root/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx"):
-                bruc_geno_codes = ("/Volumes/root/TStuber/Results/bi/salmonella/metadata/Heidelberg\ vSNP\ Metatada.xlsx")
+                heidel_geno_codes = ("/Volumes/root/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx")
             elif os.path.isfile("/bioinfo11/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx"):
-                bruc_geno_codes = ("/bioinfo11/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx")
+                heidel_geno_codes = ("/bioinfo11/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx")
             # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx"):
             #     bruc_geno_codes = ("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx")
             else:
                 return None
-            print("Pulling in the Heidelberg genotype codes...")
-            wb_in = xlrd.open_workbook(bruc_geno_codes)
-            sheet_in = wb_in.sheet_by_index(0)
-            genotype_codes = {}
-            for row_data in sheet_in.col(0):
-                row_data = row_data.value
-                row_data = re.sub("/", "_", row_data)
-                row_data = re.sub("\.", "_", row_data)
-                row_data = re.sub("\*", "_", row_data)
-                row_data = re.sub("\?", "_", row_data)
-                row_data = re.sub("\(", "_", row_data)
-                row_data = re.sub("\)", "_", row_data)
-                row_data = re.sub("\[", "_", row_data)
-                row_data = re.sub("\]", "_", row_data)
-                row_data = re.sub(" ", "_", row_data)
-                row_data = re.sub("{", "_", row_data)
-                row_data = re.sub("}", "_", row_data)
-                row_data = re.sub("\'", "_", row_data)
-                row_data = re.sub("-_", "_", row_data)
-                row_data = re.sub("_-", "_", row_data)
-                row_data = re.sub("--", "_", row_data)
-                row_data = re.sub("_$", "", row_data)
-                row_data = re.sub("-$", "", row_data)
-                row_data = re.sub("\'", "", row_data)
-                row_data = str(row_data)
-                genotype_codes[row_data] = "" #the empty value can be used for elites
+
+            in_df = pd.read_excel(heidel_geno_codes, index_col="Filename", usecols=[0,1])
+            in_dict = in_df.to_dict('dict')
+            genotype_codes = in_dict['Isolate Name']
             return genotype_codes
 
         if species_selection == "typhimurium-14028S":

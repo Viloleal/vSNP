@@ -2083,6 +2083,12 @@ def change_names(arg_options, genotype_codes):
         #Added '^' because h37 18-2397 was finding bovis 18-011018-2397, 2018-06-19
         myregex = re.compile('^' + vcf_pretext + '_.*')  #underscore required to make myregex.search below greedy.  so it finds exact match and not all matches. ex: 10-01 must match 10-01 not 10-010 also
         name_found = False
+        try:
+            prename = filename.replace(".vcf", "")
+            foundname = genotype_codes[prename]
+            name_found = True
+        except KeyError:
+            NotImplemented
         for key, value in genotype_codes.items():
             if myregex.search(key):
                 name_found = True

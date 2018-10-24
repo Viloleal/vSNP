@@ -92,9 +92,46 @@ class Get_Specie_Parameters():
                 genotype_codes[row_data] = "" #the empty value can be used for elites
             return genotype_codes
 
+        def get_heidelberg_codes():
+            if os.path.isfile("/Volumes/root/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx"):
+                bruc_geno_codes = ("/Volumes/root/TStuber/Results/bi/salmonella/metadata/Heidelberg\ vSNP\ Metatada.xlsx")
+            elif os.path.isfile("/bioinfo11/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx"):
+                bruc_geno_codes = ("/bioinfo11/TStuber/Results/bi/salmonella/metadata/Heidelberg_vSNP_Metatada.xlsx")
+            # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx"):
+            #     bruc_geno_codes = ("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx")
+            else:
+                return None
+            print("Pulling in the Heidelberg genotype codes...")
+            wb_in = xlrd.open_workbook(bruc_geno_codes)
+            sheet_in = wb_in.sheet_by_index(0)
+            genotype_codes = {}
+            for row_data in sheet_in.col(0):
+                row_data = row_data.value
+                row_data = re.sub("/", "_", row_data)
+                row_data = re.sub("\.", "_", row_data)
+                row_data = re.sub("\*", "_", row_data)
+                row_data = re.sub("\?", "_", row_data)
+                row_data = re.sub("\(", "_", row_data)
+                row_data = re.sub("\)", "_", row_data)
+                row_data = re.sub("\[", "_", row_data)
+                row_data = re.sub("\]", "_", row_data)
+                row_data = re.sub(" ", "_", row_data)
+                row_data = re.sub("{", "_", row_data)
+                row_data = re.sub("}", "_", row_data)
+                row_data = re.sub("\'", "_", row_data)
+                row_data = re.sub("-_", "_", row_data)
+                row_data = re.sub("_-", "_", row_data)
+                row_data = re.sub("--", "_", row_data)
+                row_data = re.sub("_$", "", row_data)
+                row_data = re.sub("-$", "", row_data)
+                row_data = re.sub("\'", "", row_data)
+                row_data = str(row_data)
+                genotype_codes[row_data] = "" #the empty value can be used for elites
+            return genotype_codes
+
         if species_selection == "typhimurium-14028S":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
-            genotype_codes = None
+            genotype_codes = get_heidelberg_codes()
             parameters = {
                 "upload_to": str(self.upload_to),
                 "spoligo_db": None,
@@ -111,7 +148,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "typhimurium-LT2":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
-            genotype_codes = None
+            genotype_codes = get_heidelberg_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
                 "spoligo_db": None,
@@ -124,6 +161,22 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
+            }
+        elif species_selection == "heidelberg-SL476":
+            script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
+            genotype_codes = get_heidelberg_codes()
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/NC_011083.fasta",
+                "gbk_file": [script_dependents + "/NC_011083.gbk"],
+                "species": species_selection,
+                "qual_threshold": 300,
+                "N_threshold": 350,
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
             }
         elif species_selection == "te_atcc35865":
             script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_atcc35865/script_dependents"
@@ -220,22 +273,6 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script2",
-            }
-        elif species_selection == "heidelberg-SL476":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
-            genotype_codes = None
-            parameters = {
-                "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",
-                "spoligo_db": None,
-                "reference": script_dependents + "/NC_011083.fasta",
-                "gbk_file": [script_dependents + "/NC_011083.gbk"],
-                "species": species_selection,
-                "qual_threshold": 300,
-                "N_threshold": 350,
-                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
-                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
-                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
             }
         elif species_selection == "ab1":
             script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents"

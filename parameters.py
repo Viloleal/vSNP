@@ -131,7 +131,7 @@ class Get_Specie_Parameters():
 
         if species_selection == "typhimurium-14028S":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
-            genotype_codes = get_heidelberg_codes()
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to),
                 "spoligo_db": None,
@@ -148,7 +148,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "typhimurium-LT2":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
-            genotype_codes = get_heidelberg_codes()
+            genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
                 "spoligo_db": None,

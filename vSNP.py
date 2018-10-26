@@ -119,19 +119,19 @@ elif args.email == "tod":
 elif args.email == "jess":
     email_list = "Jessica.A.Hicks@aphis.usda.gov"
 elif args.email == "suelee":
-    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, Doris.M.Bravo@aphis.usda.gov, kristina.lantz@aphis.usda.gov"
+    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, Doris.M.Bravo@aphis.usda.gov, kristina.lantz@aphis.usda.gov, patrick.m.camp@aphis.usda.gov"
 elif args.email == "suelee-":
     email_list = "tod.p.stuber@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov"
 elif args.email == "tyler-":
     email_list = "tod.p.stuber@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov"
 elif args.email == "chris":
-    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov"
+    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov, patrick.m.camp@aphis.usda.gov"
 elif args.email == "chris-":
     email_list = "tod.p.stuber@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov"
 elif args.email == "kris":
-    email_list = "kristina.lantz@aphis.usda.gov, tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov, mary.k.smith@aphis.usda.gov"
+    email_list = "kristina.lantz@aphis.usda.gov, tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov, mary.k.smith@aphis.usda.gov, patrick.m.camp@aphis.usda.gov"
 elif args.email == "doris":
-    email_list = "tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, doris.m.bravo@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov, kristina.lantz@aphis.usda.gov"
+    email_list = "tod.p.stuber@aphis.usda.gov, jessica.a.hicks@aphis.usda.gov, doris.m.bravo@aphis.usda.gov, suelee.robbe-austerman@aphis.usda.gov, kristina.lantz@aphis.usda.gov, patrick.m.camp@aphis.usda.gov"
 else:
     email_list = None
 

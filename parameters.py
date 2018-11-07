@@ -108,6 +108,21 @@ class Get_Specie_Parameters():
             genotype_codes = in_dict['Isolate Name']
             return genotype_codes
 
+        def get_vndv_codes():
+            if os.path.isfile("/Volumes/root/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx"):
+                vndv_geno_codes = ("/Volumes/root/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx")
+            elif os.path.isfile("/bioinfo14/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx"):
+                vndv_geno_codes = ("/bioinfo14/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx")
+            # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx"):
+            #     bruc_geno_codes = ("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx")
+            else:
+                return None
+
+            in_df = pd.read_excel(vndv_geno_codes, index_col="Filename", usecols=[0,1])
+            in_dict = in_df.to_dict('dict')
+            genotype_codes = in_dict['Isolate Name']
+            return genotype_codes
+
         if species_selection == "typhimurium-14028S":
             script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
             genotype_codes = None
@@ -562,7 +577,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "newcastle":
             script_dependents = str(self.dependents_dir) + "/virus/newcastle/script_dependents"
-            genotype_codes = None
+            genotype_codes = get_vndv_codes()
             parameters = {
                 "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
                 "spoligo_db": None,
@@ -579,7 +594,7 @@ class Get_Specie_Parameters():
             }
         elif species_selection == "belize":
             script_dependents = str(self.dependents_dir) + "/virus/belize/script_dependents"
-            genotype_codes = None
+            genotype_codes = get_vndv_codes()
             parameters = {
                 "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
                 "spoligo_db": None,

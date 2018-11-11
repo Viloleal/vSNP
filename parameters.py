@@ -7,14 +7,53 @@ import pandas as pd
 class Get_Specie_Parameters():
 
     def __init__(self):
-        real_path = os.path.dirname(os.path.realpath(__file__))
-        print("real path command --> {}".format(real_path))
-        real_path = real_path.split('/')
-        root_path = '/'.join(real_path)
-        self.dependents_dir = root_path + "/dependencies"
-        if os.path.isdir("/bioinfo11/TStuber/Results"): #check bioinfo from server
+        def get_my_path(bioinfo):
+            bio_drive_dep = {}
+            bio_drive_dep['af'] = bioinfo + "/mycobacterium/tbc/af2122/script_dependents"
+            bio_drive_dep['h37'] = bioinfo + "/mycobacterium/tbc/h37/script_dependents"
+            bio_drive_dep['ab1'] = bioinfo + "/brucella/abortus1/script_dependents"
+            bio_drive_dep['ab3'] = bioinfo + "/brucella/abortus3/script_dependents"
+            bio_drive_dep['suis1'] = bioinfo + "/brucella/suis1/script_dependents"
+            bio_drive_dep['suis2'] = bioinfo + "/brucella/suis2/script_dependents"
+            bio_drive_dep['suis3'] = bioinfo + "/brucella/suis3/script_dependents"
+            bio_drive_dep['mel1'] = bioinfo + "/brucella/melitensis-bv1/script_dependents"
+            bio_drive_dep['mel1b'] = bioinfo + "/brucella/melitensis-bv1b/script_dependents"
+            bio_drive_dep['mel2'] = bioinfo + "/brucella/melitensis-bv2/script_dependents"
+            bio_drive_dep['mel3'] = bioinfo + "/brucella/melitensis-bv3/script_dependents"
+            bio_drive_dep['canis'] = bioinfo + "/brucella/canis/script_dependents"
+            bio_drive_dep['ceti1'] = bioinfo + "/brucella/ceti1/script_dependents"
+            bio_drive_dep['ceti2'] = bioinfo + "/brucella/ceti2/script_dependents"
+            bio_drive_dep['ovis'] = bioinfo + "/brucella/ovis/script_dependents"
+            bio_drive_dep['neo'] = bioinfo + "/brucella/neotomae/script_dependents"
+            bio_drive_dep['para'] = bioinfo + "/brucella/abortus1/script_dependents"
+            bio_drive_dep['typhimurium-14028S'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-14028S/script_dependents"
+            bio_drive_dep['typhimurium-LT2'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-LT2/script_dependents"
+            bio_drive_dep['heidelberg-SL476'] = bioinfo + "/bi/salmonella/vsnp/heidelberg-SL476/script_dependents"
+            bio_drive_dep['te_atcc35865'] = bioinfo + "/bi/taylorella/vsnp/te_atcc35865/script_dependents"
+            bio_drive_dep['te_09-0932'] = bioinfo + "/bi/taylorella/vsnp/te_09-0932/script_dependents"
+            bio_drive_dep['te_89-0490'] = bioinfo + "/bi/taylorella/vsnp/te_89-0490/script_dependents"
+            bio_drive_dep['te_92-0972'] = bioinfo + "/bi/taylorella/vsnp/te_92-0972/script_dependents"
+            bio_drive_dep['te_98-0554'] = bioinfo + "/bi/taylorella/vsnp/te_98-0554/script_dependents"
+            bio_drive_dep['te_mce9'] = bioinfo + "/bi/taylorella/vsnp/te_mce9/script_dependents"
+            return (bio_drive_dep)
+        
+        if os.path.isdir("/Volumes/root/TStuber/Results"):
+            bioinfo = "/Volumes/root/TStuber/Results"
+            self.bio_drive_dep = get_my_path(bioinfo)
+            self.bio_drive = True
+            self.upload_to = None
+        elif os.path.isdir("/bioinfo11/TStuber/Results"):
+            bioinfo = "/bioinfo11/TStuber/Results/"
+            self.bio_drive_dep = get_my_path(bioinfo)
+            self.bio_drive = True
             self.upload_to = "/bioinfo11/TStuber/Results"
         else:
+            self.bio_drive = False
+            real_path = os.path.dirname(os.path.realpath(__file__))
+            print("real path command --> {}".format(real_path))
+            real_path = real_path.split('/')
+            root_path = '/'.join(real_path)
+            self.dependents_dir = root_path + "/dependencies"
             self.upload_to = None
 
     def choose(self, species_selection):
@@ -103,7 +142,7 @@ class Get_Specie_Parameters():
             else:
                 return None
 
-            in_df = pd.read_excel(heidel_geno_codes, index_col="Filename", usecols=[0,1])
+            in_df = pd.read_excel(heidel_geno_codes, index_col="Filename", usecols=[0, 1])
             in_dict = in_df.to_dict('dict')
             genotype_codes = in_dict['Isolate Name']
             return genotype_codes
@@ -118,13 +157,16 @@ class Get_Specie_Parameters():
             else:
                 return None
 
-            in_df = pd.read_excel(vndv_geno_codes, index_col="Filename", usecols=[0,1])
+            in_df = pd.read_excel(vndv_geno_codes, index_col="Filename", usecols=[0, 1])
             in_dict = in_df.to_dict('dict')
             genotype_codes = in_dict['Isolate Name']
             return genotype_codes
 
         if species_selection == "typhimurium-14028S":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to),
@@ -141,7 +183,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-14028S/script2",
             }
         elif species_selection == "typhimurium-LT2":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
@@ -157,7 +202,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
             }
         elif species_selection == "heidelberg-SL476":
-            script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
             genotype_codes = get_heidelberg_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",
@@ -173,7 +221,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
             }
         elif species_selection == "te_atcc35865":
-            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_atcc35865/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_atcc35865/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script1",
@@ -189,7 +240,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script2",
             }
         elif species_selection == "te_09-0932":
-            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_09-0932/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_09-0932/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_09-0932/script1",
@@ -205,7 +259,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_09-0932/script2",
             }
         elif species_selection == "te_89-0490":
-            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_89-0490/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_89-0490/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_89-0490/script1",
@@ -221,7 +278,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_89-0490/script2",
             }
         elif species_selection == "te_92-0972":
-            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_92-0972/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_92-0972/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_92-0972/script1",
@@ -237,7 +297,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_92-0972/script2",
             }
         elif species_selection == "te_98-0554":
-            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_98-0554/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_98-0554/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_98-0554/script1",
@@ -253,7 +316,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_98-0554/script2",
             }
         elif species_selection == "te_mce9":
-            script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_mce9/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/taylorella/te_mce9/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script1",
@@ -269,7 +335,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script2",
             }
         elif species_selection == "ab1":
-            script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/abortus1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus1/data",
@@ -285,7 +354,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/abortus1/vcfs",
             }
         elif species_selection == "ab3":
-            script_dependents = str(self.dependents_dir) + "/brucella/abortus3/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/abortus3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/abortus3/data",
@@ -301,7 +373,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/abortus3/vcfs",
             }
         elif species_selection == "canis":
-            script_dependents = str(self.dependents_dir) + "/brucella/canis/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/canis/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/canis/data",
@@ -317,7 +392,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/canis/vcfs",
             }
         elif species_selection == "ceti1":
-            script_dependents = str(self.dependents_dir) + "/brucella/ceti1/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/ceti1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ceti1/data",
@@ -333,7 +411,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/ceti1/vcfs",
             }
         elif species_selection == "ceti2":
-            script_dependents = str(self.dependents_dir) + "/brucella/ceti2/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/ceti2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ceti2/data",
@@ -349,7 +430,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/ceti2/vcfs",
             }
         elif species_selection == "mel1":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1/data",
@@ -365,7 +449,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv1/vcfs",
             }
         elif species_selection == "mel1b":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1b/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv1b/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv1b/data",
@@ -381,7 +468,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv1b/vcfs",
             }
         elif species_selection == "mel2":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv2/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv2/data",
@@ -397,7 +487,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv2/vcfs",
             }
         elif species_selection == "mel3":
-            script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv3/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/melitensis-bv3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/melitensis-bv3/data",
@@ -413,7 +506,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv3/vcfs",
             }
         elif species_selection == "suis1":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis1/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/suis1/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis1/data",
@@ -429,7 +525,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/suis1/vcfs",
             }
         elif species_selection == "suis2":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis2/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/suis2/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis2/data",
@@ -445,7 +544,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/suis2/vcfs",
             }
         elif species_selection == "suis3":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis3/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/suis3/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis3/data",
@@ -461,7 +563,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/suis3/vcfs",
             }
         elif species_selection == "suis4":
-            script_dependents = str(self.dependents_dir) + "/brucella/suis4/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/suis4/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/suis4/data",
@@ -477,7 +582,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/suis4/vcfs",
             }
         elif species_selection == "ovis":
-            script_dependents = str(self.dependents_dir) + "/brucella/ovis/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/ovis/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/ovis/data",
@@ -493,7 +601,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/ovis/vcfs",
             }
         elif species_selection == "neo":
-            script_dependents = str(self.dependents_dir) + "/brucella/neotomae/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/brucella/neotomae/script_dependents"
             genotype_codes = get_brucella_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/brucella/neotomae/data",
@@ -509,7 +620,11 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/brucella/neotomae/vcfs",
             }
         elif species_selection == "af":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/af2122/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                #if no species type in dictionary default to vSNP repo dependencies
+                script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/af2122/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/af2122/script1",
@@ -525,7 +640,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
             }
         elif species_selection == "h37":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/h37/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/mycobacterium/tbc/h37/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/tbc/h37/script1",
@@ -542,7 +660,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/h37/script2",
             }
         elif species_selection == "para":
-            script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/NC_002944/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/NC_002944/script_dependents"
             genotype_codes = get_tb_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
@@ -559,7 +680,10 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
             }
         elif species_selection == "flu":
-            script_dependents = str(self.dependents_dir) + "/virus/h7n3/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/virus/h7n3/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
@@ -576,7 +700,10 @@ class Get_Specie_Parameters():
                 "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
             }
         elif species_selection == "newcastle":
-            script_dependents = str(self.dependents_dir) + "/virus/newcastle/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/virus/newcastle/script_dependents"
             genotype_codes = get_vndv_codes()
             parameters = {
                 "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
@@ -593,7 +720,10 @@ class Get_Specie_Parameters():
                 "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
             }
         elif species_selection == "belize":
-            script_dependents = str(self.dependents_dir) + "/virus/belize/script_dependents"
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/virus/belize/script_dependents"
             genotype_codes = get_vndv_codes()
             parameters = {
                 "upload_to": None, #str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",

@@ -1556,20 +1556,6 @@ def run_script2(arg_options):
     print("remove_from_analysis: %s " % arg_options['remove_from_analysis'])
     print("step2_upload: %s \n" % arg_options['step2_upload'])
 
-    if genotype_codes:
-        print("\nUpdating VCF file names")
-        arg_options = change_names(arg_options, genotype_codes)
-        malformed = arg_options['malformed']
-        names_not_changed = arg_options['names_not_changed']
-    else:
-        print("Genotypingcode file unavailable.  VCF file names not updated")
-        names_not_changed = glob.glob("*.vcf")
-        arg_options['malformed'] = []
-        arg_options['names_not_changed'] = []
-
-    malformed = arg_options['malformed']
-    names_not_changed = arg_options['names_not_changed']
-
     files = glob.glob('*vcf')
     print("REMOVING FROM ANALYSIS...")
     wb = xlrd.open_workbook(arg_options['remove_from_analysis'])
@@ -1590,6 +1576,20 @@ def run_script2(arg_options):
                 except FileNotFoundError:
                     print("FileNotFoundError:")
     vcf_starting_list = glob.glob("*.vcf")
+
+    if genotype_codes:
+        print("\nUpdating VCF file names")
+        arg_options = change_names(arg_options, genotype_codes)
+        malformed = arg_options['malformed']
+        names_not_changed = arg_options['names_not_changed']
+    else:
+        print("Genotypingcode file unavailable.  VCF file names not updated")
+        names_not_changed = glob.glob("*.vcf")
+        arg_options['malformed'] = []
+        arg_options['names_not_changed'] = []
+
+    malformed = arg_options['malformed']
+    names_not_changed = arg_options['names_not_changed']
 
     print("CHECKING FOR EMPTY FILES...")
     for filename in vcf_starting_list:

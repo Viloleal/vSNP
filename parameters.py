@@ -181,6 +181,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-14028S/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "typhimurium-LT2":
             try:
@@ -200,6 +201,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "heidelberg-SL476":
             try:
@@ -219,6 +221,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/heidelberg-SL476/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "te_atcc35865":
             try:
@@ -238,6 +241,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_atcc35865/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "te_09-0932":
             try:
@@ -257,6 +261,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_09-0932/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "te_89-0490":
             try:
@@ -276,6 +281,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_89-0490/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "te_92-0972":
             try:
@@ -295,6 +301,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_92-0972/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "te_98-0554":
             try:
@@ -314,6 +321,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_98-0554/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "te_mce9":
             try:
@@ -333,6 +341,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/bi/taylorella/vsnp/te_mce9/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "ab1":
             try:
@@ -352,6 +361,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/abortus1/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "ab3":
             try:
@@ -371,6 +381,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/abortus3/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "canis":
             try:
@@ -390,6 +401,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/canis/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "ceti1":
             try:
@@ -409,6 +421,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/ceti1/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "ceti2":
             try:
@@ -428,6 +441,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/ceti2/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "mel1":
             try:
@@ -447,6 +461,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv1/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "mel1b":
             try:
@@ -466,6 +481,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv1b/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "mel2":
             try:
@@ -485,6 +501,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv2/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "mel3":
             try:
@@ -504,6 +521,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/melitensis-bv3/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "suis1":
             try:
@@ -523,6 +541,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/suis1/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "suis2":
             try:
@@ -542,6 +561,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/suis2/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "suis3":
             try:
@@ -561,6 +581,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/suis3/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "suis4":
             try:
@@ -580,6 +601,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/suis4/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "ovis":
             try:
@@ -599,6 +621,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/ovis/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "neo":
             try:
@@ -618,6 +641,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/brucella/neotomae/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "af":
             try:
@@ -638,6 +662,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx", # previous excelinfile
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/af2122/script2", #previous bioinfoVCF
+                "script_dependents": script_dependents,
             }
         elif species_selection == "h37":
             try:
@@ -658,6 +683,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/h37/script2",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "para":
             try:
@@ -678,6 +704,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "flu":
             try:
@@ -698,6 +725,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "newcastle":
             try:
@@ -718,6 +746,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+                "script_dependents": script_dependents,
             }
         elif species_selection == "belize":
             try:
@@ -738,6 +767,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": None, #str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+                "script_dependents": script_dependents,
             }
         else:
             genotype_codes = None
@@ -753,6 +783,7 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": None,
                 "filter_file": None,
                 "step2_upload": None,
+                "script_dependents": None,
             }
 
         return (parameters, genotype_codes)

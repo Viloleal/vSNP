@@ -860,6 +860,7 @@ def align_reads(arg_options):
                 conda list samtools | grep -v "^#"; \
                 conda list freebayes | grep -v "^#"; \
                 conda list biopython | grep -v "^#"').read(), file=verison_out)
+            print("Dependent source:  {}" .format(arg_options['script_dependents']), file=verison_out)
             verison_out.close()
         except:
             pass
@@ -1817,6 +1818,7 @@ def run_script2(arg_options):
             print("%s<br>" % i, file=htmlfile)
     except:
         pass
+    print("Dependent source:  {}<br>" .format(arg_options['script_dependents']), file=htmlfile)
 
     #FILES NOT RENAMED
     if names_not_changed is None:

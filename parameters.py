@@ -216,7 +216,7 @@ class Get_Specie_Parameters():
                 "gbk_file": [script_dependents + "/NC_011083.gbk"],
                 "species": species_selection,
                 "qual_threshold": 300,
-                "N_threshold": 350,
+                "N_threshold": 300,
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",

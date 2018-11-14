@@ -40,21 +40,19 @@ class Get_Specie_Parameters():
         if os.path.isdir("/Volumes/root/TStuber/Results"):
             bioinfo = "/Volumes/root/TStuber/Results"
             self.bio_drive_dep = get_my_path(bioinfo)
-            self.bio_drive = True
             self.upload_to = None
         elif os.path.isdir("/bioinfo11/TStuber/Results"):
             bioinfo = "/bioinfo11/TStuber/Results/"
             self.bio_drive_dep = get_my_path(bioinfo)
-            self.bio_drive = True
             self.upload_to = "/bioinfo11/TStuber/Results"
         else:
-            self.bio_drive = False
-            real_path = os.path.dirname(os.path.realpath(__file__))
-            print("real path command --> {}".format(real_path))
-            real_path = real_path.split('/')
-            root_path = '/'.join(real_path)
-            self.dependents_dir = root_path + "/dependencies"
             self.upload_to = None
+        real_path = os.path.dirname(os.path.realpath(__file__))
+        print("real path command --> {}".format(real_path))
+        real_path = real_path.split('/')
+        root_path = '/'.join(real_path)
+        self.dependents_dir = root_path + "/dependencies"
+        
 
     def choose(self, species_selection):
 

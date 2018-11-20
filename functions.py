@@ -1871,7 +1871,7 @@ def run_script2(arg_options):
             os.makedirs(dst, exist_ok=True)
             copy_tree(src, dst, preserve_mode=0, preserve_times=0)
             print("Samples were uploaded to {}" .format(dst))
-        except(TypeError:)
+        except TypeError:
             print("No place to upload, check parameters")
     else:
         print("\tSamples were not copied or uploaded to additional location")

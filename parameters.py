@@ -160,7 +160,27 @@ class Get_Specie_Parameters():
             genotype_codes = in_dict['Isolate Name']
             return genotype_codes
 
-        if species_selection == "typhimurium-14028S":
+        if species_selection == "typhimurium-atcc13311":
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-atcc13311/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "upload_to": str(self.upload_to),
+                "spoligo_db": None,
+                "reference": script_dependents + "/NZ_CP009102.fasta",
+                "gbk_file": [script_dependents + "/NZ_CP009102.gbk"],
+                "species": species_selection,
+                "qual_threshold": 300,
+                "N_threshold": 350,
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-atcc13311/script2",
+                "script_dependents": script_dependents,
+            }
+        elif species_selection == "typhimurium-14028S":
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):

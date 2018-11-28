@@ -25,7 +25,7 @@ class Get_Specie_Parameters():
             bio_drive_dep['ceti2'] = bioinfo + "/brucella/ceti2/script_dependents"
             bio_drive_dep['ovis'] = bioinfo + "/brucella/ovis/script_dependents"
             bio_drive_dep['neo'] = bioinfo + "/brucella/neotomae/script_dependents"
-            bio_drive_dep['para'] = bioinfo + "/brucella/abortus1/script_dependents"
+            bio_drive_dep['para'] = bioinfo + "/mycobacterium/avium_complex/vsnp/NC_002944/script_dependents"
             bio_drive_dep['typhimurium-14028S'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-14028S/script_dependents"
             bio_drive_dep['typhimurium-LT2'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-LT2/script_dependents"
             bio_drive_dep['heidelberg-SL476'] = bioinfo + "/bi/salmonella/vsnp/heidelberg-SL476/script_dependents"
@@ -701,7 +701,7 @@ class Get_Specie_Parameters():
                 "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
-                "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/para_cattle-bison/vcfs",
+                "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script2",
                 "script_dependents": script_dependents,
             }
         elif species_selection == "flu":

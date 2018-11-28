@@ -25,12 +25,8 @@ class Get_Specie_Parameters():
             bio_drive_dep['ceti2'] = bioinfo + "/brucella/ceti2/script_dependents"
             bio_drive_dep['ovis'] = bioinfo + "/brucella/ovis/script_dependents"
             bio_drive_dep['neo'] = bioinfo + "/brucella/neotomae/script_dependents"
-<<<<<<< HEAD
             bio_drive_dep['para'] = bioinfo + "/mycobacterium/avium_complex/vsnp/NC_002944/script_dependents"
-=======
-            bio_drive_dep['para'] = bioinfo + "/brucella/abortus1/script_dependents"
             bio_drive_dep['typhimurium-atcc13311'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-atcc13311/script_dependents"
->>>>>>> a4f6229eda2f15f97887ead600afa8e54f55561a
             bio_drive_dep['typhimurium-14028S'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-14028S/script_dependents"
             bio_drive_dep['typhimurium-LT2'] = bioinfo + "/bi/salmonella/vsnp/typhimurium-LT2/script_dependents"
             bio_drive_dep['heidelberg-SL476'] = bioinfo + "/bi/salmonella/vsnp/heidelberg-SL476/script_dependents"

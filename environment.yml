@@ -21,3 +21,4 @@ dependencies:
   - abyss
   - raxml
   - newick_utils
+  - vcflib

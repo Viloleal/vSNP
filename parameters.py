@@ -94,6 +94,43 @@ class Get_Specie_Parameters():
                 genotype_codes.update({new_name: elite_test})
             return genotype_codes
 
+        def get_para_codes():
+            if os.path.isfile("/Volumes/root/TStuber/Results/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx"):
+                tb_geno_codes = ("/Volumes/root/TStuber/Results/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx")
+            elif os.path.isfile("/bioinfo11/TStuber/Results/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx"):
+                tb_geno_codes = ("/bioinfo11/TStuber/Results/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx")
+            # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx"):
+            #     tb_geno_codes = ("/Users/tstuber/Desktop/to_delete/genotyping_codes.xlsx")
+            else:
+                return None
+            wb = xlrd.open_workbook(tb_geno_codes)
+            ws = wb.sheet_by_index(0)
+            genotype_codes = {}
+            for rownum in range(ws.nrows):
+                new_name = str(ws.row_values(rownum)[0])
+                new_name = new_name.rstrip()
+                new_name = re.sub('[\/() ]', '_', new_name)
+                new_name = re.sub('#', 'num', new_name)
+                new_name = re.sub('_-', '_', new_name)
+                new_name = re.sub('-_', '_', new_name)
+                new_name = re.sub('__+', '_', new_name)
+                new_name = re.sub('_$', '', new_name)
+                new_name = re.sub('-$', '', new_name)
+                new_name = re.sub(',', '', new_name)
+                try:
+                    elite_test = ws.row_values(rownum)[1]
+                except IndexError:
+                    #print("except IndexError: when changing names")
+                    elite_test = ""
+                #print("newname %s" % new_name)
+                try:
+                    if new_name[-1] != "_":
+                        new_name = new_name + "_"
+                except IndexError:
+                    pass
+                genotype_codes.update({new_name: elite_test})
+            return genotype_codes
+
         def get_brucella_codes():
             if os.path.isfile("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx"):
                 bruc_geno_codes = ("/Volumes/MB/Brucella/Brucella Logsheets/ALL_WGS.xlsx")
@@ -709,7 +746,7 @@ class Get_Specie_Parameters():
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
                 script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/NC_002944/script_dependents"
-            genotype_codes = get_tb_codes()
+            genotype_codes = get_para_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script1",
                 "spoligo_db": None,

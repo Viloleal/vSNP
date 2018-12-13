@@ -164,6 +164,7 @@ class Get_Specie_Parameters():
                 row_data = re.sub("_$", "", row_data)
                 row_data = re.sub("-$", "", row_data)
                 row_data = re.sub("\'", "", row_data)
+                row_data = re.sub(",", "", row_data)
                 row_data = str(row_data)
                 genotype_codes[row_data] = "" #the empty value can be used for elites
             return genotype_codes

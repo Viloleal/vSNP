@@ -1607,24 +1607,28 @@ def run_script2(arg_options):
     wb = xlrd.open_workbook(arg_options['definingSNPs'])
     ws = wb.sheet_by_index(0)
 
-    for rownum in range(ws.nrows):
-        position = ws.row_values(rownum)[1:][0]
-        grouping = ws.row_values(rownum)[:1][0]
-        # inverted positions will NOT be found in the passing positions
-        # inverted positions are indicated in Defining SNPs by ending with "!"
-        if position.endswith('!'):
-            position = re.sub('!', '', position)
-            inverted_position.update({position: grouping})
-        else:
-            defining_snps.update({position: grouping})
-    files = glob.glob('*vcf')
+    if arg_options['only_all_vcf']:
+        print("Only running an All_VCF tree")
+    else:
+        print("Grouping files...")
+        for rownum in range(ws.nrows):
+            position = ws.row_values(rownum)[1:][0]
+            grouping = ws.row_values(rownum)[:1][0]
+            # inverted positions will NOT be found in the passing positions
+            # inverted positions are indicated in Defining SNPs by ending with "!"
+            if position.endswith('!'):
+                position = re.sub('!', '', position)
+                inverted_position.update({position: grouping})
+            else:
+                defining_snps.update({position: grouping})
+        files = glob.glob('*vcf')
 
     arg_options['inverted_position'] = inverted_position
     arg_options['defining_snps'] = defining_snps
 
     all_list_amb = {}
     group_calls_list = []
-    print("Grouping files...")
+  
     if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
             dict_amb, group_calls, mal = group_files(i, arg_options)

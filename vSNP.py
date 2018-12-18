@@ -61,12 +61,6 @@ def fix_vcf(each_vcf, arg_options):
     os.utime(each_vcf, times=(initial_file_time_stats.st_mtime, initial_file_time_stats.st_mtime))
     return mal
 
-
-cpu_count = multiprocessing.cpu_count()
-limited_cpu_count = int(cpu_count / 4)
-if limited_cpu_count == 0:
-    limited_cpu_count = 1
-
 parser = argparse.ArgumentParser(prog='PROG', formatter_class=argparse.RawDescriptionHelpFormatter, description=textwrap.dedent('''\
 
 ---------------------------------------------------------
@@ -90,12 +84,16 @@ parser.add_argument('-d', '--debug', action='store_true', dest='debug_call', hel
 parser.add_argument('-g', '--get', action='store_true', dest='get', help='get, get to the core functions for debugging')
 parser.add_argument('-n', '--no_annotation', action='store_true', dest='no_annotation', help='no_annotation, run without annotation')
 parser.add_argument('-a', '--all_vcf', action='store_true', dest='all_vcf', help='make tree using all VCFs')
+parser.add_argument('-o', '--only_all_vcf', action='store_true', dest='only_all_vcf', help='make tree using all VCFs')
 parser.add_argument('-e', '--elite', action='store_true', dest='elite', help='create a tree with on elite sample representation')
 parser.add_argument('-f', '--filter', action='store_true', dest='filter_finder', help='Find possible positions to filter')
+parser.add_argument('-p', '--processor', action='store', dest='processor', help='max processor usage')
 parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', help='[**APHIS only**] prevent stats going to cumlative collection')
 parser.add_argument('-m', '--email', action='store', dest='email', help='[**APHIS only**, specify own SMTP address for functionality] email options: all, s, tod, jess, suelee, chris, email_address')
 parser.add_argument('-u', '--upload', action='store_true', dest='upload', help='[**APHIS only**, specify own storage for functionality] upload files to the bioinfo drive')
 args = parser.parse_args()
+if args.only_all_vcf:
+    args.all_vcf = True
 print("\nSET ARGUMENTS: ")
 print(args)
 arg_options = {
@@ -104,8 +102,10 @@ arg_options = {
     "get": args.get,
     "no_annotation": args.no_annotation,
     "all_vcf": args.all_vcf,
+    "only_all_vcf": args.only_all_vcf,
     "elite": args.elite,
     "filter_finder": args.filter_finder,
+    "processor": args.processor,
     "quiet": args.quiet,
     "upload": args.upload,
 }
@@ -152,6 +152,15 @@ if fastq_check and vcf_check:
     sys.exit(0)
 
 arg_options['root_dir'] = root_dir
+
+if arg_options['processor']:
+    cpu_count = int(args.processor)
+else:
+    cpu_count = int(multiprocessing.cpu_count())
+limited_cpu_count = int(cpu_count / 4)
+if limited_cpu_count == 0:
+    limited_cpu_count = 1
+
 arg_options['cpu_count'] = cpu_count
 arg_options['limited_cpu_count'] = limited_cpu_count
 

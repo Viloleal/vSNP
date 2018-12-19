@@ -1621,7 +1621,7 @@ def run_script2(arg_options):
                 inverted_position.update({position: grouping})
             else:
                 defining_snps.update({position: grouping})
-        files = glob.glob('*vcf')
+    files = glob.glob('*vcf')
 
     arg_options['inverted_position'] = inverted_position
     arg_options['defining_snps'] = defining_snps

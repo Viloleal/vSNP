@@ -2562,7 +2562,10 @@ def get_snps(directory, arg_options):
 
     print("%s RAxML running..." % directory)
     try:
-        os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
+        if arg_options['only_all_vcf']:
+            os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['cpu_count']))
+        else:
+            os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
     except:
         write_out = open('RAXML_FAILED', 'w+')
         write_out.close()

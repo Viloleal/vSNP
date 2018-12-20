@@ -1054,7 +1054,7 @@ def mlst(arg_options):
     mapq_fix = loc_sam_mlst + "-mapq_fix_mlst.vcf"
     vcf_mlst = directory + "/" + sample_name + "_mlst" + ".vcf"
 
-    os.system("freebayes -u -f {} {} > {}" .format(sample_reference_mlst_location, sortedbam, unfiltered_vcf_mlst))
+    os.system("freebayes -E -1 -f {} {} > {}" .format(sample_reference_mlst_location, sortedbam, unfiltered_vcf_mlst))
     # "fix" MQ notation in VCF to match GATK output
     write_fix = open(mapq_fix, 'w+')
     with open(unfiltered_vcf_mlst, 'r') as unfiltered:

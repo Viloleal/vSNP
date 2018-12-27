@@ -24,15 +24,15 @@ Download Linux Anaconda Installer, `https://www.anaconda.com/download/#linux`, R
 
 wget copied link
 
-`~$ bash ./Anaconda3*` and follow prompts (installation will take a while, if installation stalls, press <enter>)
+`~$ bash ./Anaconda3*` and follow prompts (installation will take a while, if installation stalls, press \<enter\>)
 
 Conda should prepend this or something similar to your ~/.bashrc:
 
-`. ${HOME}/anaconda3/etc/profile.d/conda.sh`
-`conda activate`
+```. ${HOME}/anaconda3/etc/profile.d/conda.sh`
+conda activate```
 
-Follow Linux/Mac [Setup](https://usda-vs.github.io/vSNP/setup.html) Start by cloning vSNP repository.
+Follow [Linux/Mac Setup](https://usda-vs.github.io/vSNP/setup.html). Start by cloning vSNP repository.
 
 A note about the subsystem...
 
-From within the Ubuntu subsystem terminal the directory structure is the familiar Linux structure.  Directories under root are as expected as with any Linux environment:  `/home`, `/usr`, `etc`.  The Windows directory structure is under `/mnt`.  With the c drive as a subdirectory under `/mnt`.  Therefore your Windows 10 Desktop may have a path such as: `/mnt/c/Users/\<windows username\>/OneDrive/Desktop`
+From within the Windows 10 Ubuntu subsystem terminal the directory structure is the familiar Linux structure.  Directories under root are as expected as with any Linux environment:  `/home`, `/usr`, `etc`.  The Windows directory structure is under `/mnt`.  The Windows c drive is a subdirectory under `/mnt`.  Therefore your Windows 10 Desktop may have a path such as: `/mnt/c/Users/<windows username>/OneDrive/Desktop`

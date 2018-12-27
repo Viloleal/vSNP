@@ -37,7 +37,11 @@ Clone script to home directory:
     $ conda env create
     $ conda activate vsnp
 
-Unfortunately a dependency is still in legacy Python.  Fix using the following:
+ A dependency may still be written for legacy Python.  Check using...
+
+    $ cat $(which vcffirstheader)
+ 
+ If print statements do not contain parathesis fix with the following command:
 
     $ sed -i 's/print line.strip()/print(line.strip())/' $(which vcffirstheader)
 

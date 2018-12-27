@@ -1,6 +1,5 @@
 ---
 layout: "default"
-title: Windows10
 ---
 
 <h1><p style="text-align: center">Windows 10</p></h1>

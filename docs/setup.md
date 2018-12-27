@@ -17,6 +17,8 @@ vSNP INSTALLATION
 
 Linux or macOS required.  Minimum 4 cores, 8GB memory.
 
+Special instructions are provide if using the [Windows 10 Unbuntu app](https://usda-vs.github.io/vSNP/windows10.html).
+
 Script is written in Python 3 and must be ran using the conda build environment.  Currently tested with Python 3.6. 
 
 Anaconda is a highly trusted Python package and scientific software distrubution platform.  

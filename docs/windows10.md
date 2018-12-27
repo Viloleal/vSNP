@@ -20,11 +20,11 @@ Launch Ubuntu app.  You will be prompted to make a username and password.
 
 Your home directory will be: ~$ /home/\<username\>
 
-Download Linux Anaconda Installer, `https://www.anaconda.com/download/#linux`,Right click on "64-Bit(86) Installer" link and "Copy link address".
+Download Linux Anaconda Installer, `https://www.anaconda.com/download/#linux`, Right click on "64-Bit(86) Installer" link and "Copy link address".
 
 wget copied link
 
-`~$ bash ./Anaconda3*` and follow prompts (installation will take a while, if it stalls, press <enter>)
+`~$ bash ./Anaconda3*` and follow prompts (installation will take a while, if installation stalls, press <enter>)
 
 Follow Linux/Mac [Setup](https://usda-vs.github.io/vSNP/setup.html) Start by cloning vSNP repository.
 

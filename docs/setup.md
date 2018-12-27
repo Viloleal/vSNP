@@ -41,7 +41,7 @@ Clone script to home directory:
 
     $ cat $(which vcffirstheader)
  
- If print statements do not contain parathesis fix with the following command:
+ If print statements do not contain parenthesis fix with the following command:
 
     $ sed -i 's/print line.strip()/print(line.strip())/' $(which vcffirstheader)
 

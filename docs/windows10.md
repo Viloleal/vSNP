@@ -26,6 +26,11 @@ wget copied link
 
 `~$ bash ./Anaconda3*` and follow prompts (installation will take a while, if installation stalls, press <enter>)
 
+Conda should prepend this or something similar to your ~/.bashrc:
+
+`. ${HOME}/anaconda3/etc/profile.d/conda.sh`
+`conda activate`
+
 Follow Linux/Mac [Setup](https://usda-vs.github.io/vSNP/setup.html) Start by cloning vSNP repository.
 
 A note about the subsystem...

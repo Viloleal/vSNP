@@ -14,7 +14,7 @@ Install Ubuntu 18 LTS from Microsoft app store
 
 Launch app
 
-If needed `Enable-WindowsOptionalFeature`.  Follow instructions provided by link.  Run Powershell as administrator.
+If needed `Enable-WindowsOptionalFeature`.  Follow instructions provided by link.  Run Powershell as administrator (right-click on Powershell).
 
 Launch Ubuntu app.  You will be prompted to make a username and password.
 

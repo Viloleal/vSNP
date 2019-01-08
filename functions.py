@@ -1696,6 +1696,8 @@ def run_script2(arg_options):
             samples_in_output.append(samples_in_fasta)
     else:
         cpu_restriction = int(arg_options['cpu_count'] / 2)
+        if cpu_restriction < 1:
+            cpu_restriction = 2
         with futures.ProcessPoolExecutor(max_workers=cpu_restriction) as pool:
             for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=5):
                 samples_in_output.append(samples_in_fasta)

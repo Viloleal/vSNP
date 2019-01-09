@@ -1,9 +1,10 @@
 name: vsnp
 channels:
+  - conda-forge
+  - defaults
   - bioconda
   - r
-  - defaults
-  - conda-forge
+  
 dependencies:
   - python=3.6
   - biopython
@@ -21,3 +22,4 @@ dependencies:
   - abyss
   - raxml
   - newick_utils
+  - vcflib

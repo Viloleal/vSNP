@@ -608,7 +608,7 @@ def align_reads(arg_options):
             #     last_number = pos
             # print("{}:{}-{}" .format(chrom, pos, total_len), file=chrom_ranges)
         chrom_ranges.close()
-        os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 --strict-vcf -u -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
+        os.system(r'freebayes-parallel chrom_ranges.txt 8 -E -1 -e 1 -u --strict-vcf -f %s %s > %s' % (sample_reference, nodupbam, unfiltered_hapall))
         # "fix" MQ notation in VCF to match GATK output
         write_fix = open(mapq_fix, 'w+')
         with open(unfiltered_hapall, 'r') as unfiltered:
@@ -860,6 +860,7 @@ def align_reads(arg_options):
                 conda list samtools | grep -v "^#"; \
                 conda list freebayes | grep -v "^#"; \
                 conda list biopython | grep -v "^#"').read(), file=verison_out)
+            print("Dependent source:  {}" .format(arg_options['script_dependents']), file=verison_out)
             verison_out.close()
         except:
             pass
@@ -1606,16 +1607,20 @@ def run_script2(arg_options):
     wb = xlrd.open_workbook(arg_options['definingSNPs'])
     ws = wb.sheet_by_index(0)
 
-    for rownum in range(ws.nrows):
-        position = ws.row_values(rownum)[1:][0]
-        grouping = ws.row_values(rownum)[:1][0]
-        # inverted positions will NOT be found in the passing positions
-        # inverted positions are indicated in Defining SNPs by ending with "!"
-        if position.endswith('!'):
-            position = re.sub('!', '', position)
-            inverted_position.update({position: grouping})
-        else:
-            defining_snps.update({position: grouping})
+    if arg_options['only_all_vcf']:
+        print("Only running an All_VCF tree")
+    else:
+        print("Grouping files...")
+        for rownum in range(ws.nrows):
+            position = ws.row_values(rownum)[1:][0]
+            grouping = ws.row_values(rownum)[:1][0]
+            # inverted positions will NOT be found in the passing positions
+            # inverted positions are indicated in Defining SNPs by ending with "!"
+            if position.endswith('!'):
+                position = re.sub('!', '', position)
+                inverted_position.update({position: grouping})
+            else:
+                defining_snps.update({position: grouping})
     files = glob.glob('*vcf')
 
     arg_options['inverted_position'] = inverted_position
@@ -1623,7 +1628,7 @@ def run_script2(arg_options):
 
     all_list_amb = {}
     group_calls_list = []
-    print("Grouping files...")
+  
     if arg_options['debug_call'] and not arg_options['get']:
         for i in files:
             dict_amb, group_calls, mal = group_files(i, arg_options)
@@ -1691,6 +1696,8 @@ def run_script2(arg_options):
             samples_in_output.append(samples_in_fasta)
     else:
         cpu_restriction = int(arg_options['cpu_count'] / 2)
+        if cpu_restriction < 1:
+            cpu_restriction = 2
         with futures.ProcessPoolExecutor(max_workers=cpu_restriction) as pool:
             for samples_in_fasta in pool.map(get_snps, directory_list, itertools_repeat(arg_options), chunksize=5):
                 samples_in_output.append(samples_in_fasta)
@@ -1817,6 +1824,7 @@ def run_script2(arg_options):
             print("%s<br>" % i, file=htmlfile)
     except:
         pass
+    print("Dependent source:  {}<br>" .format(arg_options['script_dependents']), file=htmlfile)
 
     #FILES NOT RENAMED
     if names_not_changed is None:
@@ -1863,11 +1871,14 @@ def run_script2(arg_options):
 
         #upload to bioinfoVCF
         src = arg_options['root_dir']
-        dst = arg_options['step2_upload'] + "/" + os.path.basename(os.path.normpath(arg_options['root_dir']))
-        print("\n\t%s is copying to %s" % (src, dst))
-        os.makedirs(dst, exist_ok=True)
-        copy_tree(src, dst, preserve_mode=0, preserve_times=0)
-        print("Samples were uploaded to {}" .format(dst))
+        try:
+            dst = arg_options['step2_upload'] + "/" + os.path.basename(os.path.normpath(arg_options['root_dir']))
+            print("\n\t%s is copying to %s" % (src, dst))
+            os.makedirs(dst, exist_ok=True)
+            copy_tree(src, dst, preserve_mode=0, preserve_times=0)
+            print("Samples were uploaded to {}" .format(dst))
+        except TypeError:
+            print("No place to upload, check parameters")
     else:
         print("\tSamples were not copied or uploaded to additional location")
 
@@ -2553,7 +2564,10 @@ def get_snps(directory, arg_options):
 
     print("%s RAxML running..." % directory)
     try:
-        os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
+        if arg_options['only_all_vcf']:
+            os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['cpu_count']))
+        else:
+            os.system("{} -s {} -n raxml -m GTRCATI -o root -p 12345 -T {} > /dev/null 2>&1" .format(arg_options['sys_raxml'], alignment_file, arg_options['raxml_cpu']))
     except:
         write_out = open('RAXML_FAILED', 'w+')
         write_out.close()

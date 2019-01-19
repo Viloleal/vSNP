@@ -17,7 +17,9 @@ vSNP INSTALLATION
 
 Linux or macOS required.  Minimum 4 cores, 8GB memory.
 
-Script is written in Python 3 and must be ran using the conda build environment.  Currently tested with Python 3.6. 
+Special instructions provided for [Windows 10 Unbuntu app](https://usda-vs.github.io/vSNP/windows10.html).
+
+Script is written in Python 3 and must be ran using the conda build environment.  Currently tested with Python 3.6 and 3.7. 
 
 Anaconda is a highly trusted Python package and scientific software distrubution platform.  
 
@@ -35,7 +37,11 @@ Clone script to home directory:
     $ conda env create
     $ conda activate vsnp
 
-Unfortunately a dependency is still in legacy Python.  Fix using the following:
+ A dependency may still be written for legacy Python.  Check using...
+
+    $ cat $(which vcffirstheader)
+ 
+ If print statements do not contain parenthesis fix with the following command:
 
     $ sed -i 's/print line.strip()/print(line.strip())/' $(which vcffirstheader)
 

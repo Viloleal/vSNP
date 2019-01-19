@@ -9,10 +9,46 @@ import glob
 from concurrent import futures
 import re
 from itertools import repeat as itertools_repeat
+from prettytable import PrettyTable
 
 import functions
 
 root_dir = str(os.getcwd())
+
+
+def reference_table():
+
+    pretty_table = PrettyTable(['-s option', 'Species', 'NCBI identifier'])
+    pretty_table.add_row(['af', 'Mycobacterium_bovis_AF2122/97', 'NC_002945.4'])
+    pretty_table.add_row(['h37', 'Mycobacterium tuberculosis H37Rv', 'NC_000962.3'])
+    pretty_table.add_row(['ab1', 'Brucella abortus biovar 1 str. 9-941', 'NC_006932.1, NC_006933.1'])
+    pretty_table.add_row(['ab3', 'Brucella abortus strain BER', 'NZ_CP007682.1, NZ_CP007683.1'])
+    pretty_table.add_row(['suis1', 'Brucella suis 1330', 'NC_017251.1, NC_017250.1'])
+    pretty_table.add_row(['suis2', 'Brucella suis ATCC 23445', 'NC_010169.1, NC_010167.1'])
+    pretty_table.add_row(['suis3', 'Brucella suis bv. 3 str. 686', 'NZ_CP007719.1, NZ_CP007718.1'])
+    pretty_table.add_row(['mel1', 'Brucella melitensis bv. 1 str. 16M', 'NC_003317.1, NC_003318.1'])
+    pretty_table.add_row(['mel1b', 'Brucella melitensis BwIM_SOM_36b', 'NZ_CP018508.1, NZ_CP018509.1'])
+    pretty_table.add_row(['mel2', 'Brucella melitensis ATCC 23457', 'NC_012441.1, NC_012442.1'])
+    pretty_table.add_row(['mel3', 'Brucella melitensis bv. 3 str. Ether', 'NZ_CP007760, NZ_CP007761'])
+    pretty_table.add_row(['canis', 'Brucella canis ATCC 23365', 'NC_010103.1, NC_010104.1'])
+    pretty_table.add_row(['ceti1', 'Bceti1Cudo', 'Bceti1Cudo inhouse'])
+    pretty_table.add_row(['ceti2', 'Brucella ceti TE10759-12', 'NC_022905.1, NC_022906.1'])
+    pretty_table.add_row(['ovis', 'Brucella ovis ATCC 25840', 'NC_009505.1, NC_009504.1'])
+    pretty_table.add_row(['para', 'Mycobacterium avium subsp. paratuberculosis str. k10', 'NC_002944.2'])
+    pretty_table.add_row(['typhimurium-14028S', 'Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S', 'NC_016856.1, NC_016855.1(plasmid)'])
+    pretty_table.add_row(['typhimurium-LT2', 'Salmonella enterica subsp. enterica serovar Typhimurium str. LT2', 'AE006468.2'])
+    pretty_table.add_row(['heidelberg-SL476', 'Salmonella enterica subsp. enterica serovar Heidelberg str. SL476', 'NC_011083.1'])
+    pretty_table.add_row(['te_atcc35865', 'Taylorella equigenitalis ATCC 35865', 'NC_018108.1'])
+    pretty_table.add_row(['te_09-0932', 'Taylorella equigenitalis strain 09-0932', 'NZ_CP021201.1'])
+    pretty_table.add_row(['te_89-0490', 'Taylorella equigenitalis strain 89-0490', 'NZ_CP021199.1'])
+    pretty_table.add_row(['te_92-0972', 'Taylorella equigenitalis strain 92-0972', 'NZ_CP021060.1'])
+    pretty_table.add_row(['te_98-0554', 'Taylorella equigenitalis strain 98-0554', 'NZ_CP021246.1'])
+    pretty_table.add_row(['te_mce9', 'Taylorella equigenitalis MCE9', 'NC_014914.1'])
+    pretty_table.add_row(['flu', 'H7N3', 'segments 1-8'])
+    pretty_table.add_row(['newcaste', '18-016505-001-fusion-HN', '18-016505-001-fusion-HN'])
+    pretty_table.add_row(['belize', 'Newcastle disease virus isolate Belize (Spanish Lookout)/4224-3/2008', 'KF767466.1'])
+
+    return pretty_table
 
 
 def fix_vcf(each_vcf, arg_options):
@@ -74,8 +110,6 @@ See documentation at: https://usda-vs.github.io/snp_analysis/
 
         Step 2: VCFs --> Tables & Trees
 
--s <OPTIONAL SPECIES TYPES>: af, h37, ab1, ab3, suis1, suis2, suis3, mel1, mel1b, mel2, mel3, canis, ceti1, ceti2, ovis, neo, para, typhimurium-atcc13311, typhimurium-14028S, typhimurium-LT2, heidelberg-SL476, te_atcc35865, te_09-0932, te_89-0490, te_92-0972, te_98-0554, te_mce9, flu, newcaste, belize
-
 '''), epilog='''---------------------------------------------------------''')
 
 #universal
@@ -91,7 +125,14 @@ parser.add_argument('-p', '--processor', action='store', dest='processor', help=
 parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', help='[**APHIS only**] prevent stats going to cumlative collection')
 parser.add_argument('-m', '--email', action='store', dest='email', help='[**APHIS only**, specify own SMTP address for functionality] email options: all, s, tod, jess, suelee, chris, email_address')
 parser.add_argument('-u', '--upload', action='store_true', dest='upload', help='[**APHIS only**, specify own storage for functionality] upload files to the bioinfo drive')
+parser.add_argument('-t', '--table', action='store_true', dest='table', help='print reference/species table')
 args = parser.parse_args()
+
+if args.table:
+    pretty_table = reference_table()
+    print(pretty_table)
+    sys.exit()
+
 if args.only_all_vcf:
     args.all_vcf = True
 print("\nSET ARGUMENTS: ")
@@ -113,7 +154,7 @@ print("")
 
 email_list = None
 if args.email == "all":
-    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, patrick.m.camp@aphis.usda.gov, David.T.Farrell@aphis.usda.gov, Robin.L.Swanson@aphis.usda.gov, hannah.m.tharp@aphis.usda.gov, Doris.M.Bravo@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov"
+    email_list = "tod.p.stuber@aphis.usda.gov, Jessica.A.Hicks@aphis.usda.gov, Christine.R.Quance@aphis.usda.gov, Suelee.Robbe-Austerman@aphis.usda.gov, patrick.m.camp@aphis.usda.gov, David.T.Farrell@aphis.usda.gov, Robin.L.Swanson@aphis.usda.gov, Doris.M.Bravo@aphis.usda.gov, eto3@cdc.gov, kristina.lantz@aphis.usda.gov, Tyler.Thacker@aphis.usda.gov"
 elif args.email == "tod":
     email_list = "tod.p.stuber@aphis.usda.gov"
 elif args.email == "jess":

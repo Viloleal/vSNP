@@ -362,7 +362,8 @@ def best_reference(fastq_list):
     oligo_dictionary["23_tb4"] = "CGGTGTTGAAGGGTCCCCCGTTCCAGAAGCCGGTG"
     oligo_dictionary["24_tb6"] = "ACGGTGATTCGGGTGGTCGACACCGATGGTTCAGA"
     oligo_dictionary["25_para"] = "CCTTTCTTGAAGGGTGTTCG"
-    oligo_dictionary["26_para2"] = "CGAACACCCTTCAAGAAAGG"
+    oligo_dictionary["26_para_sheep"] = "CGTGGTGGCGACGGCGGCGGGCCTGTCTAT"
+    oligo_dictionary["27_para_cattle"] = "TCTCCTCGGTCGGTGATTCGGGGGCGCGGT"
 
     brucella_identifications = {}
     brucella_identifications["1111111111111111"] = "odd" #Unexpected findings
@@ -404,12 +405,12 @@ def best_reference(fastq_list):
     bovis_identifications["10101110"] = "h37" #tb7
     bovis_identifications["11001110"] = "af" #bovis
     bovis_identifications["11011110"] = "af" #bovis
-    bovis_identifications["11001100"] = "af" #bovis
+    bovis_identifications["11001100"] = "af"  #bovis
+    
     para_identifications = {}
-    para_identifications["1"] = "para"
-    para_identifications["01"] = "para"
-    para_identifications["11"] = "para"
-
+    para_identifications["110"] = "para-CP033688"
+    para_identifications["101"] = "para-NC_002944"
+    
     count_summary = {}
 
     with futures.ProcessPoolExecutor() as pool:
@@ -475,9 +476,9 @@ def best_reference(fastq_list):
             return("TB group, but no match")
     elif para_sum >= 1:
         if para_string in para_identifications:
-            print("Para group")
-            print("\n\nPara group", file=write_out)
-            return("para") # return to set parameters
+            print("Para group, species %s" % para_identifications[para_string])
+            print("\n\nPara group, species %s" % para_identifications[para_string], file=write_out)
+            return(para_identifications[para_string]) # return to set parameters
         else:
             print("M. paratuberculosis group, but no match")
             print("\n\nNo match", file=write_out)

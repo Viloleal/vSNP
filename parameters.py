@@ -743,7 +743,7 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/mycobacterium/tbc/h37/script2",
                 "script_dependents": script_dependents,
             }
-        elif species_selection == "para":
+        elif species_selection == "para-NC_002944":
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
@@ -762,6 +762,27 @@ class Get_Specie_Parameters():
                 "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
                 "filter_file": script_dependents + "/Filtered_Regions.xlsx",
                 "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/NC_002944/script2",
+                "script_dependents": script_dependents,
+            }
+        elif species_selection == "para-CP033688":
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/mycobacterium/avium_complex/CP033688/script_dependents"
+            genotype_codes = get_para_codes()
+            parameters = {
+                "upload_to": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/CP033688/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/CP033688.fasta",
+                "gbk_file": [script_dependents + "/CP033688.gbk"],
+                "species": species_selection,
+                "qual_threshold": 150,
+                "N_threshold": 150,
+                "genotypingcodes": str(self.upload_to) + "/mycobacterium/avium_complex/metadata/avium_genotyping_codes.xlsx",
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/mycobacterium/avium_complex/vsnp/CP033688/script2",
                 "script_dependents": script_dependents,
             }
         elif species_selection == "flu":

@@ -81,9 +81,11 @@ If using VCF test files
 
     $ cd ~
     
-    ~$ git clone https://github.com/USDA-VS/vcf_test_files.git
+    ~$ git clone https://github.com/USDA-VS/test_files.git
     
-    ~$ cd vcf_test_files/bovis
+    ~$ cd test_files/bovis
+
+    Unzip
 
     $ vSNP.py
     

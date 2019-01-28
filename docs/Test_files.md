@@ -19,6 +19,6 @@ FASTQ test files can be downloaded at:
 
 ## Step 2
 
-VCF test files can be downloaded at:
+SRA and VCF test files can be downloaded at:
 
-    ~$ git clone https://github.com/USDA-VS/vcf_test_files.git
+    ~$ git clone https://github.com/USDA-VS/test_files.git

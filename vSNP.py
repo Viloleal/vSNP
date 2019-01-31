@@ -151,13 +151,10 @@ if fastq_check:
     if pair_check > 0:
         R1 = glob.glob('*_R1*fastq.gz')
         R2 = glob.glob('*_R2*fastq.gz')
-        R1count = len(R1)
-        R2count = len(R2)
     else:
         R1 = glob.glob('*fastq.gz')
         R2 = None
 
-    # fastq_count = R1count + R2count
     if arg_options['all_vcf'] or arg_options['elite'] or arg_options['upload'] or arg_options['filter_finder']:
         print("#####Incorrect use of options when running loop/script 1")
         sys.exit(0)

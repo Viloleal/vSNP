@@ -39,8 +39,7 @@ from Bio import SeqIO
 from parameters import Get_Specie_Parameters
 # import concurrent.futures as cf
 
-
-def run_loop(arg_options):  #calls read_aligner
+def run_loop(arg_options):
 
     root_dir = arg_options['root_dir']
     limited_cpu_count = arg_options['limited_cpu_count']
@@ -235,6 +234,88 @@ def run_loop(arg_options):  #calls read_aligner
             pass
 
 
+def reference_table():
+
+    pretty_table = PrettyTable(['-s option', 'Species', 'NCBI identifier'])
+    pretty_table.add_row(['af', 'Mycobacterium_bovis_AF2122/97', 'NC_002945.4'])
+    pretty_table.add_row(['h37', 'Mycobacterium tuberculosis H37Rv', 'NC_000962.3'])
+    pretty_table.add_row(['ab1', 'Brucella abortus biovar 1 str. 9-941', 'NC_006932.1, NC_006933.1'])
+    pretty_table.add_row(['ab3', 'Brucella abortus strain BER', 'NZ_CP007682.1, NZ_CP007683.1'])
+    pretty_table.add_row(['suis1', 'Brucella suis 1330', 'NC_017251.1, NC_017250.1'])
+    pretty_table.add_row(['suis2', 'Brucella suis ATCC 23445', 'NC_010169.1, NC_010167.1'])
+    pretty_table.add_row(['suis3', 'Brucella suis bv. 3 str. 686', 'NZ_CP007719.1, NZ_CP007718.1'])
+    pretty_table.add_row(['mel1', 'Brucella melitensis bv. 1 str. 16M', 'NC_003317.1, NC_003318.1'])
+    pretty_table.add_row(['mel1b', 'Brucella melitensis BwIM_SOM_36b', 'NZ_CP018508.1, NZ_CP018509.1'])
+    pretty_table.add_row(['mel2', 'Brucella melitensis ATCC 23457', 'NC_012441.1, NC_012442.1'])
+    pretty_table.add_row(['mel3', 'Brucella melitensis bv. 3 str. Ether', 'NZ_CP007760, NZ_CP007761'])
+    pretty_table.add_row(['canis', 'Brucella canis ATCC 23365', 'NC_010103.1, NC_010104.1'])
+    pretty_table.add_row(['ceti1', 'Bceti1Cudo', 'Bceti1Cudo inhouse'])
+    pretty_table.add_row(['ceti2', 'Brucella ceti TE10759-12', 'NC_022905.1, NC_022906.1'])
+    pretty_table.add_row(['ovis', 'Brucella ovis ATCC 25840', 'NC_009505.1, NC_009504.1'])
+    pretty_table.add_row(['para', 'Mycobacterium avium subsp. paratuberculosis str. k10', 'NC_002944.2'])
+    pretty_table.add_row(['typhimurium-14028S', 'Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S', 'NC_016856.1, NC_016855.1(plasmid)'])
+    pretty_table.add_row(['typhimurium-LT2', 'Salmonella enterica subsp. enterica serovar Typhimurium str. LT2', 'AE006468.2'])
+    pretty_table.add_row(['heidelberg-SL476', 'Salmonella enterica subsp. enterica serovar Heidelberg str. SL476', 'NC_011083.1'])
+    pretty_table.add_row(['te_atcc35865', 'Taylorella equigenitalis ATCC 35865', 'NC_018108.1'])
+    pretty_table.add_row(['te_09-0932', 'Taylorella equigenitalis strain 09-0932', 'NZ_CP021201.1'])
+    pretty_table.add_row(['te_89-0490', 'Taylorella equigenitalis strain 89-0490', 'NZ_CP021199.1'])
+    pretty_table.add_row(['te_92-0972', 'Taylorella equigenitalis strain 92-0972', 'NZ_CP021060.1'])
+    pretty_table.add_row(['te_98-0554', 'Taylorella equigenitalis strain 98-0554', 'NZ_CP021246.1'])
+    pretty_table.add_row(['te_mce9', 'Taylorella equigenitalis MCE9', 'NC_014914.1'])
+    pretty_table.add_row(['flu', 'H7N3', 'segments 1-8'])
+    pretty_table.add_row(['newcaste', '18-016505-001-fusion-HN', '18-016505-001-fusion-HN'])
+    pretty_table.add_row(['belize', 'Newcastle disease virus isolate Belize (Spanish Lookout)/4224-3/2008', 'KF767466.1'])
+
+    return pretty_table
+
+
+def fix_vcf(each_vcf, arg_options):
+    mal = []
+    # Fix common VCF errors
+    temp_file = each_vcf + ".temp"
+    write_out = open(temp_file, 'w') #r+ used for reading and writing to the same file
+    initial_file_time_stats = os.stat(each_vcf)
+    with open(each_vcf, 'r') as file:
+        try:
+            for line in file:
+                if line.rstrip(): # true if not empty line'^$'
+                    line = line.rstrip() #remove right white space
+                    line = re.sub('"AC=', 'AC=', line)
+                    line = re.sub('""', '"', line)
+                    line = re.sub('""', '"', line)
+                    line = re.sub('""', '"', line)
+                    line = re.sub('"$', '', line)
+                    line = re.sub('GQ:PL\t"', 'GQ:PL\t', line)
+                    line = re.sub('[0-9]+\tGT\t.\/.$', '999\tGT:AD:DP:GQ:PL\t1/1:0,80:80:99:2352,239,0', line)
+                    line = re.sub('^"', '', line)
+                    if line.startswith('##') and line.endswith('"'):
+                        line = re.sub('"$', '', line)
+                    if line.startswith('##'):
+                        line = line.split('\t')
+                        line = ''.join(line[0])
+                    if not line.startswith('##'):
+                        line = re.sub('"', '', line)
+                        line = line.split('\t')
+                        line = "\t".join(line[0:10])
+                        print(line, file=write_out)
+                    else:
+                        print(line, file=write_out)
+        except IndexError:
+            print("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
+            mal.append("##### IndexError: Deleting corrupt VCF file: " + each_vcf)
+            os.remove(each_vcf)
+        except UnicodeDecodeError:
+            print("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
+            mal.append("##### UnicodeDecodeError: Deleting corrupt VCF file: " + each_vcf)
+            os.remove(each_vcf)
+
+    write_out.close()
+    os.rename(temp_file, each_vcf)
+    # revert timestamp to original allows elites to properly sort on file modification time
+    os.utime(each_vcf, times=(initial_file_time_stats.st_mtime, initial_file_time_stats.st_mtime))
+    return mal
+
+
 def read_aligner(sample_name, arg_options):
 
     os.chdir(arg_options['root_dir'] + "/" + sample_name)
@@ -298,6 +379,49 @@ def read_aligner(sample_name, arg_options):
     except:
         print("### Unable to return stat_summary")
         return arg_options
+
+
+def get_species(arg_options):
+
+    #species = corresponding NCBI accession
+    species_cross_reference = {}
+    species_cross_reference["salmonella"] = ["016856, 016855"]
+    species_cross_reference["bovis"] = ["AF2122_NC002945", "00879"]
+    species_cross_reference["af"] = ["NC_002945.4"]
+    species_cross_reference["h37"] = ["000962", "002755", "009525", "018143"]
+    species_cross_reference["para"] = ["NC_002944"]
+    species_cross_reference["ab1"] = ["006932", "006933"]
+    species_cross_reference["ab3"] = ["007682", "007683"]
+    species_cross_reference["canis"] = ["010103", "010104"]
+    species_cross_reference["ceti1"] = ["Bceti1Cudo"]
+    species_cross_reference["ceti2"] = ["022905", "022906"]
+    species_cross_reference["mel1"] = ["003317", "003318"]
+    species_cross_reference["mel1b"] = ["CP018508", "CP018509"]
+    species_cross_reference["mel2"] = ["012441", "012442"]
+    species_cross_reference["mel3"] = ["007760", "007761"]
+    species_cross_reference["ovis"] = ["009504", "009505"]
+    species_cross_reference["neo"] = ["KN046827"]
+    species_cross_reference["suis1"] = ["017250", "017251"]
+    species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
+    species_cross_reference["suis3"] = ["007719", "007718"]
+    species_cross_reference["suis4"] = ["B-REF-BS4-40"]
+    species_cross_reference["te_09-0932"] = ["CP021201"]
+    species_cross_reference["te_89-0490"] = ["CP021199"]
+    species_cross_reference["te_92-0972"] = ["CP021060"]
+    species_cross_reference["te_98-0554"] = ["CP021246"]
+    species_cross_reference["te_atcc35865"] = ["NC_018108"]
+    species_cross_reference["te_mce9"] = ["NC_014914"]
+    vcf_list = glob.glob('*vcf')
+    for each_vcf in vcf_list:
+        print(each_vcf)
+        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
+        print("single_vcf %s" % each_vcf)
+        for record in vcf_reader:
+            header = record.CHROM
+            for key, vlist in species_cross_reference.items():
+                for li in vlist:
+                    if li in header:
+                        return (key)
 
 
 def species_selection_step1(arg_options):
@@ -1444,47 +1568,137 @@ def send_email_step1(email_list, runtime, path_found, summary_file, st):
     smtp.quit()
 
 
-def get_species(arg_options):
+def group_files(each_vcf, arg_options):
+    mal = ""
+    list_pass = []
+    list_amb = []
+    dict_amb = {}
+    group_calls = []
 
-    #species = corresponding NCBI accession
-    species_cross_reference = {}
-    species_cross_reference["salmonella"] = ["016856, 016855"]
-    species_cross_reference["bovis"] = ["AF2122_NC002945", "00879"]
-    species_cross_reference["af"] = ["NC_002945.4"]
-    species_cross_reference["h37"] = ["000962", "002755", "009525", "018143"]
-    species_cross_reference["para"] = ["NC_002944"]
-    species_cross_reference["ab1"] = ["006932", "006933"]
-    species_cross_reference["ab3"] = ["007682", "007683"]
-    species_cross_reference["canis"] = ["010103", "010104"]
-    species_cross_reference["ceti1"] = ["Bceti1Cudo"]
-    species_cross_reference["ceti2"] = ["022905", "022906"]
-    species_cross_reference["mel1"] = ["003317", "003318"]
-    species_cross_reference["mel1b"] = ["CP018508", "CP018509"]
-    species_cross_reference["mel2"] = ["012441", "012442"]
-    species_cross_reference["mel3"] = ["007760", "007761"]
-    species_cross_reference["ovis"] = ["009504", "009505"]
-    species_cross_reference["neo"] = ["KN046827"]
-    species_cross_reference["suis1"] = ["017250", "017251"]
-    species_cross_reference["suis2"] = ["NC_010169", "NC_010167"]
-    species_cross_reference["suis3"] = ["007719", "007718"]
-    species_cross_reference["suis4"] = ["B-REF-BS4-40"]
-    species_cross_reference["te_09-0932"] = ["CP021201"]
-    species_cross_reference["te_89-0490"] = ["CP021199"]
-    species_cross_reference["te_92-0972"] = ["CP021060"]
-    species_cross_reference["te_98-0554"] = ["CP021246"]
-    species_cross_reference["te_atcc35865"] = ["NC_018108"]
-    species_cross_reference["te_mce9"] = ["NC_014914"]
-    vcf_list = glob.glob('*vcf')
-    for each_vcf in vcf_list:
-        print(each_vcf)
+    try:
         vcf_reader = vcf.Reader(open(each_vcf, 'r'))
-        print("single_vcf %s" % each_vcf)
+        # PUT VCF NAME INTO LIST, capturing for htmlfile
+        group_calls.append(each_vcf)
+        # for each single vcf getting passing position
         for record in vcf_reader:
-            header = record.CHROM
-            for key, vlist in species_cross_reference.items():
-                for li in vlist:
-                    if li in header:
-                        return (key)
+            try:
+                # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
+                record.INFO['MQ'] = record.INFO['MQ'][0]
+            except TypeError:
+                pass
+            except KeyError:
+                pass
+            chrom = record.CHROM
+            position = record.POS
+            absolute_positon = str(chrom) + "-" + str(position)
+            # find quality SNPs and put absolute positions into list
+            try:
+                record_alt_length = len(record.ALT[0])
+            except TypeError:
+                record_alt_length = 0
+            try:
+                record_ref_length = len(record.REF)
+            except TypeError:
+                record_alt_length = 0
+            try:
+                if str(record.ALT[0]) != "None" and record_ref_length == 1 and record_alt_length == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['qual_threshold'] and record.INFO['MQ'] > 45:
+                    list_pass.append(absolute_positon)
+                # capture ambigous defining SNPs in htmlfile
+                elif str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 1:
+                    list_amb.append(absolute_positon)
+            except ZeroDivisionError:
+                print("bad line in %s at %s" % (each_vcf, absolute_positon))
+
+        for key in arg_options['inverted_position'].keys():
+            if key not in list_pass:
+                print("key %s not in list_pass" % key)
+                directory = arg_options['inverted_position'][key]
+                print("*** INVERTED POSITION FOUND *** PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
+                if not os.path.exists(directory):
+                    try:
+                        os.makedirs(directory)
+                    except FileExistsError:
+                        pass
+                shutil.copy(each_vcf, directory)
+                # ADD GROUP TO LIST
+                group_calls.append(directory)
+
+        #if passing:
+        # if a passing position is in the defining SNPs
+        defining_snps = arg_options['defining_snps']
+        for passing_position in list_pass:
+            # normal grouping
+            if passing_position in defining_snps:
+                directory = defining_snps[passing_position]
+                print("PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
+                if not os.path.exists(directory):
+                    try:
+                        os.makedirs(directory)
+                    except FileExistsError:
+                        pass
+                shutil.copy(each_vcf, directory)
+                # ADD GROUP TO LIST
+                group_calls.append(directory)
+        # find mixed isolates if defining snp is ambigous
+        for amb_position in list_amb:
+            if amb_position in defining_snps:
+                directory = defining_snps[amb_position]
+                dict_amb.update({each_vcf + "\t" + directory: amb_position})
+                # ADD AMBIGIOUS CALL TO LIST
+                group_calls.append("*" + directory + "-mix")
+        # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
+        if arg_options['all_vcf'] or arg_options['elite']:
+            if not os.path.exists("All_VCFs"):
+                os.makedirs("All_VCFs")
+            shutil.move(each_vcf, "All_VCFs")
+        else:
+            try:
+                os.remove(each_vcf)
+            except FileNotFoundError:
+                pass
+        #print(dict_amb, group_calls, malformed)
+
+    except ZeroDivisionError:
+        os.remove(each_vcf)
+        print("ZeroDivisionError: corrupt VCF, removed %s " % each_vcf)
+        mal = "ZeroDivisionError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except ValueError:
+        os.remove(each_vcf)
+        print("ValueError: corrupt VCF, removed %s " % each_vcf)
+        mal = "ValueError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except UnboundLocalError:
+        os.remove(each_vcf)
+        print("UnboundLocalError: corrupt VCF, removed %s " % each_vcf)
+        mal = "UnboundLocalError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except TypeError:
+        os.remove(each_vcf)
+        print("TypeError: corrupt VCF, removed %s " % each_vcf)
+        mal = "TypeError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except SyntaxError:
+        os.remove(each_vcf)
+        print("SyntaxError: corrupt VCF, removed %s " % each_vcf)
+        mal = "SyntaxError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except KeyError:
+        os.remove(each_vcf)
+        print("KeyError: corrupt VCF, removed %s " % each_vcf)
+        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+    except StopIteration:
+        print("StopIteration: %s" % each_vcf)
+        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
+        group_calls.append("error")
+
+    the_sample_name = group_calls[0:1]
+    list_of_groups = sorted(group_calls[1:]) # order the groups
+    for i in list_of_groups:
+        the_sample_name.append(i) # a is group_calls
+        group_calls = the_sample_name
+    return dict_amb, group_calls, mal
 
 
 def run_script2(arg_options):
@@ -1884,139 +2098,6 @@ def run_script2(arg_options):
         print("\tSamples were not copied or uploaded to additional location")
 
     print("\n\tComparisons have been made with no obvious error.\n")
-
-
-def group_files(each_vcf, arg_options):
-    mal = ""
-    list_pass = []
-    list_amb = []
-    dict_amb = {}
-    group_calls = []
-
-    try:
-        vcf_reader = vcf.Reader(open(each_vcf, 'r'))
-        # PUT VCF NAME INTO LIST, capturing for htmlfile
-        group_calls.append(each_vcf)
-        # for each single vcf getting passing position
-        for record in vcf_reader:
-            try:
-                # Freebayes VCFs place MQ values are placed into a list.  GATK as a float
-                record.INFO['MQ'] = record.INFO['MQ'][0]
-            except TypeError:
-                pass
-            except KeyError:
-                pass
-            chrom = record.CHROM
-            position = record.POS
-            absolute_positon = str(chrom) + "-" + str(position)
-            # find quality SNPs and put absolute positions into list
-            try:
-                record_alt_length = len(record.ALT[0])
-            except TypeError:
-                record_alt_length = 0
-            try:
-                record_ref_length = len(record.REF)
-            except TypeError:
-                record_alt_length = 0
-            try:
-                if str(record.ALT[0]) != "None" and record_ref_length == 1 and record_alt_length == 1 and record.INFO['AC'][0] == 2 and record.QUAL > arg_options['qual_threshold'] and record.INFO['MQ'] > 45:
-                    list_pass.append(absolute_positon)
-                # capture ambigous defining SNPs in htmlfile
-                elif str(record.ALT[0]) != "None" and record.INFO['AC'][0] == 1:
-                    list_amb.append(absolute_positon)
-            except ZeroDivisionError:
-                print("bad line in %s at %s" % (each_vcf, absolute_positon))
-
-        for key in arg_options['inverted_position'].keys():
-            if key not in list_pass:
-                print("key %s not in list_pass" % key)
-                directory = arg_options['inverted_position'][key]
-                print("*** INVERTED POSITION FOUND *** PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
-                if not os.path.exists(directory):
-                    try:
-                        os.makedirs(directory)
-                    except FileExistsError:
-                        pass
-                shutil.copy(each_vcf, directory)
-                # ADD GROUP TO LIST
-                group_calls.append(directory)
-
-        #if passing:
-        # if a passing position is in the defining SNPs
-        defining_snps = arg_options['defining_snps']
-        for passing_position in list_pass:
-            # normal grouping
-            if passing_position in defining_snps:
-                directory = defining_snps[passing_position]
-                print("PASSING POSITION FOUND: \t%s\t\t%s" % (each_vcf, directory))
-                if not os.path.exists(directory):
-                    try:
-                        os.makedirs(directory)
-                    except FileExistsError:
-                        pass
-                shutil.copy(each_vcf, directory)
-                # ADD GROUP TO LIST
-                group_calls.append(directory)
-        # find mixed isolates if defining snp is ambigous
-        for amb_position in list_amb:
-            if amb_position in defining_snps:
-                directory = defining_snps[amb_position]
-                dict_amb.update({each_vcf + "\t" + directory: amb_position})
-                # ADD AMBIGIOUS CALL TO LIST
-                group_calls.append("*" + directory + "-mix")
-        # if -a or -e (non elites already deleted from the analysis) copy all vcfs to All_VCFs
-        if arg_options['all_vcf'] or arg_options['elite']:
-            if not os.path.exists("All_VCFs"):
-                os.makedirs("All_VCFs")
-            shutil.move(each_vcf, "All_VCFs")
-        else:
-            try:
-                os.remove(each_vcf)
-            except FileNotFoundError:
-                pass
-        #print(dict_amb, group_calls, malformed)
-
-    except ZeroDivisionError:
-        os.remove(each_vcf)
-        print("ZeroDivisionError: corrupt VCF, removed %s " % each_vcf)
-        mal = "ZeroDivisionError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except ValueError:
-        os.remove(each_vcf)
-        print("ValueError: corrupt VCF, removed %s " % each_vcf)
-        mal = "ValueError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except UnboundLocalError:
-        os.remove(each_vcf)
-        print("UnboundLocalError: corrupt VCF, removed %s " % each_vcf)
-        mal = "UnboundLocalError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except TypeError:
-        os.remove(each_vcf)
-        print("TypeError: corrupt VCF, removed %s " % each_vcf)
-        mal = "TypeError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except SyntaxError:
-        os.remove(each_vcf)
-        print("SyntaxError: corrupt VCF, removed %s " % each_vcf)
-        mal = "SyntaxError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except KeyError:
-        os.remove(each_vcf)
-        print("KeyError: corrupt VCF, removed %s " % each_vcf)
-        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-    except StopIteration:
-        print("StopIteration: %s" % each_vcf)
-        mal = "KeyError: corrupt VCF, removed %s " % each_vcf
-        group_calls.append("error")
-
-    the_sample_name = group_calls[0:1]
-    list_of_groups = sorted(group_calls[1:]) # order the groups
-    for i in list_of_groups:
-        the_sample_name.append(i) # a is group_calls
-        group_calls = the_sample_name
-    return dict_amb, group_calls, mal
 
 
 def send_email_step2(arg_options):

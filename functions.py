@@ -740,6 +740,7 @@ def align_reads(arg_options):
             for line in unfiltered:
                 line = line.strip()
                 new_line = re.sub(r';MQM=', r';MQ=', line)
+                new_line = re.sub(r'ID=MQM,', r'ID=MQ,', new_line)
                 print(new_line, file=write_fix)
             write_fix.close()
         # remove clearly poor positions

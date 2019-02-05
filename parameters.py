@@ -203,7 +203,7 @@ class Get_Specie_Parameters():
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
-                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-atcc13311/script_dependents"
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/typhimurium-atcc13311/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to),
@@ -223,7 +223,7 @@ class Get_Specie_Parameters():
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
-                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-14028S/script_dependents"
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/typhimurium-14028S/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to),
@@ -244,7 +244,7 @@ class Get_Specie_Parameters():
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
-                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2/script_dependents"
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/typhimurium-LT2/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2/script1",
@@ -264,7 +264,7 @@ class Get_Specie_Parameters():
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
-                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2-nophage/script_dependents"
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/typhimurium-LT2-nophage/script_dependents"
             genotype_codes = None
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2-nophage/script1",
@@ -284,7 +284,7 @@ class Get_Specie_Parameters():
             try:
                 script_dependents = self.bio_drive_dep[species_selection]
             except (KeyError, AttributeError):
-                script_dependents = str(self.dependents_dir) + "/bi/salmonella/heidelberg-SL476/script_dependents"
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/vsnp/heidelberg-SL476/script_dependents"
             genotype_codes = get_heidelberg_codes()
             parameters = {
                 "upload_to": str(self.upload_to) + "/bi/salmonella/heidelberg-SL476/script1",

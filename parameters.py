@@ -260,6 +260,26 @@ class Get_Specie_Parameters():
                 "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2/script2",
                 "script_dependents": script_dependents,
             }
+        elif species_selection == "LT2-nophage":
+            try:
+                script_dependents = self.bio_drive_dep[species_selection]
+            except (KeyError, AttributeError):
+                script_dependents = str(self.dependents_dir) + "/bi/salmonella/typhimurium-LT2-nophage/script_dependents"
+            genotype_codes = None
+            parameters = {
+                "upload_to": str(self.upload_to) + "/bi/salmonella/typhimurium-LT2-nophage/script1",
+                "spoligo_db": None,
+                "reference": script_dependents + "/AE006468-nophage.fasta",
+                "gbk_file": None,
+                "species": species_selection,
+                "qual_threshold": 300,
+                "N_threshold": 350,
+                "definingSNPs": script_dependents + "/DefiningSNPsGroupDesignations.xlsx",
+                "remove_from_analysis": script_dependents + "/RemoveFromAnalysis.xlsx",
+                "filter_file": script_dependents + "/Filtered_Regions.xlsx",
+                "step2_upload": str(self.upload_to) + "/bi/salmonella/vsnp/typhimurium-LT2-nophage/script2",
+                "script_dependents": script_dependents,
+            }
         elif species_selection == "heidelberg-SL476":
             try:
                 script_dependents = self.bio_drive_dep[species_selection]

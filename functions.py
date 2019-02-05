@@ -255,6 +255,7 @@ def reference_table():
     pretty_table.add_row(['para', 'Mycobacterium avium subsp. paratuberculosis str. k10', 'NC_002944.2'])
     pretty_table.add_row(['typhimurium-14028S', 'Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S', 'NC_016856.1, NC_016855.1(plasmid)'])
     pretty_table.add_row(['typhimurium-LT2', 'Salmonella enterica subsp. enterica serovar Typhimurium str. LT2', 'AE006468.2'])
+    pretty_table.add_row(['LT2-nophage', 'Salmonella enterica subsp. enterica serovar Typhimurium str. LT2 with phage removed', 'AE006468.2(no phage)'])
     pretty_table.add_row(['heidelberg-SL476', 'Salmonella enterica subsp. enterica serovar Heidelberg str. SL476', 'NC_011083.1'])
     pretty_table.add_row(['te_atcc35865', 'Taylorella equigenitalis ATCC 35865', 'NC_018108.1'])
     pretty_table.add_row(['te_09-0932', 'Taylorella equigenitalis strain 09-0932', 'NZ_CP021201.1'])

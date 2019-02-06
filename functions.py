@@ -252,7 +252,8 @@ def reference_table():
     pretty_table.add_row(['ceti1', 'Bceti1Cudo', 'Bceti1Cudo inhouse'])
     pretty_table.add_row(['ceti2', 'Brucella ceti TE10759-12', 'NC_022905.1, NC_022906.1'])
     pretty_table.add_row(['ovis', 'Brucella ovis ATCC 25840', 'NC_009505.1, NC_009504.1'])
-    pretty_table.add_row(['para', 'Mycobacterium avium subsp. paratuberculosis str. k10', 'NC_002944.2'])
+    pretty_table.add_row(['para-NC_002944', 'Mycobacterium avium subsp. paratuberculosis str. k10', 'NC_002944.2'])
+    pretty_table.add_row(['para-CP033688', 'Mycobacterium avium subsp. paratuberculosis strain Telford', 'CP033688.1'])
     pretty_table.add_row(['typhimurium-14028S', 'Salmonella enterica subsp. enterica serovar Typhimurium str. 14028S', 'NC_016856.1, NC_016855.1(plasmid)'])
     pretty_table.add_row(['typhimurium-LT2', 'Salmonella enterica subsp. enterica serovar Typhimurium str. LT2', 'AE006468.2'])
     pretty_table.add_row(['heidelberg-SL476', 'Salmonella enterica subsp. enterica serovar Heidelberg str. SL476', 'NC_011083.1'])
@@ -389,7 +390,8 @@ def get_species(arg_options):
     species_cross_reference["bovis"] = ["AF2122_NC002945", "00879"]
     species_cross_reference["af"] = ["NC_002945.4"]
     species_cross_reference["h37"] = ["000962", "002755", "009525", "018143"]
-    species_cross_reference["para"] = ["NC_002944"]
+    species_cross_reference["para-NC_002944"] = ["NC_002944"]
+    species_cross_reference["para-CP033688"] = ["CP033688"]
     species_cross_reference["ab1"] = ["006932", "006933"]
     species_cross_reference["ab3"] = ["007682", "007683"]
     species_cross_reference["canis"] = ["010103", "010104"]

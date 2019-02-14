@@ -40,7 +40,6 @@ from collections import Counter
 from collections import defaultdict
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from Bio import SeqIO
-from prettytable import PrettyTable
 
 from parameters import Get_Specie_Parameters
 import functions

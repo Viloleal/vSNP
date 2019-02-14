@@ -18,6 +18,7 @@ import pysam
 import vcf
 import smtplib
 from multiprocessing import Pool
+from prettytable import PrettyTable
 from dask import delayed
 from itertools import repeat as itertools_repeat
 from collections import Iterable
@@ -787,14 +788,16 @@ def align_reads(arg_options):
         duplicate_stat_out.write(os.popen("samtools idxstats {} " .format(nodupbam)).read())
         duplicate_stat_out.close()
         with open(duplicate_stat_file) as f:
-            dup_first_line = f.readline()
-            dup_first_line = dup_first_line.rstrip()
-            dup_first_line = re.split(':|\t', dup_first_line)
-            nodupbam_mapped_reads = int(dup_first_line[2])
+            for line_num, line in enumerate(f):
+                if line_num == 1:
+                    dup_line_two = line
+                    dup_line_two = dup_line_two.split()
+                    unmapped_reads = int(dup_line_two[3])
         try:
-            unmapped_reads = allbam_mapped_reads - nodupbam_mapped_reads
+            print(f"{unmapped_reads} unmapped reads")
         except:
             unmapped_reads = "none_found"
+            print(f"no unmapped reads")
         allbam_mapped_reads = "{:,}".format(allbam_mapped_reads)
 
         try:

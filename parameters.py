@@ -185,10 +185,10 @@ class Get_Specie_Parameters():
             return genotype_codes
 
         def get_vndv_codes():
-            if os.path.isfile("/Volumes/root/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx"):
-                vndv_geno_codes = ("/Volumes/root/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx")
-            elif os.path.isfile("/bioinfo14/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx"):
-                vndv_geno_codes = ("/bioinfo14/MKillian/Analysis/results/newcastle/vSNP/vndv_metadata.xlsx")
+            if os.path.isfile("/Volumes/root/MKillian/Analysis/results/newcastle/vSNP/vsnp_metadata.xlsx"):
+                vndv_geno_codes = ("/Volumes/root/MKillian/Analysis/results/newcastle/vSNP/vsnp_metadata.xlsx")
+            elif os.path.isfile("/bioinfo14/MKillian/Analysis/results/newcastle/vSNP/vsnp_metadata.xlsx"):
+                vndv_geno_codes = ("/bioinfo14/MKillian/Analysis/results/newcastle/vSNP/vsnp_metadata.xlsx")
             # elif os.path.isfile("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx"):
             #     bruc_geno_codes = ("/Users/tstuber/Desktop/to_delete/ALL_WGS.xlsx")
             else:
